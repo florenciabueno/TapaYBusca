@@ -13,16 +13,35 @@ export const DashboardPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
+    <div 
+      className="min-h-screen p-8"
+      style={{
+        background: 'linear-gradient(to bottom right, #629FAD, #296374, #0C2C55)'
+      }}
+    >
       <div className="max-w-4xl mx-auto">
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">
+        <div 
+          className="rounded-lg shadow-2xl p-6"
+          style={{
+            background: '#EDEDCE'
+          }}
+        >
+          <h1 
+            className="text-3xl font-bold mb-4"
+            style={{ color: '#0C2C55' }}
+          >
             Panel de Control
           </h1>
-          <p className="text-gray-600 mb-2">
+          <p 
+            className="mb-2"
+            style={{ color: '#296374' }}
+          >
             Bienvenido, <span className="font-semibold">{user?.name}</span>!
           </p>
-          <p className="text-gray-600 mb-6">
+          <p 
+            className="mb-6"
+            style={{ color: '#296374' }}
+          >
             Usuario: <span className="font-semibold">{user?.email}</span>
           </p>
           <Button onClick={handleLogout} variant="secondary">

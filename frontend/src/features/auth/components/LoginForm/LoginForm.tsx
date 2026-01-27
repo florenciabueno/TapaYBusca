@@ -88,7 +88,10 @@ export const LoginForm = () => {
         Iniciar Sesión
       </Button>
 
-      <p className="text-sm text-gray-600 text-center mt-4">
+      <p 
+        className="text-sm font-medium text-center mt-4"
+        style={{ color: '#0C2C55' }}
+      >
         Usuarios de prueba: cualquier usuario con contraseña de 4+ caracteres
       </p>
     </form>
