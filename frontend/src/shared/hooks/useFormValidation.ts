@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 
 export interface ValidationErrors {
   [key: string]: string | null;
@@ -15,15 +15,15 @@ export interface UseFormValidationReturn {
 export const useFormValidation = (): UseFormValidationReturn => {
   const [errors, setErrors] = useState<ValidationErrors>({});
 
-  const validateField = useCallback((name: string, value: string, validator: (value: string) => string | null) => {
+  const validateField = (name: string, value: string, validator: (value: string) => string | null) => {
     const error = validator(value);
     setErrors((prev) => ({
       ...prev,
       [name]: error,
     }));
-  }, []);
+  };
 
-  const validateForm = useCallback((
+  const validateForm = (
     validators: Record<string, (value: string) => string | null>,
     values: Record<string, string>
   ): boolean => {
@@ -40,19 +40,19 @@ export const useFormValidation = (): UseFormValidationReturn => {
 
     setErrors(newErrors);
     return isValid;
-  }, []);
+  };
 
-  const clearError = useCallback((name: string) => {
+  const clearError = (name: string) => {
     setErrors((prev) => {
       const newErrors = { ...prev };
       delete newErrors[name];
       return newErrors;
     });
-  }, []);
+  };
 
-  const clearAllErrors = useCallback(() => {
+  const clearAllErrors = () => {
     setErrors({});
-  }, []);
+  };
 
   return {
     errors,
