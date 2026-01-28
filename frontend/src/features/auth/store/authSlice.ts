@@ -1,9 +1,11 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { User } from '../../../shared/types';
-import type { AuthState } from '../types';
 
-interface AuthStore extends AuthState {
+interface AuthStore {
+  user: User | null;
+  isLoading: boolean;
+  error: string | null;
   login: (user: User) => void;
   logout: () => void;
   setLoading: (isLoading: boolean) => void;

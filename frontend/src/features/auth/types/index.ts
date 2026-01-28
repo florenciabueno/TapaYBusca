@@ -1,1 +1,1 @@
-export type { LoginCredentials, AuthResponse, AuthError, AuthState } from './auth.types';
+export type { LoginCredentials, AuthResponse, AuthError } from './auth.types';
