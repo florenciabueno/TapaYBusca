@@ -85,7 +85,7 @@ export const LoginForm = () => {
       />
 
       <Button type="submit" isLoading={isLoading} className="w-full">
-        Iniciar Sesión
+        Iniciar sesión
       </Button>
 
       <p 

@@ -27,7 +27,7 @@ export const LoginPage = () => {
             className="text-3xl font-bold mb-2 -mt-2"
             style={{ color: '#0C2C55' }}
           >
-            TapaYBusca
+            Tapa y Busca
           </h1>
           <p 
             className="font-semibold text-sm"
