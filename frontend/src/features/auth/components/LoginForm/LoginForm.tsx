@@ -1,4 +1,4 @@
-import { FormEvent, useState } from 'react';
+import { type FormEvent, useState } from 'react';
 import { Input } from '../../../../shared/components/ui/Input';
 import { Button } from '../../../../shared/components/ui/Button';
 import { ErrorMessage } from '../../../../shared/components/ui/ErrorMessage';
@@ -11,26 +11,20 @@ import { ROUTES } from '../../../../config/constants';
 export const LoginForm = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { errors, validateField, validateForm, clearError } = useFormValidation();
+  const { errors, validateForm, clearError } = useFormValidation();
   const { login, isLoading, error } = useAuth();
   const navigate = useNavigate();
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setEmail(value);
-    if (errors.email) {
-      validateField('email', value, validateEmail);
-    }
-    clearError();
+    clearError('email');
   };
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setPassword(value);
-    if (errors.password) {
-      validateField('password', value, validatePassword);
-    }
-    clearError();
+    clearError('password');
   };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -66,7 +60,7 @@ export const LoginForm = () => {
         placeholder="Ingresa tu usuario"
         value={email}
         onChange={handleEmailChange}
-        error={errors.email}
+        error={errors?.email}
         autoComplete="username"
         required
       />
@@ -79,7 +73,7 @@ export const LoginForm = () => {
         placeholder="Ingresa tu contraseña"
         value={password}
         onChange={handlePasswordChange}
-        error={errors.password}
+        error={errors?.password}
         autoComplete="current-password"
         required
       />
