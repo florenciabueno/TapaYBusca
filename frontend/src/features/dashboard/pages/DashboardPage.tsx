@@ -1,5 +1,5 @@
 import { useAuth } from '../../auth/hooks/useAuth';
-import { Button } from '../../../shared/components/ui/Button';
+import { Button } from '../../../shared/components/ui/Button/Button';
 import { ROUTES } from '../../../config/constants';
 import { useNavigate } from 'react-router-dom';
 

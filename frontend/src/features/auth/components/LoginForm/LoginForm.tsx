@@ -1,7 +1,7 @@
 import { type FormEvent, useState } from 'react';
-import { Input } from '../../../../shared/components/ui/Input';
-import { Button } from '../../../../shared/components/ui/Button';
-import { ErrorMessage } from '../../../../shared/components/ui/ErrorMessage';
+import { Input } from '../../../../shared/components/ui/Input/Input';
+import { Button } from '../../../../shared/components/ui/Button/Button';
+import { ErrorMessage } from '../../../../shared/components/ui/ErrorMessage/ErrorMessage';
 import { useFormValidation } from '../../../../shared/hooks/useFormValidation';
 import { validateEmail, validatePassword } from '../../../../shared/utils/validation';
 import { useAuth } from '../../hooks/useAuth';
