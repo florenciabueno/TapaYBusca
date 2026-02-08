@@ -3,7 +3,7 @@ import { login as loginService } from '../services/auth.service';
 import type { LoginCredentials } from '../types';
 
 export const useAuth = () => {
-  const { user, isLoading, error, login: setUser, logout, setLoading, setError, clearError } = useAuthStore();
+  const { user, token, isLoading, error, login: setUserAndToken, logout, setLoading, setError, clearError } = useAuthStore();
 
   const isAuthenticated = user !== null;
 
@@ -12,7 +12,7 @@ export const useAuth = () => {
       setLoading(true);
       clearError();
       const response = await loginService(credentials);
-      setUser(response.user);
+      setUserAndToken(response.user, response.token || '');
       return { success: true };
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Ocurrió un error durante el inicio de sesión';
@@ -25,6 +25,7 @@ export const useAuth = () => {
 
   return {
     user,
+    token,
     isAuthenticated,
     isLoading,
     error,
