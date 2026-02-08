@@ -1,0 +1,1 @@
+export { EquationsTable } from './EquationsTable';

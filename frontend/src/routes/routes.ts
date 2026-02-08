@@ -1,6 +1,9 @@
 import { ROUTES } from '../config/constants';
 import { LoginPage } from '../features/auth/pages/LoginPage';
-import { DashboardPage } from '../features/dashboard/pages/DashboardPage';
+import { EquationsPage } from '../features/equations/pages/EquationsPage';
+import { CreateEquationPage } from '../features/equations/pages/CreateEquationPage';
+import { UploadPage } from '../features/equations/pages/UploadPage';
+import { DownloadPage } from '../features/equations/pages/DownloadPage';
 
 export interface RouteConfig {
   path: string;
@@ -16,7 +19,22 @@ export const routes: RouteConfig[] = [
   },
   {
     path: ROUTES.DASHBOARD,
-    element: DashboardPage,
+    element: EquationsPage,
+    isProtected: true,
+  },
+  {
+    path: ROUTES.CREATE_EQUATION,
+    element: CreateEquationPage,
+    isProtected: true,
+  },
+  {
+    path: ROUTES.UPLOAD,
+    element: UploadPage,
+    isProtected: true,
+  },
+  {
+    path: ROUTES.DOWNLOAD,
+    element: DownloadPage,
     isProtected: true,
   },
 ];
