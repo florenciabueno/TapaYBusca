@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { AuthService } from '../services/auth.service.js';
-import { LoginCredentials } from '../types/auth.types.js';
+import { LoginCredentials, RegisterCredentials } from '../types/auth.types.js';
 
 export class AuthController {
   constructor(private authService: AuthService) {}
@@ -14,6 +14,19 @@ export class AuthController {
     } catch (error: any) {
       res.status(error instanceof Error ? 400 : 500).json({
         error: error.message || 'Error en autenticación',
+      });
+    }
+  }
+
+  register = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const credentials: RegisterCredentials = req.body;
+      const result = await this.authService.register(credentials);
+      
+      res.status(201).json(result);
+    } catch (error: any) {
+      res.status(error instanceof Error ? 400 : 500).json({
+        error: error.message || 'Error en el registro',
       });
     }
   }

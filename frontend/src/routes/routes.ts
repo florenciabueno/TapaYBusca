@@ -1,9 +1,9 @@
 import { ROUTES } from '../config/constants';
-import { LoginPage } from '../features/auth/pages/LoginPage';
 import { EquationsPage } from '../features/equations/pages/EquationsPage';
 import { CreateEquationPage } from '../features/equations/pages/CreateEquationPage';
 import { UploadPage } from '../features/equations/pages/UploadPage';
 import { DownloadPage } from '../features/equations/pages/DownloadPage';
+import { AuthPage } from '../features/auth/pages/AuthPage';
 
 export interface RouteConfig {
   path: string;
@@ -14,7 +14,12 @@ export interface RouteConfig {
 export const routes: RouteConfig[] = [
   {
     path: ROUTES.LOGIN,
-    element: LoginPage,
+    element: AuthPage,
+    isProtected: false,
+  },
+  {
+    path: ROUTES.REGISTER,
+    element: AuthPage,
     isProtected: false,
   },
   {
