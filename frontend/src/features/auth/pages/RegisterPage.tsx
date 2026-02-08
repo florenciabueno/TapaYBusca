@@ -1,9 +1,9 @@
-import { LoginForm } from '../components/LoginForm/LoginForm';
+import { RegisterForm } from '../components/RegisterForm';
 import { Link } from 'react-router-dom';
 import { ROUTES } from '../../../config/constants';
 import logoImage from '../../../assets/logo.png';
 
-export const LoginPage = () => {
+export const RegisterPage = () => {
   return (
     <div 
       className="min-h-screen flex items-center justify-center"
@@ -31,21 +31,22 @@ export const LoginPage = () => {
           >
             Tapa y Busca
           </h1>
+
         </div>
 
-        <LoginForm />
+        <RegisterForm />
 
-        <div className="mt-4">
-          <Link 
-            to={ROUTES.REGISTER}
-            className="block w-full py-3 text-center border-2 rounded-lg font-semibold transition-colors hover:bg-opacity-10"
-            style={{
-              borderColor: '#0C2C55',
-              color: '#0C2C55',
-            }}
-          >
-            Crear una cuenta
-          </Link>
+        <div className="mt-4 text-center">
+          <p className="text-sm" style={{ color: '#0C2C55' }}>
+            ¿Ya tienes una cuenta?{' '}
+            <Link 
+              to={ROUTES.LOGIN}
+              className="font-semibold hover:underline"
+              style={{ color: '#296374' }}
+            >
+              Inicia sesión
+            </Link>
+          </p>
         </div>
 
         <div 

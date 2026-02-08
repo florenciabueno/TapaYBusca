@@ -3,17 +3,24 @@ import { Input } from '../../../../shared/components/ui/Input/Input';
 import { Button } from '../../../../shared/components/ui/Button/Button';
 import { ErrorMessage } from '../../../../shared/components/ui/ErrorMessage/ErrorMessage';
 import { useFormValidation } from '../../../../shared/hooks/useFormValidation';
-import { validateEmail, validatePassword } from '../../../../shared/utils/validation';
+import { validateEmail, validatePassword, validateName } from '../../../../shared/utils/validation';
 import { useAuth } from '../../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '../../../../config/constants';
 
-export const LoginForm = () => {
+export const RegisterForm = () => {
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const { errors, validateForm, clearError } = useFormValidation();
-  const { login, isLoading, error } = useAuth();
+  const { register, isLoading, error } = useAuth();
   const navigate = useNavigate();
+
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setName(value);
+    clearError('name');
+  };
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -32,17 +39,18 @@ export const LoginForm = () => {
 
     const isValid = validateForm(
       {
+        name: validateName,
         email: validateEmail,
         password: validatePassword,
       },
-      { email, password }
+      { name, email, password }
     );
 
     if (!isValid) {
       return;
     }
 
-    const result = await login({ email, password });
+    const result = await register({ name, email, password });
     if (result.success) {
       navigate(ROUTES.DASHBOARD);
     }
@@ -53,15 +61,28 @@ export const LoginForm = () => {
       {error && <ErrorMessage message={error} />}
       
       <Input
+        id="name"
+        name="name"
+        type="text"
+        label="Nombre"
+        placeholder="Ingresa tu nombre"
+        value={name}
+        onChange={handleNameChange}
+        error={errors?.name}
+        autoComplete="name"
+        required
+      />
+
+      <Input
         id="email"
         name="email"
         type="text"
-        label="Usuario"
-        placeholder="Ingresa tu usuario"
+        label="Email"
+        placeholder="Ingresa tu email"
         value={email}
         onChange={handleEmailChange}
         error={errors?.email}
-        autoComplete="username"
+        autoComplete="email"
         required
       />
 
@@ -74,12 +95,12 @@ export const LoginForm = () => {
         value={password}
         onChange={handlePasswordChange}
         error={errors?.password}
-        autoComplete="current-password"
+        autoComplete="new-password"
         required
       />
 
       <Button type="submit" isLoading={isLoading} className="w-full">
-        Iniciar sesión
+        Crear cuenta
       </Button>
     </form>
   );
