@@ -1,6 +1,5 @@
 import { ROUTES } from '../config/constants';
-import { LoginPage } from '../features/auth/pages/LoginPage';
-import { RegisterPage } from '../features/auth/pages/RegisterPage';
+import { AuthPage } from '../features/auth/pages/AuthPage';
 import { DashboardPage } from '../features/dashboard/pages/DashboardPage';
 
 export interface RouteConfig {
@@ -12,12 +11,12 @@ export interface RouteConfig {
 export const routes: RouteConfig[] = [
   {
     path: ROUTES.LOGIN,
-    element: LoginPage,
+    element: AuthPage,
     isProtected: false,
   },
   {
     path: ROUTES.REGISTER,
-    element: RegisterPage,
+    element: AuthPage,
     isProtected: false,
   },
   {

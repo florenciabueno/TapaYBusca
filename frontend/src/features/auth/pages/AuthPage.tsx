@@ -1,9 +1,13 @@
 import { LoginForm } from '../components/LoginForm/LoginForm';
-import { Link } from 'react-router-dom';
+import { RegisterForm } from '../components/RegisterForm/RegisterForm';
+import { Link, useLocation } from 'react-router-dom';
 import { ROUTES } from '../../../config/constants';
 import logoImage from '../../../assets/logo.png';
 
-export const LoginPage = () => {
+export const AuthPage = () => {
+  const location = useLocation();
+  const isRegister = location.pathname === ROUTES.REGISTER;
+
   return (
     <div 
       className="min-h-screen flex items-center justify-center"
@@ -31,21 +35,40 @@ export const LoginPage = () => {
           >
             Tapa y Busca
           </h1>
+          <p 
+            className="font-semibold text-sm"
+            style={{ color: '#296374' }}
+          >
+            Aplicación educativa de matemáticas
+          </p>
         </div>
 
-        <LoginForm />
+        {isRegister ? <RegisterForm /> : <LoginForm />}
 
         <div className="mt-4">
-          <Link 
-            to={ROUTES.REGISTER}
-            className="block w-full py-3 text-center border-2 rounded-lg font-semibold transition-colors hover:bg-opacity-10"
-            style={{
-              borderColor: '#0C2C55',
-              color: '#0C2C55',
-            }}
-          >
-            Crear una cuenta
-          </Link>
+          {isRegister ? (
+            <p className="text-sm text-center" style={{ color: '#0C2C55' }}>
+              ¿Ya tienes una cuenta?{' '}
+              <Link 
+                to={ROUTES.LOGIN}
+                className="font-semibold hover:underline"
+                style={{ color: '#296374' }}
+              >
+                Inicia sesión
+              </Link>
+            </p>
+          ) : (
+            <Link 
+              to={ROUTES.REGISTER}
+              className="block w-full py-3 text-center border-2 rounded-lg font-semibold transition-colors hover:bg-opacity-10"
+              style={{
+                borderColor: '#0C2C55',
+                color: '#0C2C55',
+              }}
+            >
+              Crear una cuenta
+            </Link>
+          )}
         </div>
 
         <div 
