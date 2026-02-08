@@ -1,6 +1,6 @@
 import { useAuthStore } from '../store/authSlice';
 import { login as loginService, register as registerService } from '../services/auth.service';
-import type { LoginCredentials, RegisterCredentials } from '../types';
+import type { LoginCredentials, RegisterCredentials } from '../types/auth.types';
 
 export const useAuth = () => {
   const { user, token, isLoading, error, login: setUserAndToken, logout, setLoading, setError, clearError } = useAuthStore();

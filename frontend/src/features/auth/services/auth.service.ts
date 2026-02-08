@@ -1,4 +1,4 @@
-import type { LoginCredentials, RegisterCredentials, AuthResponse } from '../types';
+import type { LoginCredentials, RegisterCredentials, AuthResponse } from '../types/auth.types';
 import { loginApi } from '../../../api/auth/login';
 import { registerApi } from '../../../api/auth/register';
 
