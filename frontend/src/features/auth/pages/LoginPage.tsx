@@ -1,4 +1,4 @@
-import { LoginForm } from '../components/LoginForm';
+import { LoginForm } from '../components/LoginForm/LoginForm';
 import logoImage from '../../../assets/logo.png';
 
 export const LoginPage = () => {
