@@ -12,7 +12,6 @@ async function createTestUser() {
     const password = 'test1234';
     const name = 'Usuario de Prueba';
 
-    // Verificar si el usuario ya existe
     const existingUser = await prisma.user.findUnique({
       where: { email },
     });
@@ -22,10 +21,8 @@ async function createTestUser() {
       return;
     }
 
-    // Hash de la contraseña
     const passwordHash = await bcrypt.hash(password, 10);
 
-    // Crear usuario
     const user = await prisma.user.create({
       data: {
         email,
