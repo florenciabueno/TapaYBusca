@@ -9,7 +9,7 @@ export const EquationsPage = () => {
           className="text-2xl font-bold mb-2"
           style={{ color: '#0C2C55' }}
         >
-          Mis Ecuaciones
+          Mis ecuaciones
         </h1>
         <p
           className="mb-6"

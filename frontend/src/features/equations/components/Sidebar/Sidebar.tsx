@@ -4,7 +4,7 @@ import logoImage from '../../../../assets/logo.png';
 
 const navItems = [
   { path: ROUTES.DASHBOARD, label: 'Inicio', icon: HomeIcon },
-  { path: ROUTES.CREATE_EQUATION, label: 'Crear Ecuación', icon: CalculatorIcon },
+  { path: ROUTES.CREATE_EQUATION, label: 'Crear ecuación', icon: CalculatorIcon },
   { path: ROUTES.UPLOAD, label: 'Subir', icon: UploadIcon },
   { path: ROUTES.DOWNLOAD, label: 'Descargar', icon: DownloadIcon },
 ];
@@ -84,7 +84,7 @@ export const Sidebar = () => {
         <img
           src={logoImage}
           alt="TapaYBusca"
-          className="w-14 h-14 object-contain flex-shrink-0"
+          className="w-14 h-14 object-contain shrink-0"
         />
         <span className="font-bold text-white">TapaYBusca</span>
       </div>
