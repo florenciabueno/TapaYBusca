@@ -1,5 +1,5 @@
 export type EquationStatus = 'pendiente' | 'resuelta' | 'en_proceso';
-export type EquationOrigin = 'manual' | 'importado';
+export type EquationOrigin = 'creada' | 'importado';
 
 export interface Equation {
   id: string;

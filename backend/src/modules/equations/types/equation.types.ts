@@ -5,33 +5,9 @@ export enum EquationStatus {
 }
 
 export enum EquationOrigin {
-  MANUAL = 'MANUAL',
-  IMPORTADO = 'IMPORTADO',
-  DESCARGADO = 'DESCARGADO',
-  DEFECTO = 'DEFECTO',
-}
-
-export interface Equation {
-  id: string;
-  equation: string;
-  origin: EquationOrigin;
-  status: EquationStatus;
-  steps: number;
-  userId: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export interface CreateEquationDto {
-  equation: string;
-  origin?: EquationOrigin;
-  userId?: string;
-}
-
-export interface UpdateEquationDto {
-  equation?: string;
-  status?: EquationStatus;
-  steps?: number;
+  POR_DEFECTO = 'POR_DEFECTO',
+  CREADA = 'CREADA',
+  DESCARGADA = 'DESCARGADA',
 }
 
 export interface EquationResponse {
@@ -41,4 +17,15 @@ export interface EquationResponse {
   status: string;
   steps: number;
   date: string;
+  activa: boolean;
+}
+
+export interface CreateEquationDto {
+  expresion: string;
+  userId: string;
+}
+
+export interface UpdateEquationUserDto {
+  estado?: EquationStatus;
+  activa?: boolean;
 }

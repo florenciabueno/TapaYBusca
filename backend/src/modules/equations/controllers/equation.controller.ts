@@ -1,13 +1,15 @@
 import { Request, Response } from 'express';
 import { EquationService } from '../services/equation.service.js';
-import { CreateEquationDto, UpdateEquationDto } from '../types/equation.types.js';
+import { CreateEquationDto, UpdateEquationUserDto } from '../types/equation.types.js';
 
 export class EquationController {
   constructor(private equationService: EquationService) {}
 
   getAllEquations = async (req: Request, res: Response): Promise<void> => {
     try {
-      const userId = (req as any).userId;
+      // TODO: Implementar middleware de autenticación
+      // Por ahora usamos el primer usuario que encontremos en la BD
+      const userId = (req as any).userId || '2554b0a1-aed2-4c4f-889b-dd4a3379fc45'; // sofigoy@gmail.com
       const equations = await this.equationService.getAllEquations(userId);
       
       res.status(200).json(equations);
@@ -38,9 +40,9 @@ export class EquationController {
 
   createEquation = async (req: Request, res: Response): Promise<void> => {
     try {
-      const userId = (req as any).userId;
+      const userId = (req as any).userId || '2554b0a1-aed2-4c4f-889b-dd4a3379fc45';
       const data: CreateEquationDto = {
-        ...req.body,
+        expresion: req.body.equation,
         userId
       };
       
@@ -56,8 +58,8 @@ export class EquationController {
   updateEquation = async (req: Request, res: Response): Promise<void> => {
     try {
       const { id } = req.params;
-      const userId = (req as any).userId;
-      const data: UpdateEquationDto = req.body;
+      const userId = (req as any).userId || '2554b0a1-aed2-4c4f-889b-dd4a3379fc45';
+      const data: UpdateEquationUserDto = req.body;
       
       const equation = await this.equationService.updateEquation(id, data, userId);
       res.status(200).json(equation);
@@ -71,7 +73,7 @@ export class EquationController {
   deleteEquation = async (req: Request, res: Response): Promise<void> => {
     try {
       const { id } = req.params;
-      const userId = (req as any).userId;
+      const userId = (req as any).userId || '2554b0a1-aed2-4c4f-889b-dd4a3379fc45';
       
       await this.equationService.deleteEquation(id, userId);
       res.status(204).send();

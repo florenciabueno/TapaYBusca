@@ -4,9 +4,13 @@ import { validateLoginCredentials, validateRegisterCredentials } from '../valida
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { config } from '../../../config/env.js';
+import { EquationRepository } from '../../equations/repositories/equation.repository.js';
 
 export class AuthService {
-  constructor(private authRepository: AuthRepository) {}
+  constructor(
+    private authRepository: AuthRepository,
+    private equationRepository: EquationRepository
+  ) {}
 
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     const validation = validateLoginCredentials(credentials);
@@ -59,6 +63,9 @@ export class AuthService {
       name: credentials.name,
       passwordHash,
     });
+
+    // Agregar ecuaciones por defecto al nuevo usuario
+    await this.equationRepository.addDefaultEquationsToUser(user.id);
 
     const token = jwt.sign({
       userId: user.id,

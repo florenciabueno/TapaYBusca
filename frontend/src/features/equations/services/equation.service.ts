@@ -20,7 +20,7 @@ export const equationService = {
     return data.map((eq: any) => ({
       id: eq.id,
       equation: eq.equation,
-      origin: eq.origin === 'defecto' ? 'manual' : eq.origin,
+      origin: eq.origin === 'defecto' ? 'creada' : eq.origin,
       status: eq.status,
       steps: eq.steps,
       date: eq.date,
@@ -43,7 +43,7 @@ export const equationService = {
     return response.json();
   },
 
-  async createEquation(equation: string, origin: string = 'manual'): Promise<Equation> {
+  async createEquation(equation: string, origin: string = 'creada'): Promise<Equation> {
     const response = await fetch(`${API_URL}/equations`, {
       method: 'POST',
       headers: {

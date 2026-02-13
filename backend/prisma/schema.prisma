@@ -10,13 +10,74 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum EquationStatus {
+  SIN_COMENZAR
+  EN_PROCESO
+  RESUELTA
+}
+
+enum EquationOrigin {
+  POR_DEFECTO
+  CREADA
+  DESCARGADA
+}
+
 model User {
-  id          String   @id @default(uuid())
-  email       String   @unique
-  name        String
-  passwordHash String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                  String   @id @default(uuid())
+  email               String   @unique
+  name                String
+  passwordHash        String
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  
+  ecuacionesCreadas   Ecuacion[] @relation("EcuacionCreadas")
+  ecuacionUsuarios    EcuacionUsuario[]
+  ecuacionPublicadas  EcuacionPublicada[]
 
   @@map("users")
+}
+
+model Ecuacion {
+  id                  String   @id @default(uuid())
+  expresionPostfija   String
+  idCreador           String?
+  porDefecto          Boolean  @default(false)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  
+  creador             User?    @relation("EcuacionCreadas", fields: [idCreador], references: [id])
+  ecuacionUsuarios    EcuacionUsuario[]
+  ecuacionPublicada   EcuacionPublicada[]
+
+  @@map("ecuaciones")
+}
+
+model EcuacionUsuario {
+  id              String   @id @default(uuid())
+  usuarioId       String
+  ecuacionId      String
+  estado          EquationStatus @default(SIN_COMENZAR)
+  origen          EquationOrigin
+  activa          Boolean  @default(true)
+  fechaAgregado   DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  usuario         User     @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  ecuacion        Ecuacion @relation(fields: [ecuacionId], references: [id], onDelete: Cascade)
+
+  @@unique([usuarioId, ecuacionId])
+  @@map("ecuacion_usuario")
+}
+
+model EcuacionPublicada {
+  id                 String   @id @default(uuid())
+  ecuacionId         String
+  usuarioId          String
+  fechaPublicacion   DateTime @default(now())
+  
+  ecuacion           Ecuacion @relation(fields: [ecuacionId], references: [id], onDelete: Cascade)
+  usuario            User     @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@unique([ecuacionId, usuarioId])
+  @@map("ecuacion_publicada")
 }
