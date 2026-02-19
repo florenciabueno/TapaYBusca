@@ -7,9 +7,7 @@ export class EquationController {
 
   getAllEquations = async (req: Request, res: Response): Promise<void> => {
     try {
-      // TODO: Implementar middleware de autenticación
-      // Por ahora usamos el primer usuario que encontremos en la BD
-      const userId = (req as any).userId || '2554b0a1-aed2-4c4f-889b-dd4a3379fc45'; // sofigoy@gmail.com
+      const userId = req.userId!;
       const equations = await this.equationService.getAllEquations(userId);
       
       res.status(200).json(equations);
@@ -40,7 +38,7 @@ export class EquationController {
 
   createEquation = async (req: Request, res: Response): Promise<void> => {
     try {
-      const userId = (req as any).userId || '2554b0a1-aed2-4c4f-889b-dd4a3379fc45';
+      const userId = req.userId!;
       const data: CreateEquationDto = {
         expresion: req.body.equation,
         userId
@@ -58,7 +56,7 @@ export class EquationController {
   updateEquation = async (req: Request, res: Response): Promise<void> => {
     try {
       const { id } = req.params;
-      const userId = (req as any).userId || '2554b0a1-aed2-4c4f-889b-dd4a3379fc45';
+      const userId = req.userId!;
       const data: UpdateEquationUserDto = req.body;
       
       const equation = await this.equationService.updateEquation(id, data, userId);
@@ -73,7 +71,7 @@ export class EquationController {
   deleteEquation = async (req: Request, res: Response): Promise<void> => {
     try {
       const { id } = req.params;
-      const userId = (req as any).userId || '2554b0a1-aed2-4c4f-889b-dd4a3379fc45';
+      const userId = req.userId!;
       
       await this.equationService.deleteEquation(id, userId);
       res.status(204).send();

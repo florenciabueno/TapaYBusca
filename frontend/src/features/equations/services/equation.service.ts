@@ -1,13 +1,20 @@
 import { API_URL } from '../../../config/constants';
 import type { Equation } from '../types';
+import { useAuthStore } from '../../auth/store/authSlice';
+
+const getAuthHeaders = () => {
+  const token = useAuthStore.getState().token;
+  return {
+    'Content-Type': 'application/json',
+    ...(token && { 'Authorization': `Bearer ${token}` }),
+  };
+};
 
 export const equationService = {
   async getAllEquations(): Promise<Equation[]> {
     const response = await fetch(`${API_URL}/equations`, {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: getAuthHeaders(),
       credentials: 'include',
     });
 
@@ -30,9 +37,7 @@ export const equationService = {
   async getEquationById(id: string): Promise<Equation> {
     const response = await fetch(`${API_URL}/equations/${id}`, {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: getAuthHeaders(),
       credentials: 'include',
     });
 
@@ -46,9 +51,7 @@ export const equationService = {
   async createEquation(equation: string, origin: string = 'creada'): Promise<Equation> {
     const response = await fetch(`${API_URL}/equations`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: getAuthHeaders(),
       credentials: 'include',
       body: JSON.stringify({ equation, origin: origin.toUpperCase() }),
     });
@@ -63,9 +66,7 @@ export const equationService = {
   async updateEquation(id: string, data: { status?: string; steps?: number }): Promise<Equation> {
     const response = await fetch(`${API_URL}/equations/${id}`, {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: getAuthHeaders(),
       credentials: 'include',
       body: JSON.stringify(data),
     });
@@ -80,9 +81,7 @@ export const equationService = {
   async deleteEquation(id: string): Promise<void> {
     const response = await fetch(`${API_URL}/equations/${id}`, {
       method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: getAuthHeaders(),
       credentials: 'include',
     });
 
