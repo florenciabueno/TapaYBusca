@@ -38,7 +38,7 @@ export const EquationsTable = () => {
     
     try {
       await equationService.deleteEquation(id);
-      await loadEquations(); // Recargar lista
+      await loadEquations();
     } catch (err) {
       console.error('Error al eliminar ecuación:', err);
       alert('Error al eliminar la ecuación');

@@ -20,7 +20,7 @@ export const equationService = {
     return data.map((eq: any) => ({
       id: eq.id,
       equation: eq.equation,
-      origin: eq.origin === 'defecto' ? 'creada' : eq.origin,
+      origin: eq.origin,
       status: eq.status,
       steps: eq.steps,
       date: eq.date,

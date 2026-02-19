@@ -64,7 +64,6 @@ export class AuthService {
       passwordHash,
     });
 
-    // Agregar ecuaciones por defecto al nuevo usuario
     await this.equationRepository.addDefaultEquationsToUser(user.id);
 
     const token = jwt.sign({

@@ -5,9 +5,9 @@ export class EquationService {
   constructor(private equationRepository: EquationRepository) {}
 
   async getAllEquations(userId: string): Promise<EquationResponse[]> {
-    const ecuacionesUsuario = await this.equationRepository.findAllForUser(userId);
+    const userEquations = await this.equationRepository.findAllForUser(userId);
     
-    return ecuacionesUsuario.map(eu => ({
+    return userEquations.map(eu => ({
       id: eu.id,
       equation: eu.ecuacion.expresionPostfija,
       origin: this.formatOrigin(eu.origen),
@@ -18,62 +18,62 @@ export class EquationService {
     }));
   }
 
-  async getEquationById(ecuacionUsuarioId: string): Promise<EquationResponse | null> {
-    const ecuacionUsuario = await this.equationRepository.findById(ecuacionUsuarioId);
+  async getEquationById(userEquationId: string): Promise<EquationResponse | null> {
+    const userEquation = await this.equationRepository.findById(userEquationId);
     
-    if (!ecuacionUsuario) return null;
+    if (!userEquation) return null;
 
     return {
-      id: ecuacionUsuario.id,
-      equation: ecuacionUsuario.ecuacion.expresionPostfija,
-      origin: this.formatOrigin(ecuacionUsuario.origen),
-      status: this.formatStatus(ecuacionUsuario.estado),
+      id: userEquation.id,
+      equation: userEquation.ecuacion.expresionPostfija,
+      origin: this.formatOrigin(userEquation.origen),
+      status: this.formatStatus(userEquation.estado),
       steps: 0,
-      date: this.formatDate(ecuacionUsuario.updatedAt),
-      activa: ecuacionUsuario.activa,
+      date: this.formatDate(userEquation.updatedAt),
+      activa: userEquation.activa,
     };
   }
 
   async createEquation(data: CreateEquationDto): Promise<EquationResponse> {
-    const ecuacionUsuario = await this.equationRepository.create(data);
+    const equationUser = await this.equationRepository.create(data);
     
     return {
-      id: ecuacionUsuario.id,
-      equation: ecuacionUsuario.ecuacion.expresionPostfija,
-      origin: this.formatOrigin(ecuacionUsuario.origen),
-      status: this.formatStatus(ecuacionUsuario.estado),
+      id: equationUser.id,
+      equation: equationUser.ecuacion.expresionPostfija,
+      origin: this.formatOrigin(equationUser.origen),
+      status: this.formatStatus(equationUser.estado),
       steps: 0,
-      date: this.formatDate(ecuacionUsuario.updatedAt),
-      activa: ecuacionUsuario.activa,
+      date: this.formatDate(equationUser.updatedAt),
+      activa: equationUser.activa,
     };
   }
 
-  async updateEquation(ecuacionUsuarioId: string, data: UpdateEquationUserDto, userId: string): Promise<EquationResponse> {
-    const canModify = await this.equationRepository.canUserModify(ecuacionUsuarioId, userId);
+  async updateEquation(equationUserId: string, data: UpdateEquationUserDto, userId: string): Promise<EquationResponse> {
+    const canModify = await this.equationRepository.canUserModify(equationUserId, userId);
     if (!canModify) {
       throw new Error('No tienes permisos para modificar esta ecuación');
     }
 
-    const ecuacionUsuario = await this.equationRepository.update(ecuacionUsuarioId, data);
+    const equationUser = await this.equationRepository.update(equationUserId, data);
     
     return {
-      id: ecuacionUsuario.id,
-      equation: ecuacionUsuario.ecuacion.expresionPostfija,
-      origin: this.formatOrigin(ecuacionUsuario.origen),
-      status: this.formatStatus(ecuacionUsuario.estado),
+      id: equationUser.id,
+      equation: equationUser.ecuacion.expresionPostfija,
+      origin: this.formatOrigin(equationUser.origen),
+      status: this.formatStatus(equationUser.estado),
       steps: 0,
-      date: this.formatDate(ecuacionUsuario.updatedAt),
-      activa: ecuacionUsuario.activa,
+      date: this.formatDate(equationUser.updatedAt),
+      activa: equationUser.activa,
     };
   }
 
-  async deleteEquation(ecuacionUsuarioId: string, userId: string): Promise<void> {
-    const canModify = await this.equationRepository.canUserModify(ecuacionUsuarioId, userId);
+  async deleteEquation(equationUserId: string, userId: string): Promise<void> {
+    const canModify = await this.equationRepository.canUserModify(equationUserId, userId);
     if (!canModify) {
       throw new Error('No tienes permisos para eliminar esta ecuación');
     }
 
-    await this.equationRepository.softDelete(ecuacionUsuarioId);
+    await this.equationRepository.softDelete(equationUserId);
   }
 
   private formatOrigin(origin: string): string {

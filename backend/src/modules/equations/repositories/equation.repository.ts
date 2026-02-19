@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 
 export class EquationRepository {
   async findAllForUser(userId: string) {
-    const ecuacionesUsuario = await prisma.ecuacionUsuario.findMany({
+    const userEquations = await prisma.ecuacionUsuario.findMany({
       where: {
         usuarioId: userId,
         activa: true,
@@ -19,12 +19,12 @@ export class EquationRepository {
       ],
     });
 
-    return ecuacionesUsuario;
+    return userEquations;
   }
 
-  async findById(ecuacionUsuarioId: string) {
+  async findById(equationUserId: string) {
     return prisma.ecuacionUsuario.findUnique({
-      where: { id: ecuacionUsuarioId },
+      where: { id: equationUserId },
       include: {
         ecuacion: true,
       },
@@ -32,8 +32,7 @@ export class EquationRepository {
   }
 
   async create(data: CreateEquationDto) {
-    // Crear la ecuación
-    const nuevaEcuacion = await prisma.ecuacion.create({
+    const newEquation = await prisma.ecuacion.create({
       data: {
         expresionPostfija: data.expresion,
         idCreador: data.userId,
@@ -41,11 +40,10 @@ export class EquationRepository {
       },
     });
 
-    // Crear la relación ecuación-usuario
-    const ecuacionUsuario = await prisma.ecuacionUsuario.create({
+    const userEquation = await prisma.ecuacionUsuario.create({
       data: {
         usuarioId: data.userId,
-        ecuacionId: nuevaEcuacion.id,
+        ecuacionId: newEquation.id,
         estado: EquationStatus.SIN_COMENZAR,
         origen: EquationOrigin.CREADA,
         activa: true,
@@ -55,12 +53,12 @@ export class EquationRepository {
       },
     });
 
-    return ecuacionUsuario;
+    return userEquation;
   }
 
-  async update(ecuacionUsuarioId: string, data: UpdateEquationUserDto) {
+  async update(equationUserId: string, data: UpdateEquationUserDto) {
     return prisma.ecuacionUsuario.update({
-      where: { id: ecuacionUsuarioId },
+      where: { id: equationUserId },
       data: {
         ...data,
         updatedAt: new Date(),
@@ -71,9 +69,9 @@ export class EquationRepository {
     });
   }
 
-  async softDelete(ecuacionUsuarioId: string) {
+  async softDelete(equationUserId: string) {
     return prisma.ecuacionUsuario.update({
-      where: { id: ecuacionUsuarioId },
+      where: { id: equationUserId },
       data: {
         activa: false,
         updatedAt: new Date(),
@@ -81,29 +79,27 @@ export class EquationRepository {
     });
   }
 
-  async canUserModify(ecuacionUsuarioId: string, userId: string): Promise<boolean> {
-    const ecuacionUsuario = await prisma.ecuacionUsuario.findUnique({
-      where: { id: ecuacionUsuarioId },
+  async canUserModify(equationUserId: string, userId: string): Promise<boolean> {
+    const userEquation = await prisma.ecuacionUsuario.findUnique({
+      where: { id: equationUserId },
       select: { usuarioId: true, origen: true },
     });
 
-    if (!ecuacionUsuario) return false;
+    if (!userEquation) return false;
     
-    return ecuacionUsuario.usuarioId === userId;
+    return userEquation.usuarioId === userId;
   }
 
   async addDefaultEquationsToUser(userId: string) {
-    // Obtener todas las ecuaciones por defecto
-    const ecuacionesDefecto = await prisma.ecuacion.findMany({
+    const defaultEquations = await prisma.ecuacion.findMany({
       where: { porDefecto: true },
     });
 
-    // Crear registros en EcuacionUsuario para cada ecuación por defecto
-    const promises = ecuacionesDefecto.map(ecuacion =>
+    const promises = defaultEquations.map(equation =>
       prisma.ecuacionUsuario.create({
         data: {
           usuarioId: userId,
-          ecuacionId: ecuacion.id,
+          ecuacionId: equation.id,
           estado: EquationStatus.SIN_COMENZAR,
           origen: EquationOrigin.POR_DEFECTO,
           activa: true,
