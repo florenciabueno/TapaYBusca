@@ -109,4 +109,11 @@ export class EquationRepository {
 
     await Promise.all(promises);
   }
+
+  async findDefaultEquations() {
+    return prisma.ecuacion.findMany({
+      where: { porDefecto: true },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
 }

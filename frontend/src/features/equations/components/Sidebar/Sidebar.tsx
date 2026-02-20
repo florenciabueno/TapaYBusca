@@ -77,16 +77,18 @@ function DownloadIcon({ className }: { className?: string }) {
 export const Sidebar = () => {
   return (
     <aside
-      className="w-56 min-h-screen flex flex-col py-6"
+      className="w-64 min-h-screen flex flex-col py-8"
       style={{ background: 'linear-gradient(180deg, #629FAD 0%, #296374 50%, #0C2C55 100%)' }}
     >
-      <div className="flex items-center gap-2 px-4 mb-8">
+      <div className="flex items-center gap-3 px-6 mb-10">
         <img
           src={logoImage}
           alt="TapaYBusca"
-          className="w-14 h-14 object-contain shrink-0"
+          className="w-16 h-16 object-contain shrink-0"
         />
-        <span className="font-bold text-white">TapaYBusca</span>
+        <div className="flex flex-col">
+          <span className="text-xl font-bold text-white">Tapa y Busca</span>
+        </div>
       </div>
 
       <nav className="flex flex-col gap-1 px-4">
@@ -100,7 +102,7 @@ export const Sidebar = () => {
               }`
             }
           >
-            <Icon className="w-5 h-5 flex-shrink-0" />
+            <Icon className="w-5 h-5 shrink-0" />
             <span>{label}</span>
           </NavLink>
         ))}

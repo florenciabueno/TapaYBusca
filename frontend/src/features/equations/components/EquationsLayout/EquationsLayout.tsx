@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Sidebar } from '../Sidebar';
 import { Header } from '../Header';
+import { useAuthStore } from '../../../auth/store/authSlice';
 
 interface EquationsLayoutProps {
   children: ReactNode;
@@ -23,27 +24,33 @@ function HelpIcon({ className }: { className?: string }) {
 }
 
 export const EquationsLayout = ({ children }: EquationsLayoutProps) => {
+  const user = useAuthStore((state) => state.user);
+
   return (
     <div
       className="min-h-screen flex"
       style={{ background: 'linear-gradient(135deg, #EDEDCE 0%, #f5f5e8 50%, #EDEDCE 100%)' }}
     >
-      <Sidebar />
+      {user && <Sidebar />}
 
       <div className="flex-1 flex flex-col min-w-0">
         <Header />
 
-        <main className="flex-1 pl-8 pr-6 py-6 overflow-auto relative">
-          {children}
+        <main className={`flex-1 py-6 overflow-auto relative ${user ? 'pl-8 pr-6' : 'px-6'}`}>
+          <div className={`${user ? '' : 'max-w-7xl mx-auto'}`}>
+            {children}
+          </div>
 
-          <button
-            type="button"
-            className="fixed bottom-6 right-6 w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-105 text-white"
-            style={{ backgroundColor: '#0C2C55' }}
-            aria-label="Ayuda"
-          >
-            <HelpIcon className="w-6 h-6" />
-          </button>
+          {user && (
+            <button
+              type="button"
+              className="fixed bottom-6 right-6 w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-105 text-white"
+              style={{ backgroundColor: '#0C2C55' }}
+              aria-label="Ayuda"
+            >
+              <HelpIcon className="w-6 h-6" />
+            </button>
+          )}
         </main>
       </div>
     </div>

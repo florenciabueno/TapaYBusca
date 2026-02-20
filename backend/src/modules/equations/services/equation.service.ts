@@ -76,6 +76,20 @@ export class EquationService {
     await this.equationRepository.softDelete(equationUserId);
   }
 
+  async getPublicEquations(): Promise<EquationResponse[]> {
+    const defaultEquations = await this.equationRepository.findDefaultEquations();
+    
+    return defaultEquations.map(eq => ({
+      id: eq.id,
+      equation: eq.expresionPostfija,
+      origin: 'defecto',
+      status: 'sin comenzar',
+      steps: 0,
+      date: this.formatDate(eq.createdAt),
+      activa: true,
+    }));
+  }
+
   private formatOrigin(origin: string): string {
     const originMap: Record<string, string> = {
       'POR_DEFECTO': 'defecto',

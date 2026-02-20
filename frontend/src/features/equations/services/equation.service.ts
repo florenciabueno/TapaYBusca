@@ -12,7 +12,11 @@ const getAuthHeaders = () => {
 
 export const equationService = {
   async getAllEquations(): Promise<Equation[]> {
-    const response = await fetch(`${API_URL}/equations`, {
+    const token = useAuthStore.getState().token;
+    
+    const endpoint = token ? `${API_URL}/equations` : `${API_URL}/equations/public`;
+    
+    const response = await fetch(endpoint, {
       method: 'GET',
       headers: getAuthHeaders(),
       credentials: 'include',

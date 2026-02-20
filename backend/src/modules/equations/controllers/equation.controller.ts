@@ -5,6 +5,17 @@ import { CreateEquationDto, UpdateEquationUserDto } from '../types/equation.type
 export class EquationController {
   constructor(private equationService: EquationService) {}
 
+  getPublicEquations = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const equations = await this.equationService.getPublicEquations();
+      res.status(200).json(equations);
+    } catch (error: any) {
+      res.status(500).json({
+        error: error.message || 'Error al obtener ecuaciones',
+      });
+    }
+  }
+
   getAllEquations = async (req: Request, res: Response): Promise<void> => {
     try {
       const userId = req.userId!;

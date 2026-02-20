@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { equationService } from '../../services/equation.service';
 import type { Equation } from '../../types';
+import { useAuthStore } from '../../../auth/store/authSlice';
 
 const TABLE_HEADERS = ['Ecuación', 'Origen', 'Estado', 'Pasos', 'Fecha', 'Acciones'] as const;
 
@@ -14,6 +15,7 @@ export const EquationsTable = () => {
   const [equations, setEquations] = useState<Equation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const user = useAuthStore((state) => state.user);
 
   useEffect(() => {
     loadEquations();
@@ -128,7 +130,7 @@ export const EquationsTable = () => {
                     >
                       Ver
                     </button>
-                    {equation.origin !== 'defecto' && (
+                    {user && equation.origin !== 'defecto' && (
                       <button
                         type="button"
                         onClick={() => handleDelete(equation.id)}

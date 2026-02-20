@@ -37,7 +37,7 @@ export const AppRouter = () => {
         })}
         <Route
           path="/"
-          element={<Navigate to={user ? ROUTES.DASHBOARD : ROUTES.LOGIN} replace />}
+          element={<Navigate to={ROUTES.DASHBOARD} replace />}
         />
       </Routes>
     </BrowserRouter>
