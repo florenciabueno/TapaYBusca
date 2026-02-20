@@ -1,62 +1,62 @@
 -- CreateEnum
-CREATE TYPE "EquationStatus" AS ENUM ('SIN_COMENZAR', 'EN_PROCESO', 'RESUELTA');
+CREATE TYPE "EquationStatus" AS ENUM ('NOT_STARTED', 'IN_PROGRESS', 'SOLVED');
 
 -- CreateEnum
-CREATE TYPE "EquationOrigin" AS ENUM ('POR_DEFECTO', 'CREADA', 'DESCARGADA');
+CREATE TYPE "EquationOrigin" AS ENUM ('DEFAULT', 'CREATED', 'DOWNLOADED');
 
 -- CreateTable
-CREATE TABLE "ecuaciones" (
+CREATE TABLE "equations" (
     "id" TEXT NOT NULL,
-    "expresionPostfija" TEXT NOT NULL,
-    "idCreador" TEXT,
-    "porDefecto" BOOLEAN NOT NULL DEFAULT false,
+    "postfixExpression" TEXT NOT NULL,
+    "creatorId" TEXT,
+    "isDefault" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "ecuaciones_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "equations_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE "ecuacion_usuario" (
+CREATE TABLE "user_equations" (
     "id" TEXT NOT NULL,
-    "usuarioId" TEXT NOT NULL,
-    "ecuacionId" TEXT NOT NULL,
-    "estado" "EquationStatus" NOT NULL DEFAULT 'SIN_COMENZAR',
-    "origen" "EquationOrigin" NOT NULL,
-    "activa" BOOLEAN NOT NULL DEFAULT true,
-    "fechaAgregado" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "userId" TEXT NOT NULL,
+    "equationId" TEXT NOT NULL,
+    "status" "EquationStatus" NOT NULL DEFAULT 'NOT_STARTED',
+    "origin" "EquationOrigin" NOT NULL,
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "addedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "ecuacion_usuario_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "user_equations_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE "ecuacion_publicada" (
+CREATE TABLE "published_equations" (
     "id" TEXT NOT NULL,
-    "ecuacionId" TEXT NOT NULL,
-    "usuarioId" TEXT NOT NULL,
-    "fechaPublicacion" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "equationId" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "publishedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT "ecuacion_publicada_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "published_equations_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "ecuacion_usuario_usuarioId_ecuacionId_key" ON "ecuacion_usuario"("usuarioId", "ecuacionId");
+CREATE UNIQUE INDEX "user_equations_userId_equationId_key" ON "user_equations"("userId", "equationId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "ecuacion_publicada_ecuacionId_usuarioId_key" ON "ecuacion_publicada"("ecuacionId", "usuarioId");
+CREATE UNIQUE INDEX "published_equations_equationId_userId_key" ON "published_equations"("equationId", "userId");
 
 -- AddForeignKey
-ALTER TABLE "ecuaciones" ADD CONSTRAINT "ecuaciones_idCreador_fkey" FOREIGN KEY ("idCreador") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "equations" ADD CONSTRAINT "equations_creatorId_fkey" FOREIGN KEY ("creatorId") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "ecuacion_usuario" ADD CONSTRAINT "ecuacion_usuario_usuarioId_fkey" FOREIGN KEY ("usuarioId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "user_equations" ADD CONSTRAINT "user_equations_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "ecuacion_usuario" ADD CONSTRAINT "ecuacion_usuario_ecuacionId_fkey" FOREIGN KEY ("ecuacionId") REFERENCES "ecuaciones"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "user_equations" ADD CONSTRAINT "user_equations_equationId_fkey" FOREIGN KEY ("equationId") REFERENCES "equations"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "ecuacion_publicada" ADD CONSTRAINT "ecuacion_publicada_ecuacionId_fkey" FOREIGN KEY ("ecuacionId") REFERENCES "ecuaciones"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "published_equations" ADD CONSTRAINT "published_equations_equationId_fkey" FOREIGN KEY ("equationId") REFERENCES "equations"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "ecuacion_publicada" ADD CONSTRAINT "ecuacion_publicada_usuarioId_fkey" FOREIGN KEY ("usuarioId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "published_equations" ADD CONSTRAINT "published_equations_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;

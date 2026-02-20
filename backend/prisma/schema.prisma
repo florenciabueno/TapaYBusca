@@ -11,15 +11,15 @@ datasource db {
 }
 
 enum EquationStatus {
-  SIN_COMENZAR
-  EN_PROCESO
-  RESUELTA
+  NOT_STARTED
+  IN_PROGRESS
+  SOLVED
 }
 
 enum EquationOrigin {
-  POR_DEFECTO
-  CREADA
-  DESCARGADA
+  DEFAULT
+  CREATED
+  DOWNLOADED
 }
 
 model User {
@@ -30,54 +30,54 @@ model User {
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
   
-  ecuacionesCreadas   Ecuacion[] @relation("EcuacionCreadas")
-  ecuacionUsuarios    EcuacionUsuario[]
-  ecuacionPublicadas  EcuacionPublicada[]
+  createdEquations    Equation[] @relation("CreatedEquations")
+  userEquations       UserEquation[]
+  publishedEquations  PublishedEquation[]
 
   @@map("users")
 }
 
-model Ecuacion {
+model Equation {
   id                  String   @id @default(uuid())
-  expresionPostfija   String
-  idCreador           String?
-  porDefecto          Boolean  @default(false)
+  postfixExpression   String
+  creatorId           String?
+  isDefault           Boolean  @default(false)
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
   
-  creador             User?    @relation("EcuacionCreadas", fields: [idCreador], references: [id])
-  ecuacionUsuarios    EcuacionUsuario[]
-  ecuacionPublicada   EcuacionPublicada[]
+  creator             User?    @relation("CreatedEquations", fields: [creatorId], references: [id])
+  userEquations       UserEquation[]
+  publishedEquations  PublishedEquation[]
 
-  @@map("ecuaciones")
+  @@map("equations")
 }
 
-model EcuacionUsuario {
+model UserEquation {
+  id          String         @id @default(uuid())
+  userId      String
+  equationId  String
+  status      EquationStatus @default(NOT_STARTED)
+  origin      EquationOrigin
+  isActive    Boolean        @default(true)
+  addedAt     DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  equation    Equation       @relation(fields: [equationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, equationId])
+  @@map("user_equations")
+}
+
+model PublishedEquation {
   id              String   @id @default(uuid())
-  usuarioId       String
-  ecuacionId      String
-  estado          EquationStatus @default(SIN_COMENZAR)
-  origen          EquationOrigin
-  activa          Boolean  @default(true)
-  fechaAgregado   DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  equationId      String
+  userId          String
+  publishedAt     DateTime @default(now())
   
-  usuario         User     @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
-  ecuacion        Ecuacion @relation(fields: [ecuacionId], references: [id], onDelete: Cascade)
+  equation        Equation @relation(fields: [equationId], references: [id], onDelete: Cascade)
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([usuarioId, ecuacionId])
-  @@map("ecuacion_usuario")
-}
-
-model EcuacionPublicada {
-  id                 String   @id @default(uuid())
-  ecuacionId         String
-  usuarioId          String
-  fechaPublicacion   DateTime @default(now())
-  
-  ecuacion           Ecuacion @relation(fields: [ecuacionId], references: [id], onDelete: Cascade)
-  usuario            User     @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
-
-  @@unique([ecuacionId, usuarioId])
-  @@map("ecuacion_publicada")
+  @@unique([equationId, userId])
+  @@map("published_equations")
 }

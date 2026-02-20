@@ -51,7 +51,7 @@ export class EquationController {
     try {
       const userId = req.userId!;
       const data: CreateEquationDto = {
-        expresion: req.body.equation,
+        expression: req.body.equation,
         userId
       };
       

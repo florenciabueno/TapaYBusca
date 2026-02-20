@@ -19,7 +19,7 @@ export const EquationsTable = () => {
 
   useEffect(() => {
     loadEquations();
-  }, []);
+  }, [user]);
 
   const loadEquations = async () => {
     try {

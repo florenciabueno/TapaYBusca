@@ -28,12 +28,16 @@ export class AuthService {
       throw new Error('Usuario o contraseña inválidos');
     }
 
-    const token = jwt.sign({
-      userId: user.id,
-      email: user.email,
-    }, config.jwtSecret, {
-      expiresIn: config.jwtExpireIn,
-    });
+    const token = jwt.sign(
+      {
+        userId: user.id,
+        email: user.email,
+      },
+      config.jwtSecret,
+      {
+        expiresIn: config.jwtExpireIn,
+      } as jwt.SignOptions
+    );
 
     return {
       user: {
@@ -66,12 +70,16 @@ export class AuthService {
 
     await this.equationRepository.addDefaultEquationsToUser(user.id);
 
-    const token = jwt.sign({
-      userId: user.id,
-      email: user.email,
-    }, config.jwtSecret, {
-      expiresIn: config.jwtExpireIn,
-    });
+    const token = jwt.sign(
+      {
+        userId: user.id,
+        email: user.email,
+      },
+      config.jwtSecret,
+      {
+        expiresIn: config.jwtExpireIn,
+      } as jwt.SignOptions
+    );
 
     return {
       user: {

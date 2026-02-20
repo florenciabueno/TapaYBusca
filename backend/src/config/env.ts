@@ -8,4 +8,4 @@ export const config = {
   jwtSecret: process.env.JWT_SECRET || 'default-secret',
   jwtExpireIn: process.env.JWT_EXPIRE_IN || '24h',
   databaseUrl: process.env.DATABASE_URL || 'postgresql://user:password@localhost:5432/mydb',
-} as const;
+};

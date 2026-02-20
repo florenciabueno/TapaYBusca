@@ -3,7 +3,7 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 // 40 ecuaciones definitivas con notación normal e infija
-const ecuacionesDefinitivas = [
+const defaultEquations = [
   { normal: 'x+5=12', postfija: 'x5+12=' },
   { normal: '2*(x+5)=12', postfija: '2x5+*12=' },
   { normal: '((150)/(x+10))=30', postfija: '150x10+/30=' },
@@ -50,53 +50,51 @@ async function seedFinalEquations() {
   console.log('🌱 Poblando base de datos con ecuaciones definitivas...\n');
 
   try {
-    // Crear las 40 ecuaciones definitivas
     console.log('📝 Creando 40 ecuaciones definitivas...');
-    const ecuacionesCreadas = [];
+    const createdEquations: Array<{ id: string }> = [];
 
-    for (let i = 0; i < ecuacionesDefinitivas.length; i++) {
-      const eq = ecuacionesDefinitivas[i];
-      const ecuacion = await prisma.ecuacion.create({
+    for (let i = 0; i < defaultEquations.length; i++) {
+      const eq = defaultEquations[i];
+      const equation = await prisma.equation.create({
         data: {
-          expresionPostfija: eq.postfija,
-          porDefecto: true,
-          idCreador: null,
+          postfixExpression: eq.postfija,
+          isDefault: true,
+          creatorId: null,
         },
       });
-      ecuacionesCreadas.push(ecuacion);
+      createdEquations.push(equation);
       console.log(`   ${(i + 1).toString().padStart(2, '0')}. ${eq.normal}`);
     }
 
-    console.log(`\n✅ ${ecuacionesCreadas.length} ecuaciones creadas exitosamente\n`);
+    console.log(`\n✅ ${createdEquations.length} ecuaciones creadas exitosamente\n`);
 
-    // Asignar ecuaciones a todos los usuarios existentes
     console.log('👥 Asignando ecuaciones a usuarios...');
-    const usuarios = await prisma.user.findMany();
-    console.log(`📊 Encontrados ${usuarios.length} usuarios\n`);
+    const users = await prisma.user.findMany();
+    console.log(`📊 Encontrados ${users.length} usuarios\n`);
 
     let totalAsignaciones = 0;
-    for (const usuario of usuarios) {
-      for (const ecuacion of ecuacionesCreadas) {
-        await prisma.ecuacionUsuario.create({
+    for (const user of users) {
+      for (const equation of createdEquations) {
+        await prisma.userEquation.create({
           data: {
-            usuarioId: usuario.id,
-            ecuacionId: ecuacion.id,
-            estado: 'SIN_COMENZAR',
-            origen: 'POR_DEFECTO',
-            activa: true,
+            userId: user.id,
+            equationId: equation.id,
+            status: 'NOT_STARTED',
+            origin: 'DEFAULT',
+            isActive: true,
           },
         });
         totalAsignaciones++;
       }
-      console.log(`   ✅ ${ecuacionesCreadas.length} ecuaciones asignadas a: ${usuario.email}`);
+      console.log(`   ✅ ${createdEquations.length} ecuaciones asignadas a: ${user.email}`);
     }
 
     console.log('\n' + '='.repeat(60));
     console.log('✅ SEED COMPLETADO EXITOSAMENTE');
     console.log('='.repeat(60));
     console.log(`📊 Resumen:`);
-    console.log(`   - ${ecuacionesCreadas.length} ecuaciones por defecto creadas`);
-    console.log(`   - ${usuarios.length} usuarios en el sistema`);
+    console.log(`   - ${createdEquations.length} ecuaciones por defecto creadas`);
+    console.log(`   - ${users.length} usuarios en el sistema`);
     console.log(`   - ${totalAsignaciones} asignaciones totales realizadas`);
     console.log('='.repeat(60));
 

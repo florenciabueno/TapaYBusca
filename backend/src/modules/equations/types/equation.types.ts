@@ -1,13 +1,13 @@
 export enum EquationStatus {
-  SIN_COMENZAR = 'SIN_COMENZAR',
-  EN_PROCESO = 'EN_PROCESO',
-  RESUELTA = 'RESUELTA',
+  NOT_STARTED = 'NOT_STARTED',
+  IN_PROGRESS = 'IN_PROGRESS',
+  SOLVED = 'SOLVED',
 }
 
 export enum EquationOrigin {
-  POR_DEFECTO = 'POR_DEFECTO',
-  CREADA = 'CREADA',
-  DESCARGADA = 'DESCARGADA',
+  DEFAULT = 'DEFAULT',
+  CREATED = 'CREATED',
+  DOWNLOADED = 'DOWNLOADED',
 }
 
 export interface EquationResponse {
@@ -17,15 +17,15 @@ export interface EquationResponse {
   status: string;
   steps: number;
   date: string;
-  activa: boolean;
+  isActive: boolean;
 }
 
 export interface CreateEquationDto {
-  expresion: string;
+  expression: string;
   userId: string;
 }
 
 export interface UpdateEquationUserDto {
-  estado?: EquationStatus;
-  activa?: boolean;
+  status?: EquationStatus;
+  isActive?: boolean;
 }

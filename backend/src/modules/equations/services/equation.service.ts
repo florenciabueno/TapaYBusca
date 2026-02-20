@@ -9,12 +9,12 @@ export class EquationService {
     
     return userEquations.map(eu => ({
       id: eu.id,
-      equation: eu.ecuacion.expresionPostfija,
-      origin: this.formatOrigin(eu.origen),
-      status: this.formatStatus(eu.estado),
-      steps: 0, // Por ahora retornamos 0, se calculará después con la tabla RESOLUCION
+      equation: eu.equation.postfixExpression,
+      origin: this.formatOrigin(eu.origin),
+      status: this.formatStatus(eu.status),
+      steps: 0,
       date: this.formatDate(eu.updatedAt),
-      activa: eu.activa,
+      isActive: eu.isActive,
     }));
   }
 
@@ -25,12 +25,12 @@ export class EquationService {
 
     return {
       id: userEquation.id,
-      equation: userEquation.ecuacion.expresionPostfija,
-      origin: this.formatOrigin(userEquation.origen),
-      status: this.formatStatus(userEquation.estado),
+      equation: userEquation.equation.postfixExpression,
+      origin: this.formatOrigin(userEquation.origin),
+      status: this.formatStatus(userEquation.status),
       steps: 0,
       date: this.formatDate(userEquation.updatedAt),
-      activa: userEquation.activa,
+      isActive: userEquation.isActive,
     };
   }
 
@@ -39,12 +39,12 @@ export class EquationService {
     
     return {
       id: equationUser.id,
-      equation: equationUser.ecuacion.expresionPostfija,
-      origin: this.formatOrigin(equationUser.origen),
-      status: this.formatStatus(equationUser.estado),
+      equation: equationUser.equation.postfixExpression,
+      origin: this.formatOrigin(equationUser.origin),
+      status: this.formatStatus(equationUser.status),
       steps: 0,
       date: this.formatDate(equationUser.updatedAt),
-      activa: equationUser.activa,
+      isActive: equationUser.isActive,
     };
   }
 
@@ -58,12 +58,12 @@ export class EquationService {
     
     return {
       id: equationUser.id,
-      equation: equationUser.ecuacion.expresionPostfija,
-      origin: this.formatOrigin(equationUser.origen),
-      status: this.formatStatus(equationUser.estado),
+      equation: equationUser.equation.postfixExpression,
+      origin: this.formatOrigin(equationUser.origin),
+      status: this.formatStatus(equationUser.status),
       steps: 0,
       date: this.formatDate(equationUser.updatedAt),
-      activa: equationUser.activa,
+      isActive: equationUser.isActive,
     };
   }
 
@@ -81,29 +81,29 @@ export class EquationService {
     
     return defaultEquations.map(eq => ({
       id: eq.id,
-      equation: eq.expresionPostfija,
+      equation: eq.postfixExpression,
       origin: 'defecto',
       status: 'sin comenzar',
       steps: 0,
       date: this.formatDate(eq.createdAt),
-      activa: true,
+      isActive: true,
     }));
   }
 
   private formatOrigin(origin: string): string {
     const originMap: Record<string, string> = {
-      'POR_DEFECTO': 'defecto',
-      'CREADA': 'creada',
-      'DESCARGADA': 'descargado',
+      'DEFAULT': 'defecto',
+      'CREATED': 'creada',
+      'DOWNLOADED': 'descargado',
     };
     return originMap[origin] || origin.toLowerCase();
   }
 
   private formatStatus(status: string): string {
     const statusMap: Record<string, string> = {
-      'SIN_COMENZAR': 'sin comenzar',
-      'EN_PROCESO': 'en proceso',
-      'RESUELTA': 'resuelta'
+      'NOT_STARTED': 'sin comenzar',
+      'IN_PROGRESS': 'en proceso',
+      'SOLVED': 'resuelta'
     };
     return statusMap[status] || status;
   }
