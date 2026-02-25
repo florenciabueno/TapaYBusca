@@ -41,6 +41,7 @@ model Equation {
   id                  String   @id @default(uuid())
   postfixExpression   String
   infixExpression     String?
+  latexExpression     String?
   creatorId           String?
   isDefault           Boolean  @default(false)
   createdAt           DateTime @default(now())
