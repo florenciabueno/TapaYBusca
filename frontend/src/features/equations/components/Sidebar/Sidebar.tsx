@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import { ROUTES } from '../../../../config/constants';
+import { COLORS } from '../../../../config/theme';
 import logoImage from '../../../../assets/logo.png';
 
 const navItems = [
@@ -78,7 +79,7 @@ export const Sidebar = () => {
   return (
     <aside
       className="w-64 min-h-screen flex flex-col py-8"
-      style={{ background: 'linear-gradient(180deg, #629FAD 0%, #296374 50%, #0C2C55 100%)' }}
+      style={{ background: `linear-gradient(180deg, ${COLORS.accent} 0%, ${COLORS.secondary} 50%, ${COLORS.primary} 100%)` }}
     >
       <div className="flex items-center gap-3 px-6 mb-10">
         <img

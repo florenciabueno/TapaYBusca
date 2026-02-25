@@ -1,4 +1,5 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
+import { COLORS } from '../../../../config/theme';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'outline' | 'outlineSuccess';
@@ -20,9 +21,9 @@ export const Button = ({
   const isOutline = variant === 'outline' || variant === 'outlineSuccess';
   const backgroundColor = isOutline 
     ? 'transparent' 
-    : isDisabled ? '#629FAD' : variant === 'primary' ? '#0C2C55' : '#629FAD';
-  const borderColor = variant === 'outline' ? '#0C2C55' : variant === 'outlineSuccess' ? '#22C55E' : undefined;
-  const textColor = variant === 'outline' ? '#0C2C55' : variant === 'outlineSuccess' ? '#22C55E' : 'white';
+    : isDisabled ? COLORS.accent : variant === 'primary' ? COLORS.primary : COLORS.accent;
+  const borderColor = variant === 'outline' ? COLORS.primary : variant === 'outlineSuccess' ? COLORS.success.main : undefined;
+  const textColor = variant === 'outline' ? COLORS.primary : variant === 'outlineSuccess' ? COLORS.success.main : 'white';
   const opacity = isDisabled && variant === 'secondary' ? 0.5 : undefined;
 
   return (

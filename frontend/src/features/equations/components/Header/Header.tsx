@@ -1,5 +1,6 @@
 import { useAuth } from '../../../auth/hooks/useAuth';
 import { ROUTES } from '../../../../config/constants';
+import { COLORS } from '../../../../config/theme';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../../auth/store/authSlice';
 import { useState, useRef, useEffect } from 'react';
@@ -101,7 +102,7 @@ export const Header = () => {
   return (
     <header
       className="flex items-center justify-between px-6 py-4"
-      style={{ background: 'linear-gradient(90deg, #629FAD 0%, #296374 50%, #0C2C55 100%)' }}
+      style={{ background: `linear-gradient(90deg, ${COLORS.accent} 0%, ${COLORS.secondary} 50%, ${COLORS.primary} 100%)` }}
     >
       {!user && (
         <div className="flex items-center gap-3">
@@ -138,7 +139,7 @@ export const Header = () => {
                 <button
                   onClick={handleEditProfile}
                   className="w-full px-4 py-2 text-left hover:bg-gray-100 transition-colors flex items-center gap-2"
-                  style={{ color: '#296374' }}
+                  style={{ color: COLORS.secondary }}
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
@@ -153,7 +154,7 @@ export const Header = () => {
                 <button
                   onClick={handleLogout}
                   className="w-full px-4 py-2 text-left hover:bg-gray-100 transition-colors flex items-center gap-2"
-                  style={{ color: '#DC2626' }}
+                  style={{ color: COLORS.error.dark }}
                 >
                   <LogoutIcon className="w-4 h-4" />
                   Cerrar sesión
@@ -164,7 +165,8 @@ export const Header = () => {
         ) : (
           <button
             onClick={handleLogin}
-            className="px-4 py-2 rounded-lg transition-colors hover:opacity-90 bg-white text-[#0C2C55] font-medium"
+            className="px-4 py-2 rounded-lg transition-colors hover:opacity-90 bg-white font-medium"
+            style={{ color: COLORS.primary }}
           >
             Iniciar sesión
           </button>

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { InputHTMLAttributes } from 'react';
+import { COLORS } from '../../../../config/theme';
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
@@ -18,7 +19,7 @@ export const Input = ({ label, error, className: _, type, ...props }: InputProps
       {label && (
         <label 
           className="block text-sm font-medium mb-1"
-          style={{ color: '#0C2C55' }}
+          style={{ color: COLORS.primary }}
         >
           {label}
         </label>
@@ -28,8 +29,8 @@ export const Input = ({ label, error, className: _, type, ...props }: InputProps
           type={inputType}
           className={inputClasses}
           style={{
-            borderColor: error ? '#EF4444' : '#0C2C55',
-            '--tw-ring-color': '#0C2C55',
+            borderColor: error ? COLORS.error.main : COLORS.primary,
+            '--tw-ring-color': COLORS.primary,
             paddingRight: isPasswordType ? '3rem' : undefined,
           } as React.CSSProperties}
           aria-invalid={error ? 'true' : 'false'}

@@ -1,5 +1,6 @@
 import { EquationsLayout } from '../components/EquationsLayout';
 import { EquationsTable } from '../components/EquationsTable';
+import { COLORS } from '../../../config/theme';
 
 export const EquationsPage = () => {
   return (
@@ -7,13 +8,13 @@ export const EquationsPage = () => {
       <div className="w-full">
         <h1
           className="text-3xl font-bold mb-2"
-          style={{ color: '#0C2C55' }}
+          style={{ color: COLORS.primary }}
         >
           Mis ecuaciones
         </h1>
         <p
           className="mb-8 text-lg"
-          style={{ color: '#296374' }}
+          style={{ color: COLORS.secondary }}
         >
           Gestiona y resuelve tus ecuaciones matemáticas paso a paso
         </p>

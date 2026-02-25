@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { Sidebar } from '../Sidebar';
 import { Header } from '../Header';
 import { useAuthStore } from '../../../auth/store/authSlice';
+import { COLORS } from '../../../../config/theme';
 
 interface EquationsLayoutProps {
   children: ReactNode;
@@ -29,7 +30,7 @@ export const EquationsLayout = ({ children }: EquationsLayoutProps) => {
   return (
     <div
       className="min-h-screen flex"
-      style={{ background: 'linear-gradient(135deg, #EDEDCE 0%, #f5f5e8 50%, #EDEDCE 100%)' }}
+      style={{ background: `linear-gradient(135deg, ${COLORS.light} 0%, #f5f5e8 50%, ${COLORS.light} 100%)` }}
     >
       {user && <Sidebar />}
 
@@ -45,7 +46,7 @@ export const EquationsLayout = ({ children }: EquationsLayoutProps) => {
             <button
               type="button"
               className="fixed bottom-6 right-6 w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-105 text-white"
-              style={{ backgroundColor: '#0C2C55' }}
+              style={{ backgroundColor: COLORS.primary }}
               aria-label="Ayuda"
             >
               <HelpIcon className="w-6 h-6" />

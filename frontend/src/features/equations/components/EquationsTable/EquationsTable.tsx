@@ -2,13 +2,14 @@ import { useEffect, useState } from 'react';
 import { equationService } from '../../services/equation.service';
 import type { Equation } from '../../types';
 import { useAuthStore } from '../../../auth/store/authSlice';
+import { COLORS } from '../../../../config/theme';
 
 const TABLE_HEADERS = ['Ecuación', 'Origen', 'Estado', 'Pasos', 'Fecha', 'Acciones'] as const;
 
 const STATUS_COLORS = {
-  'sin comenzar': '#629FAD', // azul
-  'en proceso': '#FF8C42', // naranja
-  'resuelta': '#4CAF50', // verde
+  'sin comenzar': COLORS.status.pending,
+  'en proceso': COLORS.status.inProgress,
+  'resuelta': COLORS.status.completed,
 } as const;
 
 export const EquationsTable = () => {
@@ -48,16 +49,16 @@ export const EquationsTable = () => {
   };
 
   const getStatusColor = (status: string): string => {
-    return STATUS_COLORS[status as keyof typeof STATUS_COLORS] || '#296374';
+    return STATUS_COLORS[status as keyof typeof STATUS_COLORS] || COLORS.secondary;
   };
 
   if (loading) {
     return (
       <div
         className="rounded-lg border-2 overflow-hidden"
-        style={{ borderColor: '#296374', backgroundColor: 'rgba(98, 159, 173, 0.2)' }}
+        style={{ borderColor: COLORS.secondary, backgroundColor: 'rgba(98, 159, 173, 0.2)' }}
       >
-        <div className="px-6 py-16 text-center" style={{ color: '#296374' }}>
+        <div className="px-6 py-16 text-center" style={{ color: COLORS.secondary }}>
           Cargando ecuaciones...
         </div>
       </div>
@@ -68,7 +69,7 @@ export const EquationsTable = () => {
     return (
       <div
         className="rounded-lg border-2 overflow-hidden"
-        style={{ borderColor: '#296374', backgroundColor: 'rgba(98, 159, 173, 0.2)' }}
+        style={{ borderColor: COLORS.secondary, backgroundColor: 'rgba(98, 159, 173, 0.2)' }}
       >
         <div className="px-6 py-16 text-center text-red-600">
           {error}
@@ -82,7 +83,7 @@ export const EquationsTable = () => {
   return (
     <div
       className="rounded-lg border-2 overflow-hidden"
-      style={{ borderColor: '#296374', backgroundColor: 'rgba(98, 159, 173, 0.2)' }}
+      style={{ borderColor: COLORS.secondary, backgroundColor: 'rgba(98, 159, 173, 0.2)' }}
     >
       <table className="w-full">
         <thead>
@@ -91,7 +92,7 @@ export const EquationsTable = () => {
               <th
                 key={header}
                 className="px-6 py-4 text-left text-sm font-semibold"
-                style={{ color: '#0C2C55' }}
+                style={{ color: COLORS.primary }}
               >
                 {header}
               </th>
@@ -106,8 +107,8 @@ export const EquationsTable = () => {
                 className="border-t transition-colors hover:bg-[rgba(98,159,173,0.2)]"
                 style={{ borderColor: 'rgba(41, 99, 116, 0.2)' }}
               >
-                <td className="px-6 py-4" style={{ color: '#296374' }}>{equation.equation}</td>
-                <td className="px-6 py-4" style={{ color: '#296374' }}>{equation.origin}</td>
+                <td className="px-6 py-4" style={{ color: COLORS.secondary }}>{equation.equation}</td>
+                <td className="px-6 py-4" style={{ color: COLORS.secondary }}>{equation.origin}</td>
                 <td className="px-6 py-4">
                   <span
                     className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium"
@@ -119,14 +120,14 @@ export const EquationsTable = () => {
                     {equation.status}
                   </span>
                 </td>
-                <td className="px-6 py-4" style={{ color: '#296374' }}>{equation.steps}</td>
-                <td className="px-6 py-4" style={{ color: '#296374' }}>{equation.date}</td>
+                <td className="px-6 py-4" style={{ color: COLORS.secondary }}>{equation.steps}</td>
+                <td className="px-6 py-4" style={{ color: COLORS.secondary }}>{equation.date}</td>
                 <td className="px-6 py-4">
                   <div className="flex gap-3">
                     <button
                       type="button"
                       className="text-sm font-medium hover:underline"
-                      style={{ color: '#0C2C55' }}
+                      style={{ color: COLORS.primary }}
                     >
                       Ver
                     </button>
@@ -135,7 +136,7 @@ export const EquationsTable = () => {
                         type="button"
                         onClick={() => handleDelete(equation.id)}
                         className="text-sm font-medium hover:underline"
-                        style={{ color: '#DC2626' }}
+                        style={{ color: COLORS.error.dark }}
                       >
                         Eliminar
                       </button>
