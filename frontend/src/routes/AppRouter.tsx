@@ -1,12 +1,9 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ProtectedRoute } from './ProtectedRoute';
 import { routes } from './routes';
-import { useAuthStore } from '../features/auth/store/authSlice';
 import { ROUTES } from '../config/constants';
 
 export const AppRouter = () => {
-  const user = useAuthStore((state) => state.user);
-
   return (
     <BrowserRouter>
       <Routes>

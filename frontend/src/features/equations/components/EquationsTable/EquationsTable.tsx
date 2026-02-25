@@ -1,6 +1,5 @@
-import { useEffect, useState } from 'react';
-import { equationService } from '../../services/equation.service';
-import type { Equation } from '../../types';
+import { useEffect } from 'react';
+import { useEquations } from '../../hooks/useEquations';
 import { useAuthStore } from '../../../auth/store/authSlice';
 
 const TABLE_HEADERS = ['Ecuación', 'Origen', 'Estado', 'Pasos', 'Fecha', 'Acciones'] as const;
@@ -12,46 +11,23 @@ const STATUS_COLORS = {
 } as const;
 
 export const EquationsTable = () => {
-  const [equations, setEquations] = useState<Equation[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { equations, isLoading, error, fetchEquations, deleteEquation } = useEquations();
   const user = useAuthStore((state) => state.user);
 
   useEffect(() => {
-    loadEquations();
-  }, [user]);
+    fetchEquations();
+  }, [user, fetchEquations]);
 
-  const loadEquations = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await equationService.getAllEquations();
-      setEquations(data);
-    } catch (err) {
-      console.error('Error al cargar ecuaciones:', err);
-      setError('Error al cargar las ecuaciones');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDelete = async (id: string) => {
+  const handleDelete = (id: string) => {
     if (!confirm('¿Estás seguro de eliminar esta ecuación?')) return;
-    
-    try {
-      await equationService.deleteEquation(id);
-      await loadEquations();
-    } catch (err) {
-      console.error('Error al eliminar ecuación:', err);
-      alert('Error al eliminar la ecuación');
-    }
+    deleteEquation(id);
   };
 
   const getStatusColor = (status: string): string => {
     return STATUS_COLORS[status as keyof typeof STATUS_COLORS] || '#296374';
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div
         className="rounded-lg border-2 overflow-hidden"

@@ -1,7 +1,6 @@
 import { useAuth } from '../../../auth/hooks/useAuth';
 import { ROUTES } from '../../../../config/constants';
 import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '../../../auth/store/authSlice';
 
 function LogoutIcon({ className }: { className?: string }) {
   return (
@@ -63,8 +62,7 @@ function AppLogo({ className }: { className?: string }) {
 }
 
 export const Header = () => {
-  const { logout } = useAuth();
-  const user = useAuthStore((state) => state.user);
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => {
