@@ -1,5 +1,6 @@
 import { useEditProfileForm } from '../../hooks/useEditProfileForm';
 import { COLORS } from '../../../../config/theme';
+import { Button } from '../../../../shared/components/ui/Button/Button';
 
 interface EditProfileFormProps {
   onSuccess: () => void;
@@ -124,23 +125,22 @@ export const EditProfileForm = ({ onSuccess, onCancel }: EditProfileFormProps) =
       )}
 
       <div className="flex gap-3 justify-end pt-2">
-        <button
+        <Button
           type="button"
           onClick={onCancel}
           disabled={loading}
-          className="px-4 py-2 rounded-lg font-medium transition-colors"
-          style={{ backgroundColor: COLORS.light, color: COLORS.secondary }}
+          variant="light"
         >
           Cancelar
-        </button>
-        <button
+        </Button>
+        <Button
           type="submit"
-          disabled={loading || success}
-          className="px-4 py-2 rounded-lg font-medium text-white transition-colors disabled:opacity-50"
-          style={{ backgroundColor: COLORS.primary }}
+          disabled={success}
+          variant="primary"
+          isLoading={loading}
         >
-          {loading ? 'Guardando...' : 'Guardar cambios'}
-        </button>
+          Guardar cambios
+        </Button>
       </div>
     </form>
   );
