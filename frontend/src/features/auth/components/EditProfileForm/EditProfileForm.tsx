@@ -1,6 +1,5 @@
-import { useState } from 'react';
-import { profileService } from '../../services/profile.service';
-import { useAuthStore } from '../../store/authSlice';
+import { useEditProfileForm } from '../../hooks/useEditProfileForm';
+import { COLORS } from '../../../../config/theme';
 
 interface EditProfileFormProps {
   onSuccess: () => void;
@@ -8,110 +7,25 @@ interface EditProfileFormProps {
 }
 
 export const EditProfileForm = ({ onSuccess, onCancel }: EditProfileFormProps) => {
-  const user = useAuthStore((state) => state.user);
-  const setUser = useAuthStore((state) => state.setUser);
-  
-  const [formData, setFormData] = useState({
-    name: user?.name || '',
-    currentPassword: '',
-    password: '',
-    confirmPassword: '',
-  });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
+  const {
+    user,
+    formData,
+    loading,
+    error,
+    success,
+    handleChange,
+    handleSubmit: submitForm,
+  } = useEditProfileForm();
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-    setError(null);
-  };
-
-  const validateForm = (): boolean => {
-    if (!formData.name.trim()) {
-      setError('El nombre no puede estar vacío');
-      return false;
-    }
-
-    if (formData.name.trim().length < 2) {
-      setError('El nombre debe tener al menos 2 caracteres');
-      return false;
-    }
-
-    if (formData.password) {
-      if (!formData.currentPassword) {
-        setError('Debe ingresar la contraseña actual para cambiarla');
-        return false;
-      }
-
-      if (formData.password.length < 8) {
-        setError('La nueva contraseña debe tener al menos 8 caracteres');
-        return false;
-      }
-
-      if (formData.password !== formData.confirmPassword) {
-        setError('Las contraseñas no coinciden');
-        return false;
-      }
-    }
-
-    return true;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const updateData: { name?: string; currentPassword?: string; password?: string } = {};
-      
-      if (formData.name.trim() !== user?.name) {
-        updateData.name = formData.name.trim();
-      }
-      
-      if (formData.password) {
-        updateData.currentPassword = formData.currentPassword;
-        updateData.password = formData.password;
-      }
-
-      if (Object.keys(updateData).length === 0 || (Object.keys(updateData).length === 1 && updateData.currentPassword)) {
-        setError('No hay cambios para guardar');
-        setLoading(false);
-        return;
-      }
-
-      const updatedProfile = await profileService.updateProfile(updateData);
-      
-      setUser({
-        id: updatedProfile.id,
-        email: updatedProfile.email,
-        name: updatedProfile.name,
-      });
-
-      setSuccess(true);
-      
-      setTimeout(() => {
-        onSuccess();
-      }, 2000);
-    } catch (err: any) {
-      setError(err.message || 'Error al actualizar el perfil');
-    } finally {
-      setLoading(false);
-    }
+    submitForm(onSuccess);
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label className="block text-sm font-medium mb-1" style={{ color: '#296374' }}>
+        <label className="block text-sm font-medium mb-1" style={{ color: COLORS.secondary }}>
           Email
         </label>
         <input
@@ -119,12 +33,12 @@ export const EditProfileForm = ({ onSuccess, onCancel }: EditProfileFormProps) =
           value={user?.email || ''}
           disabled
           className="w-full px-3 py-2 border rounded-lg bg-gray-100 cursor-not-allowed"
-          style={{ borderColor: '#EDEDCE' }}
+          style={{ borderColor: COLORS.light }}
         />
       </div>
 
       <div>
-        <label htmlFor="name" className="block text-sm font-medium mb-1" style={{ color: '#296374' }}>
+        <label htmlFor="name" className="block text-sm font-medium mb-1" style={{ color: COLORS.secondary }}>
           Nombre *
         </label>
         <input
@@ -135,13 +49,13 @@ export const EditProfileForm = ({ onSuccess, onCancel }: EditProfileFormProps) =
           onChange={handleChange}
           required
           className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0C2C55]"
-          style={{ borderColor: '#629FAD' }}
+          style={{ borderColor: COLORS.accent }}
           placeholder="Tu nombre"
         />
       </div>
 
       <div>
-        <label htmlFor="currentPassword" className="block text-sm font-medium mb-1" style={{ color: '#296374' }}>
+        <label htmlFor="currentPassword" className="block text-sm font-medium mb-1" style={{ color: COLORS.secondary }}>
           Contraseña actual
         </label>
         <input
@@ -151,17 +65,17 @@ export const EditProfileForm = ({ onSuccess, onCancel }: EditProfileFormProps) =
           value={formData.currentPassword}
           onChange={handleChange}
           className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2"
-          style={{ borderColor: '#629FAD' }}
+          style={{ borderColor: COLORS.accent }}
           placeholder="Ingresa tu contraseña actual"
         />
-        <p className="text-xs mt-1" style={{ color: '#629FAD' }}>
+        <p className="text-xs mt-1" style={{ color: COLORS.accent }}>
           Solo si deseas cambiar la contraseña
         </p>
       </div>
 
       {formData.currentPassword && (
         <div>
-          <label htmlFor="password" className="block text-sm font-medium mb-1" style={{ color: '#296374' }}>
+          <label htmlFor="password" className="block text-sm font-medium mb-1" style={{ color: COLORS.secondary }}>
             Nueva contraseña *
           </label>
           <input
@@ -172,7 +86,7 @@ export const EditProfileForm = ({ onSuccess, onCancel }: EditProfileFormProps) =
             onChange={handleChange}
             required={!!formData.currentPassword}
             className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2"
-            style={{ borderColor: '#629FAD' }}
+            style={{ borderColor: COLORS.accent }}
             placeholder="Mínimo 8 caracteres"
           />
         </div>
@@ -180,7 +94,7 @@ export const EditProfileForm = ({ onSuccess, onCancel }: EditProfileFormProps) =
 
       {formData.currentPassword && (
         <div>
-          <label htmlFor="confirmPassword" className="block text-sm font-medium mb-1" style={{ color: '#296374' }}>
+          <label htmlFor="confirmPassword" className="block text-sm font-medium mb-1" style={{ color: COLORS.secondary }}>
             Confirmar nueva contraseña *
           </label>
           <input
@@ -191,20 +105,20 @@ export const EditProfileForm = ({ onSuccess, onCancel }: EditProfileFormProps) =
             onChange={handleChange}
             required={!!formData.currentPassword}
             className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2"
-            style={{ borderColor: '#629FAD' }}
+            style={{ borderColor: COLORS.accent }}
             placeholder="Repite la nueva contraseña"
           />
         </div>
       )}
 
       {success && (
-        <div className="p-3 rounded-lg text-sm font-medium" style={{ backgroundColor: '#d4edda', color: '#155724' }}>
-          Datos actualizados exitosamente
+        <div className="p-3 rounded-lg text-sm font-medium" style={{ backgroundColor: COLORS.success.bg, color: COLORS.success.text }}>
+          ✓ Datos actualizados exitosamente
         </div>
       )}
 
       {error && (
-        <div className="p-3 rounded-lg text-sm" style={{ backgroundColor: '#fee', color: '#c00' }}>
+        <div className="p-3 rounded-lg text-sm" style={{ backgroundColor: COLORS.error.bg, color: COLORS.error.text }}>
           {error}
         </div>
       )}
@@ -215,7 +129,7 @@ export const EditProfileForm = ({ onSuccess, onCancel }: EditProfileFormProps) =
           onClick={onCancel}
           disabled={loading}
           className="px-4 py-2 rounded-lg font-medium transition-colors"
-          style={{ backgroundColor: '#EDEDCE', color: '#296374' }}
+          style={{ backgroundColor: COLORS.light, color: COLORS.secondary }}
         >
           Cancelar
         </button>
@@ -223,7 +137,7 @@ export const EditProfileForm = ({ onSuccess, onCancel }: EditProfileFormProps) =
           type="submit"
           disabled={loading || success}
           className="px-4 py-2 rounded-lg font-medium text-white transition-colors disabled:opacity-50"
-          style={{ backgroundColor: '#0C2C55' }}
+          style={{ backgroundColor: COLORS.primary }}
         >
           {loading ? 'Guardando...' : 'Guardar cambios'}
         </button>

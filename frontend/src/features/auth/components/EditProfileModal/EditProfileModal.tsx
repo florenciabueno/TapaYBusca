@@ -1,4 +1,5 @@
 import { EditProfileForm } from '../EditProfileForm';
+import { COLORS } from '../../../../config/theme';
 
 interface EditProfileModalProps {
   isOpen: boolean;
@@ -29,7 +30,7 @@ export const EditProfileModal = ({ isOpen, onClose }: EditProfileModalProps) => 
         <h2
           id="modal-title"
           className="text-2xl font-bold mb-6"
-          style={{ color: '#0C2C55' }}
+          style={{ color: COLORS.primary }}
         >
           Editar perfil
         </h2>
