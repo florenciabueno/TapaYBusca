@@ -99,7 +99,7 @@ export const Header = () => {
 
   return (
     <header
-      className="flex items-center justify-between px-6 py-4"
+      className="flex-shrink-0 flex items-center justify-between px-6 py-4"
       style={{ background: `linear-gradient(90deg, ${COLORS.accent} 0%, ${COLORS.secondary} 50%, ${COLORS.primary} 100%)` }}
     >
       {!user && (

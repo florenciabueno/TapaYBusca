@@ -29,15 +29,15 @@ export const EquationsLayout = ({ children }: EquationsLayoutProps) => {
 
   return (
     <div
-      className="min-h-screen flex"
+      className="h-screen flex overflow-hidden"
       style={{ background: `linear-gradient(135deg, ${COLORS.light} 0%, #f5f5e8 50%, ${COLORS.light} 100%)` }}
     >
       {user && <Sidebar />}
 
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 min-h-0">
         <Header />
 
-        <main className={`flex-1 py-6 overflow-auto relative ${user ? 'pl-8 pr-6' : 'px-6'}`}>
+        <main className={`flex-1 min-h-0 py-6 overflow-auto relative ${user ? 'pl-8 pr-6' : 'px-6'}`}>
           <div className={`${user ? '' : 'max-w-7xl mx-auto'}`}>
             {children}
           </div>
