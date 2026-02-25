@@ -2,7 +2,6 @@ import { useAuth } from '../../../auth/hooks/useAuth';
 import { ROUTES } from '../../../../config/constants';
 import { COLORS } from '../../../../config/theme';
 import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '../../../auth/store/authSlice';
 import { useState, useRef, useEffect } from 'react';
 import { EditProfileModal } from '../../../auth/components/EditProfileModal';
 
@@ -66,8 +65,7 @@ function AppLogo({ className }: { className?: string }) {
 }
 
 export const Header = () => {
-  const { logout } = useAuth();
-  const user = useAuthStore((state) => state.user);
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);

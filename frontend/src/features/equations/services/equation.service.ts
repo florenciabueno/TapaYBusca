@@ -1,24 +1,18 @@
 import { API_URL } from '../../../config/constants';
 import type { Equation } from '../types';
-import { useAuthStore } from '../../auth/store/authSlice';
 
-const getAuthHeaders = () => {
-  const token = useAuthStore.getState().token;
-  return {
-    'Content-Type': 'application/json',
-    ...(token && { 'Authorization': `Bearer ${token}` }),
-  };
-};
+const getAuthHeaders = (token?: string | null) => ({
+  'Content-Type': 'application/json',
+  ...(token && { Authorization: `Bearer ${token}` }),
+});
 
 export const equationService = {
-  async getAllEquations(): Promise<Equation[]> {
-    const token = useAuthStore.getState().token;
-    
+  async getAllEquations(token?: string | null): Promise<Equation[]> {
     const endpoint = token ? `${API_URL}/equations` : `${API_URL}/equations/public`;
-    
+
     const response = await fetch(endpoint, {
       method: 'GET',
-      headers: getAuthHeaders(),
+      headers: getAuthHeaders(token),
       credentials: 'include',
     });
 
@@ -38,10 +32,10 @@ export const equationService = {
     }));
   },
 
-  async getEquationById(id: string): Promise<Equation> {
+  async getEquationById(id: string, token?: string | null): Promise<Equation> {
     const response = await fetch(`${API_URL}/equations/${id}`, {
       method: 'GET',
-      headers: getAuthHeaders(),
+      headers: getAuthHeaders(token),
       credentials: 'include',
     });
 
@@ -52,10 +46,10 @@ export const equationService = {
     return response.json();
   },
 
-  async createEquation(equation: string, origin: string = 'creada'): Promise<Equation> {
+  async createEquation(equation: string, origin: string = 'creada', token?: string | null): Promise<Equation> {
     const response = await fetch(`${API_URL}/equations`, {
       method: 'POST',
-      headers: getAuthHeaders(),
+      headers: getAuthHeaders(token),
       credentials: 'include',
       body: JSON.stringify({ equation, origin: origin.toUpperCase() }),
     });
@@ -67,10 +61,10 @@ export const equationService = {
     return response.json();
   },
 
-  async updateEquation(id: string, data: { status?: string; steps?: number }): Promise<Equation> {
+  async updateEquation(id: string, data: { status?: string; steps?: number }, token?: string | null): Promise<Equation> {
     const response = await fetch(`${API_URL}/equations/${id}`, {
       method: 'PUT',
-      headers: getAuthHeaders(),
+      headers: getAuthHeaders(token),
       credentials: 'include',
       body: JSON.stringify(data),
     });
@@ -82,10 +76,10 @@ export const equationService = {
     return response.json();
   },
 
-  async deleteEquation(id: string): Promise<void> {
+  async deleteEquation(id: string, token?: string | null): Promise<void> {
     const response = await fetch(`${API_URL}/equations/${id}`, {
       method: 'DELETE',
-      headers: getAuthHeaders(),
+      headers: getAuthHeaders(token),
       credentials: 'include',
     });
 

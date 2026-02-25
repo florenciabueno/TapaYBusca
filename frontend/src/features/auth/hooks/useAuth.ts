@@ -3,7 +3,7 @@ import { login as loginService, register as registerService } from '../services/
 import type { LoginCredentials, RegisterCredentials } from '../types/auth.types';
 
 export const useAuth = () => {
-  const { user, token, isLoading, error, login: setUserAndToken, logout, setLoading, setError, clearError } = useAuthStore();
+  const { user, token, isLoading, error, setUserAndToken, logout, setLoading, setError, clearError } = useAuthStore();
 
   const isAuthenticated = user !== null;
 
