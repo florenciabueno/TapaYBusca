@@ -1,6 +1,7 @@
 import { useEditProfileForm } from '../../hooks/useEditProfileForm';
 import { COLORS } from '../../../../config/theme';
 import { Button } from '../../../../shared/components/ui/Button/Button';
+import { Input } from '../../../../shared/components/ui/Input/Input';
 
 interface EditProfileFormProps {
   onSuccess: () => void;
@@ -25,91 +26,64 @@ export const EditProfileForm = ({ onSuccess, onCancel }: EditProfileFormProps) =
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <label className="block text-sm font-medium mb-1" style={{ color: COLORS.secondary }}>
-          Email
-        </label>
-        <input
-          type="email"
-          value={user?.email || ''}
-          disabled
-          className="w-full px-3 py-2 border rounded-lg bg-gray-100 cursor-not-allowed"
-          style={{ borderColor: COLORS.light }}
-        />
-      </div>
+      <Input
+        type="email"
+        label="Email"
+        value={user?.email || ''}
+        disabled
+        labelColor="secondary"
+      />
 
-      <div>
-        <label htmlFor="name" className="block text-sm font-medium mb-1" style={{ color: COLORS.secondary }}>
-          Nombre *
-        </label>
-        <input
-          type="text"
-          id="name"
-          name="name"
-          value={formData.name}
-          onChange={handleChange}
-          required
-          className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2"
-          style={{ borderColor: COLORS.accent, '--tw-ring-color': COLORS.primary } as React.CSSProperties}
-          placeholder="Tu nombre"
-        />
-      </div>
+      <Input
+        type="text"
+        id="name"
+        name="name"
+        label="Nombre *"
+        value={formData.name}
+        onChange={handleChange}
+        required
+        placeholder="Tu nombre"
+        labelColor="secondary"
+      />
 
-      <div>
-        <label htmlFor="currentPassword" className="block text-sm font-medium mb-1" style={{ color: COLORS.secondary }}>
-          Contraseña actual
-        </label>
-        <input
-          type="password"
-          id="currentPassword"
-          name="currentPassword"
-          value={formData.currentPassword}
-          onChange={handleChange}
-          className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2"
-          style={{ borderColor: COLORS.accent }}
-          placeholder="Ingresa tu contraseña actual"
-        />
-        <p className="text-xs mt-1" style={{ color: COLORS.accent }}>
-          Solo si deseas cambiar la contraseña
-        </p>
-      </div>
+      <Input
+        type="password"
+        id="currentPassword"
+        name="currentPassword"
+        label="Contraseña actual"
+        value={formData.currentPassword}
+        onChange={handleChange}
+        placeholder="Ingresa tu contraseña actual"
+        helperText="Solo si deseas cambiar la contraseña"
+        labelColor="secondary"
+      />
 
       {formData.currentPassword && (
-        <div>
-          <label htmlFor="password" className="block text-sm font-medium mb-1" style={{ color: COLORS.secondary }}>
-            Nueva contraseña *
-          </label>
-          <input
+        <>
+          <Input
             type="password"
             id="password"
             name="password"
+            label="Nueva contraseña *"
             value={formData.password}
             onChange={handleChange}
             required={!!formData.currentPassword}
-            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2"
-            style={{ borderColor: COLORS.accent }}
             placeholder="Mínimo 8 caracteres"
+            labelColor="secondary"
           />
-        </div>
-      )}
 
-      {formData.currentPassword && (
-        <div>
-          <label htmlFor="confirmPassword" className="block text-sm font-medium mb-1" style={{ color: COLORS.secondary }}>
-            Confirmar nueva contraseña *
-          </label>
-          <input
+          <Input
             type="password"
             id="confirmPassword"
             name="confirmPassword"
+            label="Confirmar nueva contraseña *"
             value={formData.confirmPassword}
             onChange={handleChange}
             required={!!formData.currentPassword}
-            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2"
-            style={{ borderColor: COLORS.accent }}
             placeholder="Repite la nueva contraseña"
+            labelColor="secondary"
           />
-        </div>
+        </>
       )}
 
       {success && (

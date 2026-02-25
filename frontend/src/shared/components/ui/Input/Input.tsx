@@ -5,21 +5,30 @@ import { COLORS } from '../../../../config/theme';
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string | null;
+  helperText?: string;
+  labelColor?: 'primary' | 'secondary';
 }
 
-export const Input = ({ label, error, className: _, type, ...props }: InputProps) => {
+export const Input = ({ label, error, helperText, labelColor = 'primary', className: _, type, ...props }: InputProps) => {
   const [showPassword, setShowPassword] = useState(false);
   const isPasswordType = type === 'password';
   const inputType = isPasswordType && showPassword ? 'text' : type;
+  const isDisabled = props.disabled;
 
-  const inputClasses = 'w-full px-4 py-3 border-2 rounded-lg bg-white focus:outline-none focus:ring-2';
+  const inputClasses = `w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 ${
+    isDisabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'
+  }`;
+  
+  const getLabelColor = () => {
+    return labelColor === 'secondary' ? COLORS.secondary : COLORS.primary;
+  };
 
   return (
     <div className="w-full">
       {label && (
         <label 
           className="block text-sm font-medium mb-1"
-          style={{ color: COLORS.primary }}
+          style={{ color: getLabelColor() }}
         >
           {label}
         </label>
@@ -29,12 +38,12 @@ export const Input = ({ label, error, className: _, type, ...props }: InputProps
           type={inputType}
           className={inputClasses}
           style={{
-            borderColor: error ? COLORS.error.main : COLORS.primary,
+            borderColor: error ? COLORS.error.main : isDisabled ? COLORS.light : COLORS.primary,
             '--tw-ring-color': COLORS.primary,
             paddingRight: isPasswordType ? '3rem' : undefined,
           } as React.CSSProperties}
           aria-invalid={error ? 'true' : 'false'}
-          aria-describedby={error ? `${props.id || props.name}-error` : undefined}
+          aria-describedby={error ? `${props.id || props.name}-error` : helperText ? `${props.id || props.name}-helper` : undefined}
           {...props}
         />
         {isPasswordType && (
@@ -87,6 +96,15 @@ export const Input = ({ label, error, className: _, type, ...props }: InputProps
           </button>
         )}
       </div>
+      {helperText && !error && (
+        <p
+          id={`${props.id || props.name}-helper`}
+          className="mt-1 text-xs"
+          style={{ color: COLORS.accent }}
+        >
+          {helperText}
+        </p>
+      )}
       {error && (
         <p
           id={`${props.id || props.name}-error`}
