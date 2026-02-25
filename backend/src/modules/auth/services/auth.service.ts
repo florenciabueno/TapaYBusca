@@ -1,5 +1,6 @@
 import { AuthRepository } from '../repositories/auth.repository.js';
 import { LoginCredentials, AuthResponse, RegisterCredentials } from '../types/auth.types.js';
+import { UpdateProfileDto, ProfileResponse } from '../types/profile.types.js';
 import { validateLoginCredentials, validateRegisterCredentials } from '../validators/auth.validators.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
@@ -88,6 +89,65 @@ export class AuthService {
         name: user.name,
       },
       token,
+    };
+  }
+
+  async getProfile(userId: string): Promise<ProfileResponse> {
+    const user = await this.authRepository.findById(userId);
+    
+    if (!user) {
+      throw new Error('Usuario no encontrado');
+    }
+
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+    };
+  }
+
+  async updateProfile(userId: string, data: UpdateProfileDto): Promise<ProfileResponse> {
+    if (!data.name && !data.password) {
+      throw new Error('Debe proporcionar al menos un campo para actualizar');
+    }
+
+    const updateData: { name?: string; passwordHash?: string } = {};
+
+    if (data.name) {
+      if (data.name.trim().length < 2) {
+        throw new Error('El nombre debe tener al menos 2 caracteres');
+      }
+      updateData.name = data.name.trim();
+    }
+
+    if (data.password) {
+      if (!data.currentPassword) {
+        throw new Error('Debe proporcionar la contraseña actual para cambiarla');
+      }
+
+      if (data.password.length < 8) {
+        throw new Error('La contraseña debe tener al menos 8 caracteres');
+      }
+
+      const user = await this.authRepository.findById(userId);
+      if (!user) {
+        throw new Error('Usuario no encontrado');
+      }
+
+      const isCurrentPasswordValid = await bcrypt.compare(data.currentPassword, user.passwordHash);
+      if (!isCurrentPasswordValid) {
+        throw new Error('La contraseña actual es incorrecta');
+      }
+
+      updateData.passwordHash = await bcrypt.hash(data.password, 10);
+    }
+
+    const updatedUser = await this.authRepository.update(userId, updateData);
+
+    return {
+      id: updatedUser.id,
+      email: updatedUser.email,
+      name: updatedUser.name,
     };
   }
 }

@@ -1,1 +1,1 @@
-export type { LoginCredentials, AuthResponse } from './auth.types';
+export type { Profile, UpdateProfileData } from './profile.types';

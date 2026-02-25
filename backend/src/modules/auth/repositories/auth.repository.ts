@@ -8,6 +8,12 @@ export class AuthRepository {
     });
   }
 
+  async findById(id: string): Promise<User | null> {
+    return await prisma.user.findUnique({
+      where: { id },
+    });
+  }
+
   async create(userData: {
     email: string;
     name: string;
@@ -15,6 +21,16 @@ export class AuthRepository {
   }): Promise<User> {
     return await prisma.user.create({
       data: userData,
+    });
+  }
+
+  async update(id: string, data: { name?: string; passwordHash?: string }): Promise<User> {
+    return await prisma.user.update({
+      where: { id },
+      data: {
+        ...data,
+        updatedAt: new Date(),
+      },
     });
   }
 }

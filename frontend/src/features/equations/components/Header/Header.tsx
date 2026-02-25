@@ -2,6 +2,8 @@ import { useAuth } from '../../../auth/hooks/useAuth';
 import { ROUTES } from '../../../../config/constants';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../../auth/store/authSlice';
+import { useState, useRef, useEffect } from 'react';
+import { EditProfileModal } from '../../../auth/components/EditProfileModal';
 
 function LogoutIcon({ className }: { className?: string }) {
   return (
@@ -66,14 +68,34 @@ export const Header = () => {
   const { logout } = useAuth();
   const user = useAuthStore((state) => state.user);
   const navigate = useNavigate();
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleLogout = () => {
     logout();
     navigate(ROUTES.DASHBOARD);
+    setIsDropdownOpen(false);
   };
 
   const handleLogin = () => {
     navigate(ROUTES.LOGIN);
+  };
+
+  const handleEditProfile = () => {
+    setIsModalOpen(true);
+    setIsDropdownOpen(false);
   };
 
   return (
@@ -92,18 +114,52 @@ export const Header = () => {
 
       <div className={user ? 'ml-auto' : ''}>
         {user ? (
-          <div className="flex items-center gap-3">
-            <span className="flex items-center gap-2 text-white">
-              <UserIcon className="w-5 h-5" />
-              {user.name}
-            </span>
+          <div className="relative" ref={dropdownRef}>
             <button
-              onClick={handleLogout}
-              className="w-10 h-10 flex items-center justify-center rounded-lg transition-colors hover:opacity-80 bg-white/10 text-white"
-              aria-label="Cerrar sesión"
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              className="flex items-center gap-3 hover:opacity-80 transition-opacity"
             >
-              <LogoutIcon className="w-5 h-5" />
+              <span className="flex items-center gap-2 text-white">
+                <UserIcon className="w-5 h-5" />
+                {user.name}
+              </span>
+              <svg
+                className={`w-4 h-4 text-white transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
             </button>
+
+            {isDropdownOpen && (
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-50">
+                <button
+                  onClick={handleEditProfile}
+                  className="w-full px-4 py-2 text-left hover:bg-gray-100 transition-colors flex items-center gap-2"
+                  style={{ color: '#296374' }}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                    />
+                  </svg>
+                  Editar perfil
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className="w-full px-4 py-2 text-left hover:bg-gray-100 transition-colors flex items-center gap-2"
+                  style={{ color: '#DC2626' }}
+                >
+                  <LogoutIcon className="w-4 h-4" />
+                  Cerrar sesión
+                </button>
+              </div>
+            )}
           </div>
         ) : (
           <button
@@ -114,6 +170,8 @@ export const Header = () => {
           </button>
         )}
       </div>
+
+      <EditProfileModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
     </header>
   );
 };
