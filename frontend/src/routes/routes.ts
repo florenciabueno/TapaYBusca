@@ -25,7 +25,7 @@ export const routes: RouteConfig[] = [
   {
     path: ROUTES.DASHBOARD,
     element: EquationsPage,
-    isProtected: true,
+    isProtected: false,
   },
   {
     path: ROUTES.CREATE_EQUATION,

@@ -10,7 +10,8 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
-    "db:seed": "tsx scripts/create-test-user.ts"
+    "db:seed": "tsx scripts/create-test-user.ts",
+    "db:seed-equations": "tsx scripts/seed-default-equations.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",

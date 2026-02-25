@@ -4,9 +4,13 @@ import { validateLoginCredentials, validateRegisterCredentials } from '../valida
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { config } from '../../../config/env.js';
+import { EquationRepository } from '../../equations/repositories/equation.repository.js';
 
 export class AuthService {
-  constructor(private authRepository: AuthRepository) {}
+  constructor(
+    private authRepository: AuthRepository,
+    private equationRepository: EquationRepository
+  ) {}
 
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     const validation = validateLoginCredentials(credentials);
@@ -24,12 +28,16 @@ export class AuthService {
       throw new Error('Usuario o contraseña inválidos');
     }
 
-    const token = jwt.sign({
-      userId: user.id,
-      email: user.email,
-    }, config.jwtSecret, {
-      expiresIn: config.jwtExpireIn,
-    });
+    const token = jwt.sign(
+      {
+        userId: user.id,
+        email: user.email,
+      },
+      config.jwtSecret,
+      {
+        expiresIn: config.jwtExpireIn,
+      } as jwt.SignOptions
+    );
 
     return {
       user: {
@@ -60,12 +68,18 @@ export class AuthService {
       passwordHash,
     });
 
-    const token = jwt.sign({
-      userId: user.id,
-      email: user.email,
-    }, config.jwtSecret, {
-      expiresIn: config.jwtExpireIn,
-    });
+    await this.equationRepository.addDefaultEquationsToUser(user.id);
+
+    const token = jwt.sign(
+      {
+        userId: user.id,
+        email: user.email,
+      },
+      config.jwtSecret,
+      {
+        expiresIn: config.jwtExpireIn,
+      } as jwt.SignOptions
+    );
 
     return {
       user: {

@@ -1,0 +1,96 @@
+import { API_URL } from '../../../config/constants';
+import type { Equation } from '../types';
+import { useAuthStore } from '../../auth/store/authSlice';
+
+const getAuthHeaders = () => {
+  const token = useAuthStore.getState().token;
+  return {
+    'Content-Type': 'application/json',
+    ...(token && { 'Authorization': `Bearer ${token}` }),
+  };
+};
+
+export const equationService = {
+  async getAllEquations(): Promise<Equation[]> {
+    const token = useAuthStore.getState().token;
+    
+    const endpoint = token ? `${API_URL}/equations` : `${API_URL}/equations/public`;
+    
+    const response = await fetch(endpoint, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      throw new Error('Error al obtener ecuaciones');
+    }
+
+    const data = await response.json();
+    
+    return data.map((eq: any) => ({
+      id: eq.id,
+      equation: eq.equation,
+      origin: eq.origin,
+      status: eq.status,
+      steps: eq.steps,
+      date: eq.date,
+    }));
+  },
+
+  async getEquationById(id: string): Promise<Equation> {
+    const response = await fetch(`${API_URL}/equations/${id}`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      throw new Error('Error al obtener la ecuación');
+    }
+
+    return response.json();
+  },
+
+  async createEquation(equation: string, origin: string = 'creada'): Promise<Equation> {
+    const response = await fetch(`${API_URL}/equations`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      credentials: 'include',
+      body: JSON.stringify({ equation, origin: origin.toUpperCase() }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Error al crear la ecuación');
+    }
+
+    return response.json();
+  },
+
+  async updateEquation(id: string, data: { status?: string; steps?: number }): Promise<Equation> {
+    const response = await fetch(`${API_URL}/equations/${id}`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      credentials: 'include',
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      throw new Error('Error al actualizar la ecuación');
+    }
+
+    return response.json();
+  },
+
+  async deleteEquation(id: string): Promise<void> {
+    const response = await fetch(`${API_URL}/equations/${id}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      throw new Error('Error al eliminar la ecuación');
+    }
+  },
+};
