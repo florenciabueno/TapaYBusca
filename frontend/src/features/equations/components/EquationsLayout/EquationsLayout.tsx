@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { Sidebar, Header } from '../../../../shared/components/layout';
-import { useAuthStore } from '../../../auth/store/authSlice';
+import { useAuthStore } from '../../../../stores';
 import { COLORS } from '../../../../config/theme';
 
 interface EquationsLayoutProps {

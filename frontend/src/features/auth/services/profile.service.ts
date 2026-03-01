@@ -1,6 +1,6 @@
 import { API_URL } from '../../../config/constants';
 import type { Profile, UpdateProfileData } from '../types';
-import { useAuthStore } from '../store/authSlice';
+import { useAuthStore } from '../../../stores';
 
 const getAuthHeaders = () => {
   const token = useAuthStore.getState().token;

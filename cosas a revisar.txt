@@ -1,22 +1,9 @@
 . que es useDebounce? deberiamos crear ese hook en shared/hooks??
-. poner header y sidebar en carpeta layout en components/ui
-└── components/     # Reusable components
-│   │       ├── ui/          # Basic UI components
-│   │       │   ├── Button/
-│   │       │   ├── Input/
-│   │       │   └── . . .
-│   │       └── layout/      # Layout components
-│   │           ├── Header/
-│   │           ├── Sidebar/
-│   │           └── Footer/
-
-. sacar de carpetas controller, services, reposotory, etc los archivos de cada feature de backend.
-. sacar assets de src a public (frontend)
+. sacar de carpetas controller, services, repository, etc los archivos de cada feature de backend.
 . revisar carpeta api/auth y sus archivos
 . en front  en features/equations/components crear las carpetas de EquationList, EquationEditor etc en lugar de las que hay, revisar si tienen sentido las que tenemos.
 . en front  en features/equations/pages revisar
 . revisar el hook useEquation y fijarnos si no crear un useEquationList
-. revisar el archivo mockEquations en features/equations/data. y borrar la carpeta capaz
 . revisar si falta en src una carpeta stores para el estado global de zustand
 ├── stores/              # Global state (Zustand)
 │   │   ├── user-store.ts    # Store configuration

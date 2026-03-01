@@ -1,4 +1,4 @@
-import { useAuthStore } from '../store/authSlice';
+import { useAuthStore } from '../../../stores';
 import { login as loginService, register as registerService } from '../services/auth.service';
 import type { LoginCredentials, RegisterCredentials } from '../types/auth.types';
 

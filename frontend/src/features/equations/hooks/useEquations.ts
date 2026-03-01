@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { useEquationsStore } from '../store/equationsSlice';
 import { equationService } from '../services/equation.service';
-import { useAuthStore } from '../../auth/store/authSlice';
+import { useAuthStore } from '../../../stores';
 
 export const useEquations = () => {
   const {

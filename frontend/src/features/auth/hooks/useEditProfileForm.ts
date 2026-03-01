@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { profileService } from '../services/profile.service';
-import { useAuthStore } from '../store/authSlice';
+import { useAuthStore } from '../../../stores';
 
 interface EditProfileFormData {
   name: string;

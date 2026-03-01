@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useEquations } from '../../hooks/useEquations';
-import { useAuthStore } from '../../../auth/store/authSlice';
+import { useAuthStore } from '../../../../stores';
 import { COLORS } from '../../../../config/theme';
 
 const TABLE_HEADERS = ['Ecuación', 'Origen', 'Estado', 'Pasos', 'Fecha', 'Acciones'] as const;

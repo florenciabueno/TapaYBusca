@@ -1,5 +1,5 @@
 import { Navigate } from 'react-router-dom';
-import { useAuthStore } from '../features/auth/store/authSlice';
+import { useAuthStore } from '../stores';
 import { ROUTES } from '../config/constants';
 import type { ReactNode } from 'react';
 
