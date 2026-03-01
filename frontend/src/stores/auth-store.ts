@@ -5,14 +5,9 @@ import type { User } from '../shared/types';
 interface AuthStore {
   user: User | null;
   token: string | null;
-  isLoading: boolean;
-  error: string | null;
   setUserAndToken: (user: User, token: string) => void;
   logout: () => void;
   setUser: (user: User) => void;
-  setLoading: (isLoading: boolean) => void;
-  setError: (error: string | null) => void;
-  clearError: () => void;
 }
 
 export const useAuthStore = create<AuthStore>()(
@@ -20,14 +15,9 @@ export const useAuthStore = create<AuthStore>()(
     (set) => ({
       user: null,
       token: null,
-      isLoading: false,
-      error: null,
-      setUserAndToken: (user, token) => set({ user, token, error: null }),
-      logout: () => set({ user: null, token: null, error: null }),
+      setUserAndToken: (user, token) => set({ user, token }),
+      logout: () => set({ user: null, token: null }),
       setUser: (user) => set({ user }),
-      setLoading: (isLoading) => set({ isLoading }),
-      setError: (error) => set({ error }),
-      clearError: () => set({ error: null }),
     }),
     {
       name: 'auth-storage',

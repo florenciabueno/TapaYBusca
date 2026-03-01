@@ -1,16 +1,21 @@
+import { useState } from 'react';
 import { useAuthStore } from '../../../stores';
 import { login as loginService, register as registerService } from '../services/auth.service';
 import type { LoginCredentials, RegisterCredentials } from '../types/auth.types';
 
 export const useAuth = () => {
-  const { user, token, isLoading, error, setUserAndToken, logout, setLoading, setError, clearError } = useAuthStore();
+  const { user, token, setUserAndToken, logout } = useAuthStore();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const isAuthenticated = user !== null;
 
+  const clearError = () => setError(null);
+
   const login = async (credentials: LoginCredentials) => {
     try {
-      setLoading(true);
-      clearError();
+      setIsLoading(true);
+      setError(null);
       const response = await loginService(credentials);
       setUserAndToken(response.user, response.token || '');
       return { success: true };
@@ -19,14 +24,14 @@ export const useAuth = () => {
       setError(errorMessage);
       return { success: false };
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   const register = async (credentials: RegisterCredentials) => {
     try {
-      setLoading(true);
-      clearError();
+      setIsLoading(true);
+      setError(null);
       const response = await registerService(credentials);
       setUserAndToken(response.user, response.token || '');
       return { success: true };
@@ -35,7 +40,7 @@ export const useAuth = () => {
       setError(errorMessage);
       return { success: false };
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
