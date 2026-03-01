@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useEquationList } from '../../hooks/useEquationList';
 import { useAuthStore } from '../../../../stores';
 import { COLORS } from '../../../../config/theme';
+import { MathExpression } from '../../../../shared/components/ui/MathExpression';
 
 const TABLE_HEADERS = ['Ecuación', 'Origen', 'Estado', 'Pasos', 'Fecha', 'Acciones'] as const;
 
@@ -83,7 +84,9 @@ export const EquationsTable = () => {
                 className="border-t transition-colors hover:bg-[rgba(98,159,173,0.2)]"
                 style={{ borderColor: 'rgba(41, 99, 116, 0.2)' }}
               >
-                <td className="px-6 py-4" style={{ color: COLORS.secondary }}>{equation.equation}</td>
+                <td className="px-6 py-4" style={{ color: COLORS.secondary }}>
+                  <MathExpression expression={equation.equation} />
+                </td>
                 <td className="px-6 py-4" style={{ color: COLORS.secondary }}>{equation.origin}</td>
                 <td className="px-6 py-4">
                   <span

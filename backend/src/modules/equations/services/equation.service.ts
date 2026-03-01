@@ -9,7 +9,7 @@ export class EquationService {
     
     return userEquations.map(eu => ({
       id: eu.id,
-      equation: eu.equation.postfixExpression,
+      equation: eu.equation.latexExpression || eu.equation.infixExpression || eu.equation.postfixExpression,
       origin: this.formatOrigin(eu.origin),
       status: this.formatStatus(eu.status),
       steps: 0,
@@ -25,7 +25,7 @@ export class EquationService {
 
     return {
       id: userEquation.id,
-      equation: userEquation.equation.postfixExpression,
+      equation: userEquation.equation.latexExpression || userEquation.equation.infixExpression || userEquation.equation.postfixExpression,
       origin: this.formatOrigin(userEquation.origin),
       status: this.formatStatus(userEquation.status),
       steps: 0,
@@ -39,7 +39,7 @@ export class EquationService {
     
     return {
       id: equationUser.id,
-      equation: equationUser.equation.postfixExpression,
+      equation: equationUser.equation.latexExpression || equationUser.equation.infixExpression || equationUser.equation.postfixExpression,
       origin: this.formatOrigin(equationUser.origin),
       status: this.formatStatus(equationUser.status),
       steps: 0,
@@ -58,7 +58,7 @@ export class EquationService {
     
     return {
       id: equationUser.id,
-      equation: equationUser.equation.postfixExpression,
+      equation: equationUser.equation.latexExpression || equationUser.equation.infixExpression || equationUser.equation.postfixExpression,
       origin: this.formatOrigin(equationUser.origin),
       status: this.formatStatus(equationUser.status),
       steps: 0,
@@ -81,7 +81,7 @@ export class EquationService {
     
     return defaultEquations.map(eq => ({
       id: eq.id,
-      equation: eq.postfixExpression,
+      equation: eq.latexExpression || eq.infixExpression || eq.postfixExpression,
       origin: 'defecto',
       status: 'sin comenzar',
       steps: 0,
