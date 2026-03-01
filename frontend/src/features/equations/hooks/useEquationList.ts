@@ -3,7 +3,7 @@ import { useEquationsStore } from '../store/equationsSlice';
 import { equationService } from '../services/equation.service';
 import { useAuthStore } from '../../../stores';
 
-export const useEquations = () => {
+export const useEquationList = () => {
   const {
     equations,
     isLoading,
@@ -29,20 +29,17 @@ export const useEquations = () => {
     }
   }, [setEquations, setLoading, setError, clearError]);
 
-  const deleteEquation = useCallback(
-    async (id: string) => {
-      try {
-        const token = useAuthStore.getState().token;
-        await equationService.deleteEquation(id, token);
-        clearError();
-        await fetchEquations();
-      } catch (err) {
-        console.error('Error al eliminar ecuación:', err);
-        setError('Error al eliminar la ecuación');
-      }
-    },
-    [fetchEquations, setError, clearError]
-  );
+  const deleteEquation = async (id: string) => {
+    try {
+      const token = useAuthStore.getState().token;
+      await equationService.deleteEquation(id, token);
+      clearError();
+      await fetchEquations();
+    } catch (err) {
+      console.error('Error al eliminar ecuación:', err);
+      setError('Error al eliminar la ecuación');
+    }
+  };
 
   return {
     equations,

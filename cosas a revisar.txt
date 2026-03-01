@@ -3,9 +3,3 @@
 . revisar carpeta api/auth y sus archivos
 . en front  en features/equations/components crear las carpetas de EquationList, EquationEditor etc en lugar de las que hay, revisar si tienen sentido las que tenemos.
 . en front  en features/equations/pages revisar
-. revisar el hook useEquation y fijarnos si no crear un useEquationList
-. revisar si falta en src una carpeta stores para el estado global de zustand
-├── stores/              # Global state (Zustand)
-│   │   ├── user-store.ts    # Store configuration
-│   │   ├── x-store.ts
-│   │   └── middleware/      # Middlewares

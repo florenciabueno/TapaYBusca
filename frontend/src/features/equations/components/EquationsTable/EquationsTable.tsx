@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useEquations } from '../../hooks/useEquations';
+import { useEquationList } from '../../hooks/useEquationList';
 import { useAuthStore } from '../../../../stores';
 import { COLORS } from '../../../../config/theme';
 
@@ -12,7 +12,7 @@ const STATUS_COLORS = {
 } as const;
 
 export const EquationsTable = () => {
-  const { equations, isLoading, error, fetchEquations, deleteEquation } = useEquations();
+  const { equations, isLoading, error, fetchEquations, deleteEquation } = useEquationList();
   const user = useAuthStore((state) => state.user);
 
   useEffect(() => {
