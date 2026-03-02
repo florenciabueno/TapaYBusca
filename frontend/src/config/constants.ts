@@ -9,3 +9,5 @@ export const ROUTES = {
   UPLOAD: '/subir',
   DOWNLOAD: '/descargar',
 } as const;
+
+export const EQUATIONS_PAGE_SIZE = 9;

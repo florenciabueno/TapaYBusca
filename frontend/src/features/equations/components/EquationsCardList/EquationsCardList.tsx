@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { ROUTES } from '../../../../config/constants';
 import { useEquationList } from '../../hooks/useEquationList';
 import { useAuthStore } from '../../../../stores';
@@ -7,13 +7,30 @@ import { COLORS, ACCENT_RGB, SHADOW } from '../../../../config/theme';
 import { EquationCard } from '../EquationCard';
 
 export const EquationsCardList = () => {
-  const { equations, isLoading, error, fetchEquations, deleteEquation } =
-    useEquationList();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const {
+    equations,
+    isLoading,
+    error,
+    currentPage,
+    totalPages,
+    total,
+    fetchEquations,
+    deleteEquation,
+  } = useEquationList();
   const user = useAuthStore((state) => state.user);
 
+  const pageFromUrl = Number(searchParams.get('page') || 1);
+
   useEffect(() => {
-    fetchEquations();
-  }, [user, fetchEquations]);
+    fetchEquations(pageFromUrl);
+  }, [pageFromUrl, user, fetchEquations]);
+
+  useEffect(() => {
+    if (totalPages > 0 && pageFromUrl > totalPages) {
+      setSearchParams({ page: String(totalPages) });
+    }
+  }, [totalPages, pageFromUrl, setSearchParams]);
 
   const handleDelete = (id: string) => {
     if (!confirm('¿Estás seguro de eliminar esta ecuación?')) return;
@@ -44,7 +61,7 @@ export const EquationsCardList = () => {
     );
   }
 
-  if (equations.length === 0) {
+  if (equations.length === 0 && total === 0) {
     return (
       <div
         className="rounded-xl border bg-white px-6 py-16 text-center transition-shadow"
@@ -75,17 +92,55 @@ export const EquationsCardList = () => {
     );
   }
 
+  const handlePageChange = (newPage: number) => {
+    setSearchParams({ page: String(newPage) });
+  };
+
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {equations.map((equation) => (
-        <EquationCard
-          key={equation.id}
-          equation={equation}
-          onView={() => {}}
-          onDelete={() => handleDelete(equation.id)}
-          canDelete={!!user && equation.origin !== 'DEFAULT'}
-        />
-      ))}
+    <div className="space-y-6">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {equations.map((equation) => (
+          <EquationCard
+            key={equation.id}
+            equation={equation}
+            onView={() => {}}
+            onDelete={() => handleDelete(equation.id)}
+            canDelete={!!user && equation.origin !== 'DEFAULT'}
+          />
+        ))}
+      </div>
+
+      {totalPages > 1 && (
+        <nav
+          className="flex flex-wrap items-center justify-center gap-2"
+          aria-label="Paginación de ecuaciones"
+        >
+          <button
+            type="button"
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage <= 1}
+            className="rounded-lg border px-3 py-2 text-sm font-medium transition-colors hover:bg-gray-100 hover:border-gray-400 hover:text-gray-800 disabled:pointer-events-none disabled:opacity-50"
+            style={{ borderColor: COLORS.lightTeal, color: COLORS.gray[700] }}
+          >
+            Anterior
+          </button>
+          <span
+            className="px-3 py-2 text-sm text-gray-600"
+            aria-live="polite"
+          >
+            Página {currentPage} de {totalPages}
+          </span>
+          <button
+            type="button"
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage >= totalPages}
+            className="rounded-lg border px-3 py-2 text-sm font-medium transition-colors hover:bg-gray-100 hover:border-gray-400 hover:text-gray-800 disabled:pointer-events-none disabled:opacity-50"
+            style={{ borderColor: COLORS.lightTeal, color: COLORS.gray[700] }}
+          >
+            Siguiente
+          </button>
+        </nav>
+      )}
     </div>
   );
 };

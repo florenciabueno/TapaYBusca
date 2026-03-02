@@ -4,7 +4,7 @@ import { CreateEquationDto, UpdateEquationUserDto, EquationStatus, EquationOrigi
 const prisma = new PrismaClient();
 
 export class EquationRepository {
-  async findAllForUser(userId: string) {
+  async findAllForUser(userId: string, page: number, limit: number) {
     const userEquations = await prisma.userEquation.findMany({
       where: {
         userId: userId,
@@ -17,9 +17,20 @@ export class EquationRepository {
         { status: 'asc' },
         { updatedAt: 'desc' },
       ],
+      skip: (page - 1) * limit,
+      take: limit,
     });
 
     return userEquations;
+  }
+
+  async countForUser(userId: string): Promise<number> {
+    return prisma.userEquation.count({
+      where: {
+        userId,
+        isActive: true,
+      },
+    });
   }
 
   async findById(userEquationId: string) {
@@ -110,10 +121,18 @@ export class EquationRepository {
     await Promise.all(promises);
   }
 
-  async findDefaultEquations() {
+  async findDefaultEquations(page: number, limit: number) {
     return prisma.equation.findMany({
       where: { isDefault: true },
       orderBy: { createdAt: 'desc' },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+  }
+
+  async countDefaultEquations(): Promise<number> {
+    return prisma.equation.count({
+      where: { isDefault: true },
     });
   }
 }

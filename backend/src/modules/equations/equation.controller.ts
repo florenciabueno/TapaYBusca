@@ -15,8 +15,10 @@ export class EquationController {
 
   getPublicEquations = async (req: Request, res: Response): Promise<void> => {
     try {
-      const equations = await this.equationService.getPublicEquations();
-      res.status(200).json(equations);
+      const page = Math.max(1, parseInt(String(req.query.page), 10) || 1);
+      const limit = Math.min(50, Math.max(1, parseInt(String(req.query.limit), 10) || 9));
+      const result = await this.equationService.getPublicEquations(page, limit);
+      res.status(200).json(result);
     } catch (error: any) {
       res.status(500).json({
         error: error.message || ERROR_GET_EQUATIONS,
@@ -27,9 +29,10 @@ export class EquationController {
   getAllEquations = async (req: Request, res: Response): Promise<void> => {
     try {
       const userId = req.userId!;
-      const equations = await this.equationService.getAllEquations(userId);
-
-      res.status(200).json(equations);
+      const page = Math.max(1, parseInt(String(req.query.page), 10) || 1);
+      const limit = Math.min(50, Math.max(1, parseInt(String(req.query.limit), 10) || 9));
+      const result = await this.equationService.getAllEquations(userId, page, limit);
+      res.status(200).json(result);
     } catch (error: any) {
       res.status(500).json({
         error: error.message || ERROR_GET_EQUATIONS,

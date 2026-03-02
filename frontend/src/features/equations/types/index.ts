@@ -1,1 +1,1 @@
-export type { Equation, EquationStatus, EquationOrigin } from './equation.types';
+export type { Equation, EquationStatus, EquationOrigin, PaginatedResponse } from './equation.types';

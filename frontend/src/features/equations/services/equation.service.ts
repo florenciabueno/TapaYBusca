@@ -1,16 +1,32 @@
 import { API_URL } from '../../../config/constants';
-import type { Equation } from '../types';
+import type { Equation, PaginatedResponse } from '../types';
 
 const getAuthHeaders = (token?: string | null) => ({
   'Content-Type': 'application/json',
   ...(token && { Authorization: `Bearer ${token}` }),
 });
 
-export const equationService = {
-  async getAllEquations(token?: string | null): Promise<Equation[]> {
-    const endpoint = token ? `${API_URL}/equations` : `${API_URL}/equations/public`;
+function mapItem(eq: { id: string; equation: string; origin: string; status: string; steps: number; date: string }): Equation {
+  return {
+    id: eq.id,
+    equation: eq.equation,
+    origin: eq.origin as Equation['origin'],
+    status: eq.status as Equation['status'],
+    steps: eq.steps,
+    date: eq.date,
+  };
+}
 
-    const response = await fetch(endpoint, {
+export const equationService = {
+  async getAllEquations(
+    token: string | null | undefined,
+    page: number,
+    limit: number
+  ): Promise<PaginatedResponse<Equation>> {
+    const endpoint = token ? `${API_URL}/equations` : `${API_URL}/equations/public`;
+    const url = `${endpoint}?page=${page}&limit=${limit}`;
+
+    const response = await fetch(url, {
       method: 'GET',
       headers: getAuthHeaders(token),
       credentials: 'include',
@@ -20,16 +36,14 @@ export const equationService = {
       throw new Error('Error al obtener ecuaciones');
     }
 
-    const data = await response.json();
-    
-    return data.map((eq: any) => ({
-      id: eq.id,
-      equation: eq.equation,
-      origin: eq.origin,
-      status: eq.status,
-      steps: eq.steps,
-      date: eq.date,
-    }));
+    const raw = await response.json();
+    return {
+      data: raw.data.map(mapItem),
+      total: raw.total,
+      page: raw.page,
+      limit: raw.limit,
+      totalPages: raw.totalPages,
+    };
   },
 
   async getEquationById(id: string, token?: string | null): Promise<Equation> {

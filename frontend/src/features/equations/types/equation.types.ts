@@ -10,6 +10,14 @@ export interface Equation {
   date: string;
 }
 
+export interface PaginatedResponse<T> {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
 export const ORIGIN_LABELS: Record<EquationOrigin, string> = {
   DEFAULT: 'defecto',
   CREATED: 'creada',

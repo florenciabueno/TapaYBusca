@@ -7,16 +7,32 @@ import {
   EquationStatus,
   UserEquationRow,
   DefaultEquationRow,
+  PaginatedEquationsResponse,
 } from './equation.types.js';
 
 const STEPS_DEFAULT = 0;
+const DEFAULT_PAGE = 1;
+const DEFAULT_LIMIT = 9;
+const MAX_LIMIT = 50;
+
+function sanitizePagination(page: number, limit: number): { page: number; limit: number } {
+  const p = Math.max(1, Math.floor(page));
+  const l = Math.min(MAX_LIMIT, Math.max(1, Math.floor(limit)));
+  return { page: p, limit: l };
+}
 
 export class EquationService {
   constructor(private equationRepository: EquationRepository) {}
 
-  async getAllEquations(userId: string): Promise<EquationResponse[]> {
-    const userEquations = await this.equationRepository.findAllForUser(userId);
-    return userEquations.map((eu) => this.toEquationResponse(eu));
+  async getAllEquations(userId: string, page = DEFAULT_PAGE, limit = DEFAULT_LIMIT): Promise<PaginatedEquationsResponse> {
+    const { page: p, limit: l } = sanitizePagination(page, limit);
+    const [userEquations, total] = await Promise.all([
+      this.equationRepository.findAllForUser(userId, p, l),
+      this.equationRepository.countForUser(userId),
+    ]);
+    const data = userEquations.map((eu) => this.toEquationResponse(eu));
+    const totalPages = Math.ceil(total / l) || 1;
+    return { data, total, page: p, limit: l, totalPages };
   }
 
   async getEquationById(userEquationId: string): Promise<EquationResponse | null> {
@@ -47,9 +63,15 @@ export class EquationService {
     await this.equationRepository.softDelete(equationUserId);
   }
 
-  async getPublicEquations(): Promise<EquationResponse[]> {
-    const defaultEquations = await this.equationRepository.findDefaultEquations();
-    return defaultEquations.map((eq) => this.toEquationResponseFromDefault(eq));
+  async getPublicEquations(page = DEFAULT_PAGE, limit = DEFAULT_LIMIT): Promise<PaginatedEquationsResponse> {
+    const { page: p, limit: l } = sanitizePagination(page, limit);
+    const [defaultEquations, total] = await Promise.all([
+      this.equationRepository.findDefaultEquations(p, l),
+      this.equationRepository.countDefaultEquations(),
+    ]);
+    const data = defaultEquations.map((eq) => this.toEquationResponseFromDefault(eq));
+    const totalPages = Math.ceil(total / l) || 1;
+    return { data, total, page: p, limit: l, totalPages };
   }
 
   private toEquationResponse(row: UserEquationRow): EquationResponse {
