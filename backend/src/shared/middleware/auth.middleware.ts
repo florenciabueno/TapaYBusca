@@ -7,7 +7,6 @@ interface JwtPayload {
   email: string;
 }
 
-// Extender el tipo Request para incluir userId
 declare global {
   namespace Express {
     interface Request {

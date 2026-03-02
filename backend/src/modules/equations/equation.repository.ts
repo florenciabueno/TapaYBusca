@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import { CreateEquationDto, UpdateEquationUserDto, EquationStatus, EquationOrigin } from '../types/equation.types.js';
+import { CreateEquationDto, UpdateEquationUserDto, EquationStatus, EquationOrigin } from './equation.types.js';
 
 const prisma = new PrismaClient();
 

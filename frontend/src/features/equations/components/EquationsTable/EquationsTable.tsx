@@ -3,14 +3,16 @@ import { useEquationList } from '../../hooks/useEquationList';
 import { useAuthStore } from '../../../../stores';
 import { COLORS } from '../../../../config/theme';
 import { MathExpression } from '../../../../shared/components/ui/MathExpression';
+import type { EquationStatus } from '../../types/equation.types';
+import { ORIGIN_LABELS, STATUS_LABELS } from '../../types/equation.types';
 
 const TABLE_HEADERS = ['Ecuación', 'Origen', 'Estado', 'Pasos', 'Fecha', 'Acciones'] as const;
 
-const STATUS_COLORS = {
-  'sin comenzar': COLORS.status.pending,
-  'en proceso': COLORS.status.inProgress,
-  'resuelta': COLORS.status.completed,
-} as const;
+const STATUS_COLORS: Record<EquationStatus, string> = {
+  NOT_STARTED: COLORS.status.pending,
+  IN_PROGRESS: COLORS.status.inProgress,
+  SOLVED: COLORS.status.completed,
+};
 
 export const EquationsTable = () => {
   const { equations, isLoading, error, fetchEquations, deleteEquation } = useEquationList();
@@ -25,8 +27,8 @@ export const EquationsTable = () => {
     deleteEquation(id);
   };
 
-  const getStatusColor = (status: string): string => {
-    return STATUS_COLORS[status as keyof typeof STATUS_COLORS] || COLORS.secondary;
+  const getStatusColor = (status: EquationStatus): string => {
+    return STATUS_COLORS[status] ?? COLORS.secondary;
   };
 
   if (isLoading) {
@@ -87,7 +89,7 @@ export const EquationsTable = () => {
                 <td className="px-6 py-4" style={{ color: COLORS.secondary }}>
                   <MathExpression expression={equation.equation} />
                 </td>
-                <td className="px-6 py-4" style={{ color: COLORS.secondary }}>{equation.origin}</td>
+                <td className="px-6 py-4" style={{ color: COLORS.secondary }}>{ORIGIN_LABELS[equation.origin]}</td>
                 <td className="px-6 py-4">
                   <span
                     className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium"
@@ -96,7 +98,7 @@ export const EquationsTable = () => {
                       color: 'white',
                     }}
                   >
-                    {equation.status}
+                    {STATUS_LABELS[equation.status]}
                   </span>
                 </td>
                 <td className="px-6 py-4" style={{ color: COLORS.secondary }}>{equation.steps}</td>
@@ -110,7 +112,7 @@ export const EquationsTable = () => {
                     >
                       Ver
                     </button>
-                    {user && equation.origin !== 'defecto' && (
+                    {user && equation.origin !== 'DEFAULT' && (
                       <button
                         type="button"
                         onClick={() => handleDelete(equation.id)}

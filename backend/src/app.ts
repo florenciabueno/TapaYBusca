@@ -1,8 +1,9 @@
 import express from 'express';
 import cors from 'cors';
-import { config } from './config/env';
-import authRoutes from './modules/auth/routes/auth.routes';
-import equationRoutes from './modules/equations/routes/equation.routes';
+import { config } from './config/env.js';
+import authRoutes from './modules/auth/auth.routes.js';
+import userRoutes from './modules/user/user.routes.js';
+import equationRoutes from './modules/equations/equation.routes.js';
 
 const app = express();
 
@@ -15,6 +16,7 @@ app.use(express.json());
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/user', userRoutes);
 app.use('/api/equations', equationRoutes);
 
 // Error handling

@@ -12,7 +12,7 @@ const getAuthHeaders = () => {
 
 export const profileService = {
   async getProfile(): Promise<Profile> {
-    const response = await fetch(`${API_URL}/auth/profile`, {
+    const response = await fetch(`${API_URL}/user/profile`, {
       method: 'GET',
       headers: getAuthHeaders(),
       credentials: 'include',
@@ -26,7 +26,7 @@ export const profileService = {
   },
 
   async updateProfile(data: UpdateProfileData): Promise<Profile> {
-    const response = await fetch(`${API_URL}/auth/profile`, {
+    const response = await fetch(`${API_URL}/user/profile`, {
       method: 'PUT',
       headers: getAuthHeaders(),
       body: JSON.stringify(data),

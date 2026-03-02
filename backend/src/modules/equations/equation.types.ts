@@ -1,0 +1,54 @@
+export enum EquationStatus {
+  NOT_STARTED = 'NOT_STARTED',
+  IN_PROGRESS = 'IN_PROGRESS',
+  SOLVED = 'SOLVED',
+}
+
+export enum EquationOrigin {
+  DEFAULT = 'DEFAULT',
+  CREATED = 'CREATED',
+  DOWNLOADED = 'DOWNLOADED',
+}
+
+export interface EquationResponse {
+  id: string;
+  equation: string;
+  origin: EquationOrigin;
+  status: EquationStatus;
+  steps: number;
+  date: string;
+  isActive: boolean;
+}
+
+/** Forma que devuelve el repository para UserEquation con equation incluido */
+export interface UserEquationRow {
+  id: string;
+  origin: string;
+  status: string;
+  updatedAt: Date;
+  isActive: boolean;
+  equation: {
+    latexExpression?: string | null;
+    infixExpression?: string | null;
+    postfixExpression?: string | null;
+  };
+}
+
+/** Forma que devuelve el repository para Equation (por defecto, sin UserEquation) */
+export interface DefaultEquationRow {
+  id: string;
+  createdAt: Date;
+  latexExpression?: string | null;
+  infixExpression?: string | null;
+  postfixExpression?: string | null;
+}
+
+export interface CreateEquationDto {
+  expression: string;
+  userId: string;
+}
+
+export interface UpdateEquationUserDto {
+  status?: EquationStatus;
+  isActive?: boolean;
+}

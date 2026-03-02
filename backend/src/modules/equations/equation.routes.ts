@@ -1,8 +1,8 @@
 import { Router } from 'express';
-import { EquationController } from '../controllers/equation.controller.js';
-import { EquationService } from '../services/equation.service.js';
-import { EquationRepository } from '../repositories/equation.repository.js';
-import { authMiddleware } from '../../../shared/middleware/auth.middleware.js';
+import { EquationController } from './equation.controller.js';
+import { EquationService } from './equation.service.js';
+import { EquationRepository } from './equation.repository.js';
+import { authMiddleware } from '../../shared/middleware/auth.middleware.js';
 
 const router = Router();
 const equationRepository = new EquationRepository();
