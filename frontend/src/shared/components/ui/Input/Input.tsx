@@ -7,17 +7,28 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   error?: string | null;
   helperText?: string;
   labelColor?: 'primary' | 'secondary';
+  density?: 'md' | 'sm';
 }
 
-export const Input = ({ label, error, helperText, labelColor = 'primary', className: _, type, ...props }: InputProps) => {
+export const Input = ({
+  label,
+  error,
+  helperText,
+  labelColor = 'primary',
+  density = 'md',
+  className,
+  type,
+  ...props
+}: InputProps) => {
   const [showPassword, setShowPassword] = useState(false);
   const isPasswordType = type === 'password';
   const inputType = isPasswordType && showPassword ? 'text' : type;
   const isDisabled = props.disabled;
 
-  const inputClasses = `w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 ${
+  const sizeClasses = density === 'sm' ? 'px-3 py-2 text-sm' : 'px-4 py-3';
+  const inputClasses = `w-full ${sizeClasses} border-2 rounded-lg focus:outline-none focus:ring-2 ${
     isDisabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'
-  }`;
+  }${className ? ` ${className}` : ''}`;
   
   const getLabelColor = () => {
     return labelColor === 'secondary' ? COLORS.gray[600] : COLORS.primary;

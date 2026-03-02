@@ -57,13 +57,14 @@ export const RegisterForm = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="w-full space-y-4">
+    <form onSubmit={handleSubmit} className="w-full space-y-3">
       {error && <ErrorMessage message={error} />}
       
       <Input
         id="name"
         name="name"
         type="text"
+        density="sm"
         label="Nombre"
         placeholder="Ingresa tu nombre"
         value={name}
@@ -77,6 +78,7 @@ export const RegisterForm = () => {
         id="email"
         name="email"
         type="text"
+        density="sm"
         label="Email"
         placeholder="Ingresa tu email"
         value={email}
@@ -90,6 +92,7 @@ export const RegisterForm = () => {
         id="password"
         name="password"
         type="password"
+        density="sm"
         label="Contraseña"
         placeholder="Ingresa tu contraseña"
         value={password}
@@ -99,7 +102,12 @@ export const RegisterForm = () => {
         required
       />
 
-      <Button type="submit" variant="accent" isLoading={isLoading} className="w-full">
+      <Button
+        type="submit"
+        variant="accent"
+        isLoading={isLoading}
+        className="w-full py-2.5 text-sm"
+      >
         Crear cuenta
       </Button>
     </form>

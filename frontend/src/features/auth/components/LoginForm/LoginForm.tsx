@@ -49,13 +49,14 @@ export const LoginForm = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="w-full space-y-4">
+    <form onSubmit={handleSubmit} className="w-full space-y-3">
       {error && <ErrorMessage message={error} />}
       
       <Input
         id="email"
         name="email"
         type="text"
+        density="sm"
         label="Usuario"
         placeholder="Ingresa tu usuario"
         value={email}
@@ -69,6 +70,7 @@ export const LoginForm = () => {
         id="password"
         name="password"
         type="password"
+        density="sm"
         label="Contraseña"
         placeholder="Ingresa tu contraseña"
         value={password}
@@ -78,7 +80,12 @@ export const LoginForm = () => {
         required
       />
 
-      <Button type="submit" variant="accent" isLoading={isLoading} className="w-full">
+      <Button
+        type="submit"
+        variant="accent"
+        isLoading={isLoading}
+        className="w-full py-2.5 text-sm"
+      >
         Iniciar sesión
       </Button>
     </form>
