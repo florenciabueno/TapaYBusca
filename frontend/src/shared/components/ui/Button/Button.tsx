@@ -2,7 +2,7 @@ import type { ButtonHTMLAttributes, ReactNode } from 'react';
 import { COLORS } from '../../../../config/theme';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'light' | 'outline' | 'outlineSuccess';
+  variant?: 'primary' | 'secondary' | 'light' | 'outline' | 'outlineSuccess' | 'accent';
   isLoading?: boolean;
   children: ReactNode;
 }
@@ -22,23 +22,24 @@ export const Button = ({
   
   const getBackgroundColor = () => {
     if (isOutline) return 'transparent';
-    if (isDisabled) return COLORS.accent;
+    if (isDisabled && !isLoading) return COLORS.gray[300];
+    if (variant === 'accent') return COLORS.orange;
     if (variant === 'primary') return COLORS.primary;
-    if (variant === 'light') return COLORS.light;
-    return COLORS.accent;
+    if (variant === 'light') return COLORS.gray[100];
+    return COLORS.gray[800];
   };
-  
+
   const getTextColor = () => {
     if (variant === 'outline') return COLORS.primary;
     if (variant === 'outlineSuccess') return COLORS.success.main;
-    if (variant === 'light') return COLORS.secondary;
+    if (variant === 'light') return COLORS.gray[700];
     return 'white';
   };
   
   const backgroundColor = getBackgroundColor();
   const borderColor = variant === 'outline' ? COLORS.primary : variant === 'outlineSuccess' ? COLORS.success.main : undefined;
   const textColor = getTextColor();
-  const opacity = isDisabled && variant === 'secondary' ? 0.5 : undefined;
+  const opacity = isDisabled && variant === 'secondary' ? 0.5 : isLoading && (variant === 'accent' || variant === 'primary') ? 0.82 : undefined;
 
   return (
     <button

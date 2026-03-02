@@ -1,6 +1,6 @@
 import { useAuth } from '../../../features/auth/hooks/useAuth';
 import { ROUTES } from '../../../config/constants';
-import { COLORS } from '../../../config/theme';
+import { COLORS, ACCENT_RGB } from '../../../config/theme';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { EditProfileModal } from '../../../features/auth/components/EditProfileModal';
@@ -84,34 +84,42 @@ export const Header = () => {
 
   return (
     <header
-      className="flex-shrink-0 flex items-center justify-between px-6 py-4"
-      style={{ background: `linear-gradient(90deg, ${COLORS.accent} 0%, ${COLORS.secondary} 50%, ${COLORS.primary} 100%)` }}
+      className="flex-shrink-0 flex items-center justify-between px-6 py-3 border-b transition-shadow"
+      style={{
+        backgroundColor: `rgba(${ACCENT_RGB}, 0.42)`,
+        borderColor: COLORS.lightTeal,
+        boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.05)',
+      }}
     >
       {!user && (
         <div className="flex items-center gap-3">
-          <AppLogo className="w-8 h-8 text-white" />
-          <div className="flex flex-col">
-            <h1 className="text-xl font-bold text-white">Tapa y Busca</h1>
-          </div>
+          <span style={{ color: COLORS.teal }}>
+            <AppLogo className="w-7 h-7" />
+          </span>
+          <h1 className="text-lg font-semibold" style={{ color: COLORS.gray[900] }}>
+            Tapa y Busca
+          </h1>
         </div>
       )}
 
-      <div className={user ? 'ml-auto flex items-center gap-4' : ''}>
+      <div className={user ? 'ml-auto flex items-center gap-3' : ''}>
         {user ? (
           <>
             <button
               type="button"
               onClick={openEditProfile}
-              className="flex items-center gap-2 text-white hover:opacity-90 transition-opacity rounded-md cursor-pointer focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-transparent"
+              className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm font-medium transition-colors hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:ring-offset-2"
+              style={{ color: COLORS.gray[700] }}
               aria-label="Editar perfil"
             >
               <UserIcon className="w-5 h-5 flex-shrink-0" />
-              <span className="font-medium">{user.name}</span>
+              <span>{user.name}</span>
             </button>
             <button
               type="button"
               onClick={handleLogout}
-              className="flex items-center justify-center w-9 h-9 rounded-lg bg-white/15 text-white hover:bg-white/25 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-transparent"
+              className="flex items-center justify-center w-8 h-8 rounded-lg transition-colors hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:ring-offset-2"
+              style={{ color: COLORS.gray[600] }}
               aria-label="Cerrar sesión"
             >
               <LogoutIcon className="w-5 h-5" />
@@ -121,8 +129,8 @@ export const Header = () => {
           <button
             type="button"
             onClick={handleLogin}
-            className="px-4 py-2 rounded-lg transition-colors hover:opacity-90 bg-white font-medium cursor-pointer"
-            style={{ color: COLORS.primary }}
+            className="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:brightness-95 focus:outline-none focus:ring-2 focus:ring-orange-400/40 focus:ring-offset-2"
+            style={{ backgroundColor: COLORS.orange, color: COLORS.surface }}
           >
             Iniciar sesión
           </button>

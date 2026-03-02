@@ -13,7 +13,7 @@ export const EquationsLayout = ({ children }: EquationsLayoutProps) => {
   return (
     <div
       className="h-screen flex overflow-hidden"
-      style={{ background: `linear-gradient(135deg, ${COLORS.light} 0%, #f5f5e8 50%, ${COLORS.light} 100%)` }}
+      style={{ backgroundColor: COLORS.background }}
     >
       {user && <Sidebar />}
 

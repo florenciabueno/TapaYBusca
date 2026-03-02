@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import { ROUTES } from '../../../config/constants';
-import { COLORS } from '../../../config/theme';
+import { COLORS, ACCENT_RGB } from '../../../config/theme';
 import logoImage from '../../../assets/logo.png';
 
 const navItems = [
@@ -78,28 +78,33 @@ function DownloadIcon({ className }: { className?: string }) {
 export const Sidebar = () => {
   return (
     <aside
-      className="w-64 h-screen flex-shrink-0 flex flex-col py-8"
-      style={{ background: `linear-gradient(180deg, ${COLORS.accent} 0%, ${COLORS.secondary} 50%, ${COLORS.primary} 100%)` }}
+      className="w-60 h-screen flex-shrink-0 flex flex-col border-r"
+      style={{
+        backgroundColor: `rgba(${ACCENT_RGB}, 0.48)`,
+        borderColor: COLORS.lightTeal,
+      }}
     >
-      <div className="flex items-center gap-3 px-6 mb-10">
+      <div className="flex items-center gap-3 px-5 py-5">
         <img
           src={logoImage}
-          alt="TapaYBusca"
-          className="w-16 h-16 object-contain shrink-0"
+          alt="Tapa y Busca"
+          className="w-10 h-10 object-contain shrink-0"
         />
-        <div className="flex flex-col">
-          <span className="text-xl font-bold text-white">Tapa y Busca</span>
-        </div>
+        <span className="text-base font-semibold" style={{ color: COLORS.gray[800] }}>
+          Tapa y Busca
+        </span>
       </div>
 
-      <nav className="flex flex-col gap-1 px-4">
+      <nav className="flex flex-col gap-0.5 px-3 pt-2">
         {navItems.map(({ path, label, icon: Icon }) => (
           <NavLink
             key={path}
             to={path}
             className={({ isActive }) =>
-              `flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                isActive ? 'bg-white/15 text-white' : 'text-white/80 hover:bg-white/10 hover:text-white'
+              `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-150 ${
+                isActive
+                  ? 'bg-[#086B85]/20 text-[#086B85]'
+                  : 'text-gray-600 hover:bg-white/60 hover:text-gray-800'
               }`
             }
           >

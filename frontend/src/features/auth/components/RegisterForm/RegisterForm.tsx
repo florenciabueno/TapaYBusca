@@ -99,7 +99,7 @@ export const RegisterForm = () => {
         required
       />
 
-      <Button type="submit" isLoading={isLoading} className="w-full">
+      <Button type="submit" variant="accent" isLoading={isLoading} className="w-full">
         Crear cuenta
       </Button>
     </form>

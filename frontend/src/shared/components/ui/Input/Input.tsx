@@ -20,7 +20,7 @@ export const Input = ({ label, error, helperText, labelColor = 'primary', classN
   }`;
   
   const getLabelColor = () => {
-    return labelColor === 'secondary' ? COLORS.secondary : COLORS.primary;
+    return labelColor === 'secondary' ? COLORS.gray[600] : COLORS.primary;
   };
 
   return (
@@ -38,8 +38,8 @@ export const Input = ({ label, error, helperText, labelColor = 'primary', classN
           type={inputType}
           className={inputClasses}
           style={{
-            borderColor: error ? COLORS.error.main : isDisabled ? COLORS.light : COLORS.primary,
-            '--tw-ring-color': COLORS.primary,
+            borderColor: error ? COLORS.error.main : isDisabled ? COLORS.gray[200] : COLORS.lightTeal,
+            '--tw-ring-color': COLORS.teal,
             paddingRight: isPasswordType ? '3rem' : undefined,
           } as React.CSSProperties}
           aria-invalid={error ? 'true' : 'false'}
@@ -100,7 +100,7 @@ export const Input = ({ label, error, helperText, labelColor = 'primary', classN
         <p
           id={`${props.id || props.name}-helper`}
           className="mt-1 text-xs"
-          style={{ color: COLORS.accent }}
+          style={{ color: COLORS.gray[500] }}
         >
           {helperText}
         </p>

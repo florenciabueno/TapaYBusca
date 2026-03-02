@@ -1,4 +1,0 @@
-. que es useDebounce? deberiamos crear ese hook en shared/hooks??
-. revisar carpeta api/auth y sus archivos
-. en front  en features/equations/components crear las carpetas de EquationList, EquationEditor etc en lugar de las que hay, revisar si tienen sentido las que tenemos.
-. en front  en features/equations/pages revisar
