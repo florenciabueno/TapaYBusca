@@ -6,10 +6,10 @@ export const EquationsPage = () => {
   return (
     <EquationsLayout>
       <div className="w-full">
-        <h1 className="mb-2 text-2xl font-semibold sm:text-3xl" style={{ color: COLORS.gray[800] }}>
+        <h1 className="mb-1 text-xl font-semibold sm:text-2xl" style={{ color: COLORS.gray[800] }}>
           Mis ecuaciones
         </h1>
-        <p className="mb-8 text-sm text-gray-500 sm:text-base">
+        <p className="mb-4 text-xs text-gray-500 sm:text-sm">
           Gestiona y resuelve tus ecuaciones matemáticas paso a paso
         </p>
 

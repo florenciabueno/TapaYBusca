@@ -14,14 +14,12 @@ const STATUS_STYLES: Record<
 
 export interface EquationCardProps {
   equation: Equation;
-  onView: () => void;
-  onDelete: () => void;
+  onDelete: (id: string) => void;
   canDelete: boolean;
 }
 
 export const EquationCard = ({
   equation,
-  onView,
   onDelete,
   canDelete,
 }: EquationCardProps) => {
@@ -29,20 +27,20 @@ export const EquationCard = ({
 
   return (
     <article
-      className="rounded-xl border bg-white p-5 transition-all duration-200 hover:shadow-md"
+      className="rounded-lg border bg-white p-3 transition-all duration-200 hover:shadow-md"
       style={{
         borderRadius: RADIUS.lg,
         borderColor: COLORS.lightTeal,
         boxShadow: SHADOW.sm,
       }}
     >
-      <div className="mb-4 min-h-[2.5rem]">
+      <div className="mb-2 min-h-[2rem]">
         <MathExpression
           expression={equation.equation}
-          className="text-lg text-gray-800"
+          className="text-base text-gray-800"
         />
       </div>
-      <div className="flex flex-wrap items-center gap-2 text-sm text-gray-500">
+      <div className="flex flex-wrap items-center gap-1.5 text-xs text-gray-500">
         <span>{ORIGIN_LABELS[equation.origin]}</span>
         <span aria-hidden className="text-gray-300">
           ·
@@ -53,27 +51,19 @@ export const EquationCard = ({
         </span>
         <span>{equation.steps} pasos</span>
       </div>
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+      <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
         <span
-          className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium"
+          className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
           style={{ backgroundColor: statusStyle.bg, color: statusStyle.text }}
         >
           {STATUS_LABELS[equation.status]}
         </span>
         <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={onView}
-            className="rounded-lg px-3 py-1.5 text-sm font-medium transition-colors hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-orange-400/40 focus:ring-offset-2"
-            style={{ color: COLORS.orange }}
-          >
-            Ver
-          </button>
           {canDelete && (
             <button
               type="button"
-              onClick={onDelete}
-              className="rounded-lg px-3 py-1.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500/30 focus:ring-offset-2"
+              onClick={() => onDelete(equation.id)}
+              className="rounded-md px-2 py-1 text-xs font-medium text-red-600 transition-colors hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500/30 focus:ring-offset-2"
             >
               Eliminar
             </button>

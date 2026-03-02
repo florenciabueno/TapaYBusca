@@ -1,10 +1,13 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { EQUATIONS_PAGE_SIZE } from '../../../config/constants';
 import { useEquationsStore } from '../store/equationsSlice';
 import { equationService } from '../services/equation.service';
 import { useAuthStore } from '../../../stores';
 
 export const useEquationList = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const user = useAuthStore((state) => state.user);
   const {
     equations,
     isLoading,
@@ -19,6 +22,8 @@ export const useEquationList = () => {
     setPagination,
     setPage,
   } = useEquationsStore();
+
+  const pageFromUrl = Number(searchParams.get('page') || 1);
 
   const fetchEquations = useCallback(
     async (page?: number) => {
@@ -41,6 +46,20 @@ export const useEquationList = () => {
     [setEquations, setLoading, setError, clearError, setPagination, setPage]
   );
 
+  useEffect(() => {
+    fetchEquations(pageFromUrl);
+  }, [pageFromUrl, user, fetchEquations]);
+
+  useEffect(() => {
+    if (totalPages > 0 && pageFromUrl > totalPages) {
+      setSearchParams({ page: String(totalPages) });
+    }
+  }, [totalPages, pageFromUrl, setSearchParams]);
+
+  const goToPage = useCallback((page: number) => {
+    setSearchParams({ page: String(page) });
+  }, [setSearchParams]);
+
   const deleteEquation = async (id: string) => {
     try {
       const token = useAuthStore.getState().token;
@@ -61,7 +80,7 @@ export const useEquationList = () => {
     currentPage,
     total,
     totalPages,
-    setPage,
+    goToPage,
     fetchEquations,
     deleteEquation,
     clearError,

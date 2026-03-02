@@ -20,7 +20,7 @@ export const EquationsLayout = ({ children }: EquationsLayoutProps) => {
       <div className="flex-1 flex flex-col min-w-0 min-h-0">
         <Header />
 
-        <main className={`flex-1 min-h-0 py-6 overflow-auto relative ${user ? 'pl-8 pr-6' : 'px-6'}`}>
+        <main className={`flex-1 min-h-0 py-6 overflow-auto relative ${user ? 'pl-8 pr-4' : 'px-6'}`}>
           <div className={`${user ? '' : 'max-w-7xl mx-auto'}`}>
             {children}
           </div>
