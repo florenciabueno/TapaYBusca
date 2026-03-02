@@ -1,1 +1,0 @@
-export { EquationsTable } from './EquationsTable';

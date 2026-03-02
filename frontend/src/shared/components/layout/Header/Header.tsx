@@ -1,9 +1,9 @@
-import { useAuth } from '../../../features/auth/hooks/useAuth';
-import { ROUTES } from '../../../config/constants';
-import { COLORS, ACCENT_RGB } from '../../../config/theme';
+import { useAuth } from '../../../../features/auth/hooks/useAuth';
+import { ROUTES } from '../../../../config/constants';
+import { COLORS, ACCENT_RGB } from '../../../../config/theme';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
-import { EditProfileModal } from '../../../features/auth/components/EditProfileModal';
+import { EditProfileModal } from '../../../../features/auth/components/EditProfileModal';
 
 function LogoutIcon({ className }: { className?: string }) {
   return (

@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom';
-import { ROUTES } from '../../../config/constants';
-import { COLORS, ACCENT_RGB } from '../../../config/theme';
-import logoImage from '../../../assets/logo.png';
+import { ROUTES } from '../../../../config/constants';
+import { COLORS, ACCENT_RGB } from '../../../../config/theme';
+import logoImage from '../../../../assets/logo.png';
 
 const navItems = [
   { path: ROUTES.DASHBOARD, label: 'Inicio', icon: HomeIcon },
