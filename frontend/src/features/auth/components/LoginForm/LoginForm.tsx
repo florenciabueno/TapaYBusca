@@ -5,7 +5,7 @@ import { ErrorMessage } from '../../../../shared/components/ui/ErrorMessage/Erro
 import { useFormValidation } from '../../../../shared/hooks/useFormValidation';
 import { validateEmail, validatePassword } from '../../../../shared/utils/validation';
 import { useAuth } from '../../hooks/useAuth';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { ROUTES } from '../../../../config/constants';
 
 export const LoginForm = () => {
@@ -79,6 +79,12 @@ export const LoginForm = () => {
         autoComplete="current-password"
         required
       />
+
+      <div className="flex justify-end">
+        <Link to={ROUTES.FORGOT_PASSWORD} className="text-xs text-gray-600 hover:underline">
+          ¿Olvidaste tu contraseña?
+        </Link>
+      </div>
 
       <Button
         type="submit"

@@ -4,6 +4,8 @@ import { CreateEquationPage } from '../features/equations/pages/CreateEquationPa
 import { UploadPage } from '../features/equations/pages/UploadPage';
 import { DownloadPage } from '../features/equations/pages/DownloadPage';
 import { AuthPage } from '../features/auth/pages/AuthPage';
+import { ForgotPasswordPage } from '../features/auth/pages/ForgotPasswordPage';
+import { ResetPasswordPage } from '../features/auth/pages/ResetPasswordPage';
 
 export interface RouteConfig {
   path: string;
@@ -20,6 +22,16 @@ export const routes: RouteConfig[] = [
   {
     path: ROUTES.REGISTER,
     element: AuthPage,
+    isProtected: false,
+  },
+  {
+    path: ROUTES.FORGOT_PASSWORD,
+    element: ForgotPasswordPage,
+    isProtected: false,
+  },
+  {
+    path: ROUTES.RESET_PASSWORD,
+    element: ResetPasswordPage,
     isProtected: false,
   },
   {
