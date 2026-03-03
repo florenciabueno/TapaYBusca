@@ -18,7 +18,7 @@ export const AuthPage = () => {
         className="w-full max-w-md rounded-2xl border shadow-lg p-6 sm:p-8 max-h-[calc(100vh-3rem)] overflow-y-auto"
         style={{
           backgroundColor: COLORS.surface,
-          borderColor: COLORS.lightTeal,
+          borderColor: COLORS.secondary,
         }}
       >
         <div className="flex flex-col items-center mb-5">

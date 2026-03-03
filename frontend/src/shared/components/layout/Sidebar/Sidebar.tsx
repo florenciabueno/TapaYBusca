@@ -78,10 +78,9 @@ function DownloadIcon({ className }: { className?: string }) {
 export const Sidebar = () => {
   return (
     <aside
-      className="w-60 h-screen flex-shrink-0 flex flex-col border-r"
+      className="w-60 h-screen flex-shrink-0 flex flex-col"
       style={{
         backgroundColor: `rgba(${ACCENT_RGB}, 0.48)`,
-        borderColor: COLORS.lightTeal,
       }}
     >
       <div className="flex items-center gap-3 px-5 py-5">
@@ -90,7 +89,7 @@ export const Sidebar = () => {
           alt="Tapa y Busca"
           className="w-10 h-10 object-contain shrink-0"
         />
-        <span className="text-base font-semibold" style={{ color: COLORS.gray[800] }}>
+        <span className="text-base font-semibold" style={{ color: COLORS.brandDark }}>
           Tapa y Busca
         </span>
       </div>
@@ -100,11 +99,12 @@ export const Sidebar = () => {
           <NavLink
             key={path}
             to={path}
+            style={({ isActive }) =>
+              isActive ? { backgroundColor: `${COLORS.brandDark}22`, color: COLORS.brandDark } : undefined
+            }
             className={({ isActive }) =>
               `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-150 ${
-                isActive
-                  ? 'bg-[#086B85]/20 text-[#086B85]'
-                  : 'text-gray-600 hover:bg-white/60 hover:text-gray-800'
+                isActive ? '' : 'text-gray-600 hover:bg-white/60 hover:text-gray-800'
               }`
             }
           >

@@ -37,9 +37,9 @@ export const EquationsCardList = () => {
     return (
       <div
         className="rounded-lg border bg-white px-4 py-10 text-center"
-        style={{ borderColor: COLORS.lightTeal, boxShadow: SHADOW.sm }}
+        style={{ borderColor: COLORS.brandDark, boxShadow: SHADOW.sm }}
       >
-        <p className="text-sm font-medium" style={{ color: COLORS.secondary }}>
+        <p className="text-sm font-medium" style={{ color: COLORS.brandDark }}>
           {MESSAGES.LOADING}
         </p>
       </div>
@@ -61,7 +61,7 @@ export const EquationsCardList = () => {
     return (
       <div
         className="rounded-lg border bg-white px-4 py-10 text-center transition-shadow"
-        style={{ borderColor: COLORS.lightTeal, boxShadow: SHADOW.sm }}
+        style={{ borderColor: COLORS.brandDark, boxShadow: SHADOW.sm }}
       >
         <div
           className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full"
@@ -89,8 +89,8 @@ export const EquationsCardList = () => {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="space-y-4 w-full">
+      <div className="grid w-full gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {equations.map((equation) => (
           <EquationCard
             key={equation.id}

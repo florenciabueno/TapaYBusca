@@ -1,23 +1,24 @@
 /**
- * Paleta coherente en tono #0A809D (rgb 10, 128, 157).
- * - Header y sidebar: mismo tono en rgba.
- * - Bordes, botones, activos: misma familia.
+ * Paleta: naranja #FF8000, naranja suave (secundario), teal #219B9D, gris claro #EEEEEE.
  */
 export const PALETTE = {
-  cream: '#E3F1F5',
-  lightTeal: '#0A809D',
-  teal: '#086B85',
-  orange: '#EB8B4A',
+  cream: '#EEEEEE',
+  lightTeal: '#219B9D',
+  teal: '#219B9D',
+  orange: '#FF8000',
+  mutedOrange: '#C97B50', // naranja suave que combina con el verde agua
+  violet: '#6B4A8E',
+  brandDark: '#33555D', // teal oscuro del logo / texto marca
 } as const;
 
-/** Base RGB para header/sidebar y fondos suaves (10, 128, 157) */
-export const ACCENT_RGB = '10, 128, 157' as const;
+/** Base RGB para header/sidebar y fondos (33, 155, 157) */
+export const ACCENT_RGB = '33, 155, 157' as const;
 
 export const COLORS = {
   ...PALETTE,
   primary: PALETTE.teal,
-  primaryHover: '#065A70',
-  secondary: '#5a7a80',
+  primaryHover: '#1A7D7F',
+  secondary: PALETTE.mutedOrange,
   background: PALETTE.cream,
   surface: '#ffffff',
   success: {

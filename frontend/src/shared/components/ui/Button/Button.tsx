@@ -25,21 +25,23 @@ export const Button = ({
     if (isDisabled && !isLoading) return COLORS.gray[300];
     if (variant === 'accent') return COLORS.orange;
     if (variant === 'primary') return COLORS.primary;
+    if (variant === 'secondary') return COLORS.secondary;
     if (variant === 'light') return COLORS.gray[100];
     return COLORS.gray[800];
   };
 
   const getTextColor = () => {
-    if (variant === 'outline') return COLORS.primary;
+    if (isOutline) return COLORS.primary;
     if (variant === 'outlineSuccess') return COLORS.success.main;
     if (variant === 'light') return COLORS.gray[700];
+    if (variant === 'secondary') return 'white';
     return 'white';
   };
   
   const backgroundColor = getBackgroundColor();
   const borderColor = variant === 'outline' ? COLORS.primary : variant === 'outlineSuccess' ? COLORS.success.main : undefined;
   const textColor = getTextColor();
-  const opacity = isDisabled && variant === 'secondary' ? 0.5 : isLoading && (variant === 'accent' || variant === 'primary') ? 0.82 : undefined;
+  const opacity = isDisabled && variant === 'secondary' ? 0.5 : isLoading && (variant === 'accent' || variant === 'primary' || variant === 'secondary') ? 0.82 : undefined;
 
   return (
     <button

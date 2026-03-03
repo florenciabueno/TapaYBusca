@@ -22,7 +22,11 @@ export const EditProfileModal = ({ isOpen, onClose }: EditProfileModalProps) => 
       />
 
       <div
-        className="relative bg-white rounded-lg shadow-xl w-full max-w-md mx-4 p-6"
+        className="relative rounded-2xl border shadow-lg w-full max-w-md mx-4 p-6 sm:p-8"
+        style={{
+          backgroundColor: COLORS.surface,
+          borderColor: COLORS.teal,
+        }}
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-title"
@@ -30,7 +34,7 @@ export const EditProfileModal = ({ isOpen, onClose }: EditProfileModalProps) => 
         <h2
           id="modal-title"
           className="text-2xl font-bold mb-6"
-          style={{ color: COLORS.primary }}
+          style={{ color: COLORS.teal }}
         >
           Editar perfil
         </h2>

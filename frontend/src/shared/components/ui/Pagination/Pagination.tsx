@@ -24,8 +24,21 @@ export const Pagination = ({
         type="button"
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage <= 1}
-        className="rounded-lg border px-3 py-2 text-sm font-medium transition-colors hover:bg-gray-100 hover:border-gray-400 hover:text-gray-800 disabled:pointer-events-none disabled:opacity-50"
-        style={{ borderColor: COLORS.lightTeal, color: COLORS.gray[700] }}
+        className="rounded-lg border px-3 py-2 text-sm font-medium transition-colors disabled:pointer-events-none disabled:opacity-50"
+        style={{
+          borderColor: COLORS.brandDark,
+          color: COLORS.brandDark,
+        }}
+        onMouseEnter={(e) => {
+          if (currentPage > 1) {
+            e.currentTarget.style.backgroundColor = `${COLORS.brandDark}22`;
+            e.currentTarget.style.borderColor = COLORS.brandDark;
+          }
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.backgroundColor = '';
+          e.currentTarget.style.borderColor = COLORS.brandDark;
+        }}
       >
         {previousLabel}
       </button>
@@ -39,8 +52,21 @@ export const Pagination = ({
         type="button"
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage >= totalPages}
-        className="rounded-lg border px-3 py-2 text-sm font-medium transition-colors hover:bg-gray-100 hover:border-gray-400 hover:text-gray-800 disabled:pointer-events-none disabled:opacity-50"
-        style={{ borderColor: COLORS.lightTeal, color: COLORS.gray[700] }}
+        className="rounded-lg border px-3 py-2 text-sm font-medium transition-colors disabled:pointer-events-none disabled:opacity-50"
+        style={{
+          borderColor: COLORS.brandDark,
+          color: COLORS.brandDark,
+        }}
+        onMouseEnter={(e) => {
+          if (currentPage < totalPages) {
+            e.currentTarget.style.backgroundColor = `${COLORS.brandDark}22`;
+            e.currentTarget.style.borderColor = COLORS.brandDark;
+          }
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.backgroundColor = '';
+          e.currentTarget.style.borderColor = COLORS.brandDark;
+        }}
       >
         {nextLabel}
       </button>

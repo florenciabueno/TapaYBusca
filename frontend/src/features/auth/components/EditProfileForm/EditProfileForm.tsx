@@ -31,7 +31,6 @@ export const EditProfileForm = ({ onSuccess, onCancel }: EditProfileFormProps) =
         label="Email"
         value={user?.email || ''}
         disabled
-        labelColor="secondary"
       />
 
       <Input
@@ -43,7 +42,6 @@ export const EditProfileForm = ({ onSuccess, onCancel }: EditProfileFormProps) =
         onChange={handleChange}
         required
         placeholder="Tu nombre"
-        labelColor="secondary"
       />
 
       <Input
@@ -55,7 +53,6 @@ export const EditProfileForm = ({ onSuccess, onCancel }: EditProfileFormProps) =
         onChange={handleChange}
         placeholder="Ingresa tu contraseña actual"
         helperText="Solo si deseas cambiar la contraseña"
-        labelColor="secondary"
       />
 
       {formData.currentPassword && (
@@ -69,7 +66,6 @@ export const EditProfileForm = ({ onSuccess, onCancel }: EditProfileFormProps) =
             onChange={handleChange}
             required={!!formData.currentPassword}
             placeholder="Mínimo 8 caracteres"
-            labelColor="secondary"
           />
 
           <Input
@@ -81,7 +77,6 @@ export const EditProfileForm = ({ onSuccess, onCancel }: EditProfileFormProps) =
             onChange={handleChange}
             required={!!formData.currentPassword}
             placeholder="Repite la nueva contraseña"
-            labelColor="secondary"
           />
         </>
       )}
@@ -110,7 +105,7 @@ export const EditProfileForm = ({ onSuccess, onCancel }: EditProfileFormProps) =
         <Button
           type="submit"
           disabled={success}
-          variant="primary"
+          variant="accent"
           isLoading={loading}
         >
           Guardar cambios

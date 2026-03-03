@@ -84,19 +84,18 @@ export const Header = () => {
 
   return (
     <header
-      className="flex-shrink-0 flex items-center justify-between px-6 py-3 border-b transition-shadow"
+      className="flex-shrink-0 flex items-center justify-between px-6 py-3 transition-shadow"
       style={{
         backgroundColor: `rgba(${ACCENT_RGB}, 0.42)`,
-        borderColor: COLORS.lightTeal,
         boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.05)',
       }}
     >
       {!user && (
         <div className="flex items-center gap-3">
-          <span style={{ color: COLORS.teal }}>
+          <span style={{ color: COLORS.brandDark }}>
             <AppLogo className="w-7 h-7" />
           </span>
-          <h1 className="text-lg font-semibold" style={{ color: COLORS.gray[900] }}>
+          <h1 className="text-lg font-semibold" style={{ color: COLORS.brandDark }}>
             Tapa y Busca
           </h1>
         </div>
@@ -108,8 +107,8 @@ export const Header = () => {
             <button
               type="button"
               onClick={openEditProfile}
-              className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm font-medium transition-colors hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:ring-offset-2"
-              style={{ color: COLORS.gray[700] }}
+              className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm font-medium transition-colors hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:ring-offset-2"
+              style={{ color: COLORS.brandDark }}
               aria-label="Editar perfil"
             >
               <UserIcon className="w-5 h-5 flex-shrink-0" />

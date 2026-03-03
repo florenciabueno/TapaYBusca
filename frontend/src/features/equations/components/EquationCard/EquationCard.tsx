@@ -27,11 +27,11 @@ export const EquationCard = ({
 
   return (
     <article
-      className="rounded-lg border bg-white p-3 transition-all duration-200 hover:shadow-md"
+      className="rounded-lg border bg-white p-4 transition-all duration-200 ease-out hover:-translate-y-2 hover:scale-[1.05] hover:shadow-xl"
       style={{
         borderRadius: RADIUS.lg,
-        borderColor: COLORS.lightTeal,
-        boxShadow: SHADOW.sm,
+        borderColor: COLORS.brandDark,
+        boxShadow: SHADOW.md,
       }}
     >
       <div className="mb-2 min-h-[2rem]">
@@ -42,13 +42,9 @@ export const EquationCard = ({
       </div>
       <div className="flex flex-wrap items-center gap-1.5 text-xs text-gray-500">
         <span>{ORIGIN_LABELS[equation.origin]}</span>
-        <span aria-hidden className="text-gray-300">
-          ·
-        </span>
+        <span aria-hidden className="text-gray-300">·</span>
         <span>{equation.date}</span>
-        <span aria-hidden className="text-gray-300">
-          ·
-        </span>
+        <span aria-hidden className="text-gray-300">·</span>
         <span>{equation.steps} pasos</span>
       </div>
       <div className="mt-2 flex flex-wrap items-center justify-between gap-2">

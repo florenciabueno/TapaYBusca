@@ -49,7 +49,7 @@ export const Input = ({
           type={inputType}
           className={inputClasses}
           style={{
-            borderColor: error ? COLORS.error.main : isDisabled ? COLORS.gray[200] : COLORS.lightTeal,
+            borderColor: error ? COLORS.error.main : isDisabled ? COLORS.gray[200] : COLORS.primary,
             '--tw-ring-color': COLORS.teal,
             paddingRight: isPasswordType ? '3rem' : undefined,
           } as React.CSSProperties}
