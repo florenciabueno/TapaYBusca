@@ -26,12 +26,7 @@ export const EditProfileForm = ({ onSuccess, onCancel }: EditProfileFormProps) =
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <Input
-        type="email"
-        label="Email"
-        value={user?.email || ''}
-        disabled
-      />
+      <Input type="email" label="Email" value={user?.email ?? ''} disabled />
 
       <Input
         type="text"
@@ -82,32 +77,28 @@ export const EditProfileForm = ({ onSuccess, onCancel }: EditProfileFormProps) =
       )}
 
       {success && (
-        <div className="p-3 rounded-lg text-sm font-medium" style={{ backgroundColor: COLORS.success.bg, color: COLORS.success.text }}>
+        <div
+          className="p-3 rounded-lg text-sm font-medium"
+          style={{ backgroundColor: COLORS.success.bg, color: COLORS.success.text }}
+        >
           ✓ Datos actualizados exitosamente
         </div>
       )}
 
       {error && (
-        <div className="p-3 rounded-lg text-sm" style={{ backgroundColor: COLORS.error.bg, color: COLORS.error.text }}>
+        <div
+          className="p-3 rounded-lg text-sm"
+          style={{ backgroundColor: COLORS.error.bg, color: COLORS.error.text }}
+        >
           {error}
         </div>
       )}
 
       <div className="flex gap-3 justify-end pt-2">
-        <Button
-          type="button"
-          onClick={onCancel}
-          disabled={loading}
-          variant="light"
-        >
+        <Button type="button" onClick={onCancel} disabled={loading} variant="light">
           Cancelar
         </Button>
-        <Button
-          type="submit"
-          disabled={success}
-          variant="accent"
-          isLoading={loading}
-        >
+        <Button type="submit" disabled={success} variant="accent" isLoading={loading}>
           Guardar cambios
         </Button>
       </div>

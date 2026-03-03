@@ -6,7 +6,7 @@ const getAuthHeaders = () => {
   const token = useAuthStore.getState().token;
   return {
     'Content-Type': 'application/json',
-    ...(token && { 'Authorization': `Bearer ${token}` }),
+    ...(token && { Authorization: `Bearer ${token}` }),
   };
 };
 
@@ -22,7 +22,7 @@ export const profileService = {
       throw new Error('Error al obtener el perfil');
     }
 
-    return await response.json();
+    return response.json();
   },
 
   async updateProfile(data: UpdateProfileData): Promise<Profile> {
@@ -38,6 +38,6 @@ export const profileService = {
       throw new Error(error.error || 'Error al actualizar el perfil');
     }
 
-    return await response.json();
+    return response.json();
   },
 };

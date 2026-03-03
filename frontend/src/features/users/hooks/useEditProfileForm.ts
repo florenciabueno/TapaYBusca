@@ -9,26 +9,29 @@ interface EditProfileFormData {
   confirmPassword: string;
 }
 
+const MIN_NAME_LENGTH = 2;
+const MIN_PASSWORD_LENGTH = 8;
+
 export const useEditProfileForm = () => {
   const user = useAuthStore((state) => state.user);
   const setUser = useAuthStore((state) => state.setUser);
-  
+
   const [formData, setFormData] = useState<EditProfileFormData>({
-    name: user?.name || '',
+    name: user?.name ?? '',
     currentPassword: '',
     password: '',
     confirmPassword: '',
   });
-  
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
+    setFormData((prev) => ({
+      ...prev,
       [e.target.name]: e.target.value,
-    });
+    }));
     setError(null);
   };
 
@@ -38,7 +41,7 @@ export const useEditProfileForm = () => {
       return false;
     }
 
-    if (formData.name.trim().length < 2) {
+    if (formData.name.trim().length < MIN_NAME_LENGTH) {
       setError('El nombre debe tener al menos 2 caracteres');
       return false;
     }
@@ -54,7 +57,7 @@ export const useEditProfileForm = () => {
         return false;
       }
 
-      if (formData.password.length < 8) {
+      if (formData.password.length < MIN_PASSWORD_LENGTH) {
         setError('La nueva contraseña debe tener al menos 8 caracteres');
         return false;
       }
@@ -69,33 +72,35 @@ export const useEditProfileForm = () => {
   };
 
   const handleSubmit = async (onSuccess: () => void) => {
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
 
     setLoading(true);
     setError(null);
 
     try {
       const updateData: { name?: string; currentPassword?: string; password?: string } = {};
-      
+
       if (formData.name.trim() !== user?.name) {
         updateData.name = formData.name.trim();
       }
-      
+
       if (formData.password) {
         updateData.currentPassword = formData.currentPassword;
         updateData.password = formData.password;
       }
 
-      if (Object.keys(updateData).length === 0 || (Object.keys(updateData).length === 1 && updateData.currentPassword)) {
+      const hasChanges =
+        Object.keys(updateData).length > 0 &&
+        !(Object.keys(updateData).length === 1 && updateData.currentPassword);
+
+      if (!hasChanges) {
         setError('No hay cambios para guardar');
         setLoading(false);
         return;
       }
 
       const updatedProfile = await profileService.updateProfile(updateData);
-      
+
       setUser({
         id: updatedProfile.id,
         email: updatedProfile.email,
@@ -103,12 +108,9 @@ export const useEditProfileForm = () => {
       });
 
       setSuccess(true);
-      
-      setTimeout(() => {
-        onSuccess();
-      }, 2000);
-    } catch (err: any) {
-      setError(err.message || 'Error al actualizar el perfil');
+      setTimeout(onSuccess, 2000);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Error al actualizar el perfil');
     } finally {
       setLoading(false);
     }

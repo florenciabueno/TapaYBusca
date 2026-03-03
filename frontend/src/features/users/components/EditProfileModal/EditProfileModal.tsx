@@ -9,10 +9,6 @@ interface EditProfileModalProps {
 export const EditProfileModal = ({ isOpen, onClose }: EditProfileModalProps) => {
   if (!isOpen) return null;
 
-  const handleSuccess = () => {
-    onClose();
-  };
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div
@@ -39,7 +35,7 @@ export const EditProfileModal = ({ isOpen, onClose }: EditProfileModalProps) => 
           Editar perfil
         </h2>
 
-        <EditProfileForm onSuccess={handleSuccess} onCancel={onClose} />
+        <EditProfileForm onSuccess={onClose} onCancel={onClose} />
       </div>
     </div>
   );
