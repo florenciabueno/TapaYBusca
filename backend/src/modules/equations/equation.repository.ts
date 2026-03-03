@@ -43,9 +43,11 @@ export class EquationRepository {
   }
 
   async create(data: CreateEquationDto) {
+    const expression = data.expression.trim();
     const newEquation = await prisma.equation.create({
       data: {
-        postfixExpression: data.expression,
+        postfixExpression: expression,
+        infixExpression: expression,
         creatorId: data.userId,
         isDefault: false,
       },

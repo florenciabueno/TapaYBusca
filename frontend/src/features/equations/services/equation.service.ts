@@ -60,19 +60,22 @@ export const equationService = {
     return response.json();
   },
 
-  async createEquation(equation: string, origin: string = 'creada', token?: string | null): Promise<Equation> {
+  async createEquation(equation: string, token?: string | null): Promise<Equation> {
     const response = await fetch(`${API_URL}/equations`, {
       method: 'POST',
       headers: getAuthHeaders(token),
       credentials: 'include',
-      body: JSON.stringify({ equation, origin: origin.toUpperCase() }),
+      body: JSON.stringify({ equation }),
     });
 
+    const data = await response.json().catch(() => ({}));
+
     if (!response.ok) {
-      throw new Error('Error al crear la ecuación');
+      const message = typeof data?.error === 'string' ? data.error : 'Error al crear la ecuación';
+      throw new Error(message);
     }
 
-    return response.json();
+    return mapItem(data);
   },
 
   async updateEquation(id: string, data: { status?: string; steps?: number }, token?: string | null): Promise<Equation> {

@@ -9,6 +9,7 @@ import {
   DefaultEquationRow,
   PaginatedEquationsResponse,
 } from './equation.types.js';
+import { validateEquation } from './equation.validators.js';
 
 const STEPS_DEFAULT = 0;
 const DEFAULT_PAGE = 1;
@@ -42,6 +43,10 @@ export class EquationService {
   }
 
   async createEquation(data: CreateEquationDto): Promise<EquationResponse> {
+    const validation = validateEquation(data.expression);
+    if (!validation.isValid) {
+      throw new Error(validation.errors.join(' '));
+    }
     const equationUser = await this.equationRepository.create(data);
     return this.toEquationResponse(equationUser);
   }
