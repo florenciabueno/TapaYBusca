@@ -1,4 +1,4 @@
-import { type FormEvent, useMemo, useState } from 'react';
+import { type FormEvent, useState } from 'react';
 import { Input } from '../../../../shared/components/ui/Input/Input';
 import { Button } from '../../../../shared/components/ui/Button/Button';
 import { ErrorMessage } from '../../../../shared/components/ui/ErrorMessage/ErrorMessage';
@@ -19,13 +19,11 @@ export const ResetPasswordForm = ({ token, onSuccess }: ResetPasswordFormProps) 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { errors, validateForm, clearError } = useFormValidation();
 
-  const validateConfirmPassword = useMemo(() => {
-    return (value: string): string | null => {
-      if (!value) return 'Confirma la contraseña';
-      if (value !== newPassword) return 'Las contraseñas no coinciden';
-      return null;
-    };
-  }, [newPassword]);
+  const validateConfirmPassword = (value: string): string | null => {
+    if (!value) return 'Confirma la contraseña';
+    if (value !== newPassword) return 'Las contraseñas no coinciden';
+    return null;
+  };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();

@@ -5,24 +5,19 @@ import {
   RegisterValidationErrors,
   ValidationResult,
 } from './auth.types.js';
-import { MIN_NAME_LENGTH, MIN_PASSWORD_LENGTH } from '../../shared/constants/validation.js';
-
-const EMAIL_INVALID_MESSAGE = 'Email inválido';
-const NAME_TOO_SHORT_MESSAGE = `El nombre debe tener al menos ${MIN_NAME_LENGTH} caracteres`;
-const PASSWORD_TOO_SHORT_MESSAGE = `La contraseña debe tener al menos ${MIN_PASSWORD_LENGTH} caracteres`;
+import {
+  MIN_NAME_LENGTH,
+  MIN_PASSWORD_LENGTH,
+  NAME_TOO_SHORT_MESSAGE,
+  PASSWORD_TOO_SHORT_MESSAGE,
+} from '../../shared/constants/validation.js';
+import { validateEmail } from '../../shared/utils/validation.js';
 
 function toValidationResult<T extends Record<string, string | undefined>>(errors: T): ValidationResult<T> {
   return {
     isValid: Object.keys(errors).length === 0,
     errors,
   };
-}
-
-function validateEmail(email: string | undefined): string | undefined {
-  if (!email || !email.includes('@')) {
-    return EMAIL_INVALID_MESSAGE;
-  }
-  return undefined;
 }
 
 function validatePasswordLength(password: string | undefined): string | undefined {

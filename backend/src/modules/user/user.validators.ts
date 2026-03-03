@@ -1,9 +1,11 @@
 import { UpdateProfileDto, UpdateProfileValidationErrors, ValidationResult } from './user.types.js';
-import { MIN_NAME_LENGTH, MIN_PASSWORD_LENGTH } from '../../shared/constants/validation.js';
-
-const NAME_TOO_SHORT_MESSAGE = `El nombre debe tener al menos ${MIN_NAME_LENGTH} caracteres`;
-const PASSWORD_TOO_SHORT_MESSAGE = `La contraseña debe tener al menos ${MIN_PASSWORD_LENGTH} caracteres`;
-const CURRENT_PASSWORD_REQUIRED_MESSAGE = 'Debe proporcionar la contraseña actual para cambiarla';
+import {
+  MIN_NAME_LENGTH,
+  MIN_PASSWORD_LENGTH,
+  NAME_TOO_SHORT_MESSAGE,
+  PASSWORD_TOO_SHORT_MESSAGE,
+  CURRENT_PASSWORD_REQUIRED_MESSAGE,
+} from '../../shared/constants/validation.js';
 
 function validateName(name: string | undefined): string | undefined {
   if (name === undefined) return undefined;
