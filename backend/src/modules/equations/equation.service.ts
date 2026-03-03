@@ -10,6 +10,7 @@ import {
   PaginatedEquationsResponse,
 } from './equation.types.js';
 import { validateEquation } from './equation.validators.js';
+import { solveEquation } from './equation-solver/index.js';
 
 const STEPS_DEFAULT = 0;
 const DEFAULT_PAGE = 1;
@@ -46,6 +47,10 @@ export class EquationService {
     const validation = validateEquation(data.expression);
     if (!validation.isValid) {
       throw new Error(validation.errors.join(' '));
+    }
+    const solveResult = solveEquation(data.expression);
+    if (!solveResult.ok) {
+      throw new Error(solveResult.message ?? 'La ecuación no tiene solución.');
     }
     const equationUser = await this.equationRepository.create(data);
     return this.toEquationResponse(equationUser);
