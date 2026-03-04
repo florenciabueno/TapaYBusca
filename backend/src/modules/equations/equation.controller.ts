@@ -8,6 +8,8 @@ const ERROR_GET_EQUATION = 'Error al obtener la ecuación';
 const ERROR_CREATE_EQUATION = 'Error al crear la ecuación';
 const ERROR_UPDATE_EQUATION = 'Error al actualizar la ecuación';
 const ERROR_DELETE_EQUATION = 'Error al eliminar la ecuación';
+const ERROR_GET_FOR_UPLOAD = 'Error al obtener ecuaciones para subir';
+const ERROR_UPLOAD_EQUATIONS = 'Error al subir ecuaciones';
 const PERMISSION_ERROR_KEYWORD = 'permisos';
 
 export class EquationController {
@@ -36,6 +38,33 @@ export class EquationController {
     } catch (error: any) {
       res.status(500).json({
         error: error.message || ERROR_GET_EQUATIONS,
+      });
+    }
+  };
+
+  getForUpload = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const userId = req.userId!;
+      const result = await this.equationService.getEquationsForUpload(userId);
+      res.status(200).json(result);
+    } catch (error: any) {
+      res.status(500).json({
+        error: error.message || ERROR_GET_FOR_UPLOAD,
+      });
+    }
+  };
+
+  uploadEquations = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const userId = req.userId!;
+      const userEquationIds = Array.isArray(req.body?.userEquationIds)
+        ? (req.body.userEquationIds as string[]).filter((id): id is string => typeof id === 'string')
+        : [];
+      await this.equationService.uploadEquations(userId, userEquationIds);
+      res.status(200).json({ ok: true });
+    } catch (error: any) {
+      res.status(400).json({
+        error: error.message || ERROR_UPLOAD_EQUATIONS,
       });
     }
   };

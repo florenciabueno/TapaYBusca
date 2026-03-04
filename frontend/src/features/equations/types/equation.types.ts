@@ -10,6 +10,12 @@ export interface Equation {
   date: string;
 }
 
+export interface UploadableEquation {
+  id: string;
+  equation: string;
+  isPublished: boolean;
+}
+
 export interface PaginatedResponse<T> {
   data: T[];
   total: number;

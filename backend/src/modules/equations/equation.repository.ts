@@ -137,4 +137,51 @@ export class EquationRepository {
       where: { isDefault: true },
     });
   }
+
+  async findCreatedForUser(userId: string, limit = 500) {
+    return prisma.userEquation.findMany({
+      where: {
+        userId,
+        isActive: true,
+        origin: EquationOrigin.CREATED,
+      },
+      include: { equation: true },
+      orderBy: { updatedAt: 'desc' },
+      take: limit,
+    });
+  }
+
+  async getPublishedEquationIdsForUser(userId: string): Promise<string[]> {
+    const rows = await prisma.publishedEquation.findMany({
+      where: { userId },
+      select: { equationId: true },
+    });
+    return rows.map((r) => r.equationId);
+  }
+
+  async findUserEquationByIdAndUser(
+    userEquationId: string,
+    userId: string
+  ): Promise<{ id: string; equationId: string; equation: { infixExpression?: string | null; postfixExpression?: string | null; latexExpression?: string | null } } | null> {
+    const row = await prisma.userEquation.findFirst({
+      where: { id: userEquationId, userId },
+      include: { equation: true },
+    });
+    return row;
+  }
+
+  async isEquationPublishedByUser(equationId: string, userId: string): Promise<boolean> {
+    const existing = await prisma.publishedEquation.findUnique({
+      where: {
+        equationId_userId: { equationId, userId },
+      },
+    });
+    return existing !== null;
+  }
+
+  async createPublishedEquation(equationId: string, userId: string) {
+    return prisma.publishedEquation.create({
+      data: { equationId, userId },
+    });
+  }
 }

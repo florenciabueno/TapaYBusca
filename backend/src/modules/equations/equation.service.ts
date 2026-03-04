@@ -8,6 +8,7 @@ import {
   UserEquationRow,
   DefaultEquationRow,
   PaginatedEquationsResponse,
+  UploadableEquationResponse,
 } from './equation.types.js';
 import { validateEquation } from './equation.validators.js';
 import { solveEquation } from './equation-solver/index.js';
@@ -82,6 +83,45 @@ export class EquationService {
     const data = defaultEquations.map((eq) => this.toEquationResponseFromDefault(eq));
     const totalPages = Math.ceil(total / l) || 1;
     return { data, total, page: p, limit: l, totalPages };
+  }
+
+  async getEquationsForUpload(userId: string): Promise<{ data: UploadableEquationResponse[] }> {
+    const [rows, publishedIds] = await Promise.all([
+      this.equationRepository.findCreatedForUser(userId),
+      this.equationRepository.getPublishedEquationIdsForUser(userId),
+    ]);
+    const data: UploadableEquationResponse[] = rows.map((row) => ({
+      id: row.id,
+      equation: this.getDisplayExpression(row.equation),
+      isPublished: publishedIds.includes(row.equationId),
+    }));
+    return { data };
+  }
+
+  async uploadEquations(userId: string, userEquationIds: string[]): Promise<void> {
+    if (userEquationIds.length === 0) return;
+
+    const alreadyPublished: string[] = [];
+    for (const userEquationId of userEquationIds) {
+      const row = await this.equationRepository.findUserEquationByIdAndUser(userEquationId, userId);
+      if (!row) {
+        throw new Error('Una o más ecuaciones no existen o no te pertenecen.');
+      }
+      const isPublished = await this.equationRepository.isEquationPublishedByUser(row.equationId, userId);
+      if (isPublished) {
+        alreadyPublished.push(row.equation.infixExpression || row.equation.postfixExpression || row.equationId);
+      }
+    }
+    if (alreadyPublished.length > 0) {
+      throw new Error('Una o más ecuaciones ya fueron subidas. Solo puedes subir cada ecuación una vez.');
+    }
+
+    for (const userEquationId of userEquationIds) {
+      const row = await this.equationRepository.findUserEquationByIdAndUser(userEquationId, userId);
+      if (row) {
+        await this.equationRepository.createPublishedEquation(row.equationId, userId);
+      }
+    }
   }
 
   private toEquationResponse(row: UserEquationRow): EquationResponse {

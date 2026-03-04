@@ -60,3 +60,13 @@ export interface PaginatedEquationsResponse {
   limit: number;
   totalPages: number;
 }
+
+export interface UploadableEquationResponse {
+  id: string;
+  equation: string;
+  isPublished: boolean;
+}
+
+export interface UploadEquationsDto {
+  userEquationIds: string[];
+}

@@ -14,6 +14,8 @@ router.get('/public', equationController.getPublicEquations.bind(equationControl
 
 // Endpoints protegidos - requieren autenticación
 router.get('/', authMiddleware, equationController.getAllEquations.bind(equationController));
+router.get('/for-upload', authMiddleware, equationController.getForUpload.bind(equationController));
+router.post('/upload', authMiddleware, equationController.uploadEquations.bind(equationController));
 router.get('/:id', authMiddleware, equationController.getEquationById.bind(equationController));
 router.post('/', authMiddleware, equationController.createEquation.bind(equationController));
 router.put('/:id', authMiddleware, equationController.updateEquation.bind(equationController));
