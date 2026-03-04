@@ -56,9 +56,9 @@ export const useEquationList = () => {
     }
   }, [totalPages, pageFromUrl, setSearchParams]);
 
-  const goToPage = useCallback((page: number) => {
+  function goToPage(page: number) {
     setSearchParams({ page: String(page) });
-  }, [setSearchParams]);
+  }
 
   const deleteEquation = async (id: string) => {
     try {

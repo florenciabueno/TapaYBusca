@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { EquationsLayout } from '../EquationsLayout';
 import { Input } from '../../../../shared/components/ui/Input/Input';
@@ -29,43 +29,40 @@ export const CreateEquationForm = () => {
   const [success, setSuccess] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSymbolClick = useCallback((insert: string) => {
+  function handleSymbolClick(insert: string) {
     setValue((prev) => prev + insert);
     setError(null);
-  }, []);
+  }
 
-  const handleSubmit = useCallback(
-    async (e: React.FormEvent) => {
-      e.preventDefault();
-      setError(null);
-      setSuccess(null);
-      const trimmed = value.trim();
-      if (!trimmed) {
-        setError('Escribe una ecuación antes de guardar.');
-        return;
-      }
-      setIsLoading(true);
-      try {
-        await equationService.createEquation(trimmed, token);
-        setSuccess('Ecuación guardada correctamente.');
-        setValue('');
-        setTimeout(() => {
-          navigate(ROUTES.DASHBOARD);
-        }, 1500);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Error al crear la ecuación.');
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [value, token, navigate]
-  );
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setSuccess(null);
+    const trimmed = value.trim();
+    if (!trimmed) {
+      setError('Escribe una ecuación antes de guardar.');
+      return;
+    }
+    setIsLoading(true);
+    try {
+      await equationService.createEquation(trimmed, token);
+      setSuccess('Ecuación guardada correctamente.');
+      setValue('');
+      setTimeout(() => {
+        navigate(ROUTES.DASHBOARD);
+      }, 1500);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al crear la ecuación.');
+    } finally {
+      setIsLoading(false);
+    }
+  }
 
-  const handleClear = useCallback(() => {
+  function handleClear() {
     setValue('');
     setError(null);
     setSuccess(null);
-  }, []);
+  }
 
   return (
     <EquationsLayout>

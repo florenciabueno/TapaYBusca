@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ROUTES } from '../../../../config/constants';
 import { COLORS, ACCENT_RGB, SHADOW } from '../../../../config/theme';
@@ -33,20 +33,20 @@ export const EquationsCardList = () => {
   const user = useAuthStore((state) => state.user);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
-  const handleDeleteClick = useCallback((id: string) => {
+  function handleDeleteClick(id: string) {
     setPendingDeleteId(id);
-  }, []);
+  }
 
-  const handleConfirmDelete = useCallback(() => {
+  function handleConfirmDelete() {
     if (pendingDeleteId) {
       deleteEquation(pendingDeleteId);
       setPendingDeleteId(null);
     }
-  }, [pendingDeleteId, deleteEquation]);
+  }
 
-  const handleCancelDelete = useCallback(() => {
+  function handleCancelDelete() {
     setPendingDeleteId(null);
-  }, []);
+  }
 
   if (isLoading) {
     return (
