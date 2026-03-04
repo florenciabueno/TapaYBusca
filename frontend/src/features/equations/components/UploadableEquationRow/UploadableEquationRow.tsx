@@ -4,12 +4,36 @@ import type { UploadableEquation } from '../../types';
 
 export interface UploadableEquationRowProps {
   item: UploadableEquation;
-  selected: boolean;
-  onToggle: (id: string) => void;
+  selected?: boolean;
+  onToggle?: (id: string) => void;
+  /** When true, renders only the equation (no checkbox). For "Ya subidas" tab. */
+  displayOnly?: boolean;
 }
 
-export const UploadableEquationRow = ({ item, selected, onToggle }: UploadableEquationRowProps) => {
-  const disabled = item.isPublished;
+export const UploadableEquationRow = ({
+  item,
+  selected = false,
+  onToggle,
+  displayOnly = false,
+}: UploadableEquationRowProps) => {
+  const disabled = displayOnly || item.isPublished;
+
+  if (displayOnly) {
+    return (
+      <div
+        className="flex items-center gap-3 rounded-lg border bg-white p-4 transition-shadow"
+        style={{
+          borderRadius: RADIUS.lg,
+          borderColor: COLORS.gray[200],
+          boxShadow: SHADOW.sm,
+        }}
+      >
+        <div className="min-w-0 flex-1">
+          <MathExpression expression={item.equation} className="text-base text-gray-800" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <label
@@ -25,7 +49,7 @@ export const UploadableEquationRow = ({ item, selected, onToggle }: UploadableEq
       <input
         type="checkbox"
         checked={selected}
-        onChange={() => !disabled && onToggle(item.id)}
+        onChange={() => !disabled && onToggle?.(item.id)}
         disabled={disabled}
         aria-disabled={disabled}
         aria-label={item.equation}
