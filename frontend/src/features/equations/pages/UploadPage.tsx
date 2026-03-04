@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { EquationsLayout } from '../components/EquationsLayout';
 import { UploadableEquationRow } from '../components/UploadableEquationRow';
 import { Button } from '../../../shared/components/ui/Button/Button';
@@ -9,6 +9,7 @@ import { COLORS, SPACING, RADIUS, SHADOW } from '../../../config/theme';
 
 const UPLOAD_SUCCESS = 'Ecuaciones subidas correctamente. Se han compartido con el resto de estudiantes.';
 const UPLOAD_SELECT_AT_LEAST_ONE = 'Selecciona al menos una ecuación para subir.';
+const SUCCESS_MESSAGE_DURATION_MS = 4000;
 
 type UploadTab = 'can-upload' | 'already-uploaded';
 
@@ -23,6 +24,12 @@ export const UploadPage = () => {
 
   const canUploadList = uploadableEquations.filter((e) => !e.isPublished);
   const alreadyUploadedList = uploadableEquations.filter((e) => e.isPublished);
+
+  useEffect(() => {
+    if (!success) return;
+    const timer = setTimeout(() => setSuccess(null), SUCCESS_MESSAGE_DURATION_MS);
+    return () => clearTimeout(timer);
+  }, [success]);
 
   const handleToggle = useCallback((id: string) => {
     const item = canUploadList.find((e) => e.id === id);
