@@ -70,3 +70,14 @@ export interface UploadableEquationResponse {
 export interface UploadEquationsDto {
   userEquationIds: string[];
 }
+
+export interface DownloadEquationsDto {
+  quantity: number;
+  fromDate?: string;
+  toDate?: string;
+}
+
+export interface DownloadEquationsResult {
+  added: number;
+  totalRequested: number;
+}

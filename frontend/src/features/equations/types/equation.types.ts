@@ -16,6 +16,17 @@ export interface UploadableEquation {
   isPublished: boolean;
 }
 
+export interface DownloadEquationsParams {
+  quantity: number;
+  fromDate?: string;
+  toDate?: string;
+}
+
+export interface DownloadEquationsResult {
+  added: number;
+  totalRequested: number;
+}
+
 export interface PaginatedResponse<T> {
   data: T[];
   total: number;
@@ -25,9 +36,9 @@ export interface PaginatedResponse<T> {
 }
 
 export const ORIGIN_LABELS: Record<EquationOrigin, string> = {
-  DEFAULT: 'defecto',
-  CREATED: 'creada',
-  DOWNLOADED: 'descargado',
+  DEFAULT: 'Conjunto inicial',
+  CREATED: 'Creada por mi',
+  DOWNLOADED: 'Descargada',
 };
 
 export const STATUS_LABELS: Record<EquationStatus, string> = {

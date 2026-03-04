@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { EquationService } from './equation.service.js';
-import { CreateEquationDto, UpdateEquationUserDto } from './equation.types.js';
+import { CreateEquationDto, UpdateEquationUserDto, DownloadEquationsDto } from './equation.types.js';
 
 const ERROR_GET_EQUATIONS = 'Error al obtener ecuaciones';
 const ERROR_EQUATION_NOT_FOUND = 'Ecuación no encontrada';
@@ -10,6 +10,7 @@ const ERROR_UPDATE_EQUATION = 'Error al actualizar la ecuación';
 const ERROR_DELETE_EQUATION = 'Error al eliminar la ecuación';
 const ERROR_GET_FOR_UPLOAD = 'Error al obtener ecuaciones para subir';
 const ERROR_UPLOAD_EQUATIONS = 'Error al subir ecuaciones';
+const ERROR_DOWNLOAD_EQUATIONS = 'Error al descargar ecuaciones';
 const PERMISSION_ERROR_KEYWORD = 'permisos';
 
 export class EquationController {
@@ -65,6 +66,24 @@ export class EquationController {
     } catch (error: any) {
       res.status(400).json({
         error: error.message || ERROR_UPLOAD_EQUATIONS,
+      });
+    }
+  };
+
+  downloadEquations = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const userId = req.userId!;
+      const body = req.body ?? {};
+      const dto: DownloadEquationsDto = {
+        quantity: typeof body.quantity === 'number' ? body.quantity : parseInt(String(body.quantity), 10),
+        fromDate: typeof body.fromDate === 'string' ? body.fromDate : undefined,
+        toDate: typeof body.toDate === 'string' ? body.toDate : undefined,
+      };
+      const result = await this.equationService.downloadEquations(userId, dto);
+      res.status(200).json(result);
+    } catch (error: any) {
+      res.status(400).json({
+        error: error.message || ERROR_DOWNLOAD_EQUATIONS,
       });
     }
   };

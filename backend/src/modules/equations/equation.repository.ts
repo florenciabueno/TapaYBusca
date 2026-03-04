@@ -184,4 +184,47 @@ export class EquationRepository {
       data: { equationId, userId },
     });
   }
+
+  async findPublishedInDateRange(from?: Date, to?: Date, limit: number) {
+    const where: { publishedAt?: { gte?: Date; lte?: Date } } = {};
+    if (from !== undefined || to !== undefined) {
+      where.publishedAt = {};
+      if (from !== undefined) where.publishedAt.gte = from;
+      if (to !== undefined) where.publishedAt.lte = to;
+    }
+    return prisma.publishedEquation.findMany({
+      where: Object.keys(where).length > 0 ? where : undefined,
+      include: { equation: true },
+      orderBy: { publishedAt: 'desc' },
+      take: limit,
+    });
+  }
+
+  async getEquationIdsOwnedByUser(userId: string): Promise<string[]> {
+    const rows = await prisma.userEquation.findMany({
+      where: { userId, isActive: true },
+      select: { equationId: true },
+    });
+    return rows.map((r) => r.equationId);
+  }
+
+  async addEquationsToUser(
+    userId: string,
+    equationIds: string[],
+    origin: EquationOrigin
+  ): Promise<number> {
+    if (equationIds.length === 0) return 0;
+    const data = equationIds.map((equationId) => ({
+      userId,
+      equationId,
+      status: EquationStatus.NOT_STARTED,
+      origin,
+      isActive: true,
+    }));
+    const result = await prisma.userEquation.createMany({
+      data,
+      skipDuplicates: true,
+    });
+    return result.count;
+  }
 }

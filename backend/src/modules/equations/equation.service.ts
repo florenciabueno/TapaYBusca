@@ -9,6 +9,8 @@ import {
   DefaultEquationRow,
   PaginatedEquationsResponse,
   UploadableEquationResponse,
+  DownloadEquationsDto,
+  DownloadEquationsResult,
 } from './equation.types.js';
 import { validateEquation } from './equation.validators.js';
 import { solveEquation } from './equation-solver/index.js';
@@ -122,6 +124,36 @@ export class EquationService {
         await this.equationRepository.createPublishedEquation(row.equationId, userId);
       }
     }
+  }
+
+  private static readonly DOWNLOAD_QUANTITY_MIN = 1;
+  private static readonly DOWNLOAD_QUANTITY_MAX = 50;
+
+  async downloadEquations(userId: string, dto: DownloadEquationsDto): Promise<DownloadEquationsResult> {
+    const quantity = Math.floor(Number(dto.quantity));
+    if (quantity < EquationService.DOWNLOAD_QUANTITY_MIN || quantity > EquationService.DOWNLOAD_QUANTITY_MAX) {
+      throw new Error(`Cantidad debe estar entre ${EquationService.DOWNLOAD_QUANTITY_MIN} y ${EquationService.DOWNLOAD_QUANTITY_MAX}.`);
+    }
+    let fromDate: Date | undefined;
+    let toDate: Date | undefined;
+    if (dto.fromDate) {
+      fromDate = new Date(dto.fromDate);
+      if (Number.isNaN(fromDate.getTime())) throw new Error('Fecha desde no válida.');
+    }
+    if (dto.toDate) {
+      toDate = new Date(dto.toDate);
+      if (Number.isNaN(toDate.getTime())) throw new Error('Fecha hasta no válida.');
+    }
+    if (fromDate !== undefined && toDate !== undefined && fromDate > toDate) {
+      throw new Error('La fecha desde no puede ser posterior a la fecha hasta.');
+    }
+    const limit = Math.min(quantity * 3, 200);
+    const rows = await this.equationRepository.findPublishedInDateRange(fromDate, toDate, limit);
+    const uniqueEquationIds = [...new Set(rows.map((r) => r.equationId))];
+    const ownedIds = await this.equationRepository.getEquationIdsOwnedByUser(userId);
+    const toAdd = uniqueEquationIds.filter((id) => !ownedIds.includes(id)).slice(0, quantity);
+    const added = await this.equationRepository.addEquationsToUser(userId, toAdd, EquationOrigin.DOWNLOADED);
+    return { added, totalRequested: quantity };
   }
 
   private toEquationResponse(row: UserEquationRow): EquationResponse {
