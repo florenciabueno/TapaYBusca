@@ -8,7 +8,7 @@ import { tokenizeInfix } from './tokenizer.js';
 import { infixToPostfix } from './infix-to-postfix.js';
 import { postfixToTree } from './postfix-to-tree.js';
 import { containsVariable } from './tree-utils.js';
-import { evaluateTree, listContainsList } from './evaluate-tree.js';
+import { evaluateTree, listContainsElement } from './evaluate-tree.js';
 
 function stringHasVariable(s: string): boolean {
   const infix = tokenizeInfix(s);
@@ -51,7 +51,10 @@ export function evaluateWithVariable(r: number, postfixSideWithVariable: string[
   return evaluateTree(tree, false, r);
 }
 
-/** Filters candidates: keep only r for which evaluating the variable side at x=r is contained in constant-side values. */
+/**
+ * Filters candidates: keep r if substituting x=r in the variable side yields at least one value
+ * that matches the constant side (e.g. sqrt(9) gives [3, -3]; constant is 3, so 9 is valid).
+ */
 export function verifiedSolutions(candidates: number[], infixEquation: string): number[] {
   const verified: number[] = [];
   if (candidates.length === 0) return verified;
@@ -59,7 +62,8 @@ export function verifiedSolutions(candidates: number[], infixEquation: string): 
   const postfixWithVariable = getSideWithVariablePostfix(infixEquation);
   for (const r of candidates) {
     const evaluationResults = evaluateWithVariable(r, postfixWithVariable);
-    if (evaluationResults.length > 0 && listContainsList(constantValues, evaluationResults)) {
+    const matchesConstant = constantValues.some((cv) => listContainsElement(evaluationResults, cv));
+    if (evaluationResults.length > 0 && matchesConstant) {
       verified.push(r);
     }
   }

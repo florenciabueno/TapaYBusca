@@ -25,8 +25,8 @@ export const ALLOWED_FUNCTIONS = new Set([
 
 /** Operadores permitidos en lado constante k */
 const CONSTANT_OPS = new Set(['+', '-', '*', '/']);
-/** Caracteres permitidos en lado constante (sin variable) */
-const CONSTANT_ALLOWED_CHARS = /^[\d\s.+*\/()-]+$/;
+/** Caracteres permitidos en lado constante (sin variable): números (incl. negativos), espacios, operadores + - * / ( ) */
+const CONSTANT_ALLOWED_CHARS = /^[-\d\s.+*\/()]+$/;
 
 /** Máximo grado permitido para la incógnita (lineal, cuadrático, cúbico) */
 const MAX_DEGREE = 3;
