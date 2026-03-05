@@ -1,11 +1,21 @@
 import { EquationsLayout } from '../components/EquationsLayout';
 import { EquationsCardList } from '../components/EquationsCardList';
 import { OriginFilter } from '../components/OriginFilter';
+import { StatusFilter } from '../components/StatusFilter';
+import { DateFilter } from '../components/DateFilter';
 import { useEquationList } from '../hooks/useEquationList';
 import { COLORS } from '../../../config/theme';
 
 export const EquationsPage = () => {
-  const { selectedOrigins, setOriginFilter } = useEquationList();
+  const {
+    selectedOrigins,
+    setOriginFilter,
+    selectedStatuses,
+    setStatusFilter,
+    fromDate,
+    toDate,
+    setDateFilter,
+  } = useEquationList();
 
   return (
     <EquationsLayout>
@@ -17,7 +27,11 @@ export const EquationsPage = () => {
           Gestiona y resuelve tus ecuaciones matemáticas paso a paso
         </p>
 
-        <OriginFilter selectedOrigins={selectedOrigins} onChange={setOriginFilter} />
+        <div className="mb-4 flex flex-col gap-3">
+          <OriginFilter selectedOrigins={selectedOrigins} onChange={setOriginFilter} />
+          <StatusFilter selectedStatuses={selectedStatuses} onChange={setStatusFilter} />
+          <DateFilter fromDate={fromDate} toDate={toDate} onChange={setDateFilter} />
+        </div>
 
         <EquationsCardList />
       </div>

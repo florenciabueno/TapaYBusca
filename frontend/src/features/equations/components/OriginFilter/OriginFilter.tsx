@@ -20,7 +20,7 @@ export const OriginFilter = ({ selectedOrigins, onChange }: OriginFilterProps) =
   }
 
   return (
-    <div className="mb-4 flex flex-wrap items-center gap-2">
+    <div className="flex flex-wrap items-center gap-2">
       <span className="text-sm font-medium" style={{ color: COLORS.gray[600] }}>
         Filtrar:
       </span>

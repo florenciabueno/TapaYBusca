@@ -3,20 +3,53 @@ import { CreateEquationDto, UpdateEquationUserDto, EquationStatus, EquationOrigi
 
 const prisma = new PrismaClient();
 
+type ListWhere = {
+  userId: string;
+  isActive: boolean;
+  origin?: { in: EquationOrigin[] };
+  status?: { in: EquationStatus[] };
+  updatedAt?: { gte?: Date; lte?: Date };
+};
+
+function endOfDay(date: Date): Date {
+  const d = new Date(date);
+  d.setUTCHours(23, 59, 59, 999);
+  return d;
+}
+
+function buildListWhere(
+  userId: string,
+  origins?: EquationOrigin[],
+  statuses?: EquationStatus[],
+  fromDate?: Date,
+  toDate?: Date
+): ListWhere {
+  const where: ListWhere = { userId, isActive: true };
+  if (origins && origins.length > 0) {
+    where.origin = { in: origins };
+  }
+  if (statuses && statuses.length > 0) {
+    where.status = { in: statuses };
+  }
+  if (fromDate !== undefined || toDate !== undefined) {
+    where.updatedAt = {};
+    if (fromDate !== undefined) where.updatedAt.gte = fromDate;
+    if (toDate !== undefined) where.updatedAt.lte = endOfDay(toDate);
+  }
+  return where;
+}
+
 export class EquationRepository {
   async findAllForUser(
     userId: string,
     page: number,
     limit: number,
-    origins?: EquationOrigin[]
+    origins?: EquationOrigin[],
+    statuses?: EquationStatus[],
+    fromDate?: Date,
+    toDate?: Date
   ) {
-    const where: { userId: string; isActive: boolean; origin?: { in: EquationOrigin[] } } = {
-      userId,
-      isActive: true,
-    };
-    if (origins && origins.length > 0) {
-      where.origin = { in: origins };
-    }
+    const where = buildListWhere(userId, origins, statuses, fromDate, toDate);
     const userEquations = await prisma.userEquation.findMany({
       where,
       include: {
@@ -33,14 +66,14 @@ export class EquationRepository {
     return userEquations;
   }
 
-  async countForUser(userId: string, origins?: EquationOrigin[]): Promise<number> {
-    const where: { userId: string; isActive: boolean; origin?: { in: EquationOrigin[] } } = {
-      userId,
-      isActive: true,
-    };
-    if (origins && origins.length > 0) {
-      where.origin = { in: origins };
-    }
+  async countForUser(
+    userId: string,
+    origins?: EquationOrigin[],
+    statuses?: EquationStatus[],
+    fromDate?: Date,
+    toDate?: Date
+  ): Promise<number> {
+    const where = buildListWhere(userId, origins, statuses, fromDate, toDate);
     return prisma.userEquation.count({ where });
   }
 

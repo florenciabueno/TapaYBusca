@@ -5,9 +5,11 @@ import {
   UpdateEquationUserDto,
   DownloadEquationsDto,
   EquationOrigin,
+  EquationStatus,
 } from './equation.types.js';
 
 const VALID_ORIGINS = new Set<string>(Object.values(EquationOrigin));
+const VALID_STATUSES = new Set<string>(Object.values(EquationStatus));
 
 function parseOriginsQuery(query: Request['query']): EquationOrigin[] | undefined {
   const raw = query.origins;
@@ -18,6 +20,34 @@ function parseOriginsQuery(query: Request['query']): EquationOrigin[] | undefine
     .flatMap((v) => v.split(',').map((s) => s.trim()))
     .filter((v) => VALID_ORIGINS.has(v));
   return parsed.length === 0 ? undefined : (parsed as EquationOrigin[]);
+}
+
+function parseStatusesQuery(query: Request['query']): EquationStatus[] | undefined {
+  const raw = query.statuses;
+  if (raw === undefined || raw === '') return undefined;
+  const values = Array.isArray(raw) ? raw : [raw];
+  const parsed = values
+    .filter((v): v is string => typeof v === 'string')
+    .flatMap((v) => v.split(',').map((s) => s.trim()))
+    .filter((v) => VALID_STATUSES.has(v));
+  return parsed.length === 0 ? undefined : (parsed as EquationStatus[]);
+}
+
+function parseOptionalDate(value: unknown): Date | undefined {
+  if (value === undefined || value === null || value === '') return undefined;
+  const str = typeof value === 'string' ? value.trim() : String(value);
+  if (!str) return undefined;
+  const date = new Date(str);
+  return Number.isNaN(date.getTime()) ? undefined : date;
+}
+
+function parseDateFilters(query: Request['query']): { fromDate?: Date; toDate?: Date } | { error: string } {
+  const fromDate = parseOptionalDate(query.fromDate);
+  const toDate = parseOptionalDate(query.toDate);
+  if (fromDate !== undefined && toDate !== undefined && fromDate > toDate) {
+    return { error: 'La fecha desde no puede ser posterior a la fecha hasta.' };
+  }
+  return { fromDate, toDate };
 }
 
 const ERROR_GET_EQUATIONS = 'Error al obtener ecuaciones';
@@ -53,7 +83,21 @@ export class EquationController {
       const page = Math.max(1, parseInt(String(req.query.page), 10) || 1);
       const limit = Math.min(50, Math.max(1, parseInt(String(req.query.limit), 10) || 9));
       const origins = parseOriginsQuery(req.query);
-      const result = await this.equationService.getAllEquations(userId, page, limit, origins);
+      const statuses = parseStatusesQuery(req.query);
+      const dateFilters = parseDateFilters(req.query);
+      if ('error' in dateFilters) {
+        res.status(400).json({ error: dateFilters.error });
+        return;
+      }
+      const result = await this.equationService.getAllEquations(
+        userId,
+        page,
+        limit,
+        origins,
+        statuses,
+        dateFilters.fromDate,
+        dateFilters.toDate
+      );
       res.status(200).json(result);
     } catch (error: any) {
       res.status(500).json({
