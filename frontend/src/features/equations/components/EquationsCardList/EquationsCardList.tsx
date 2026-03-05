@@ -1,8 +1,9 @@
-import { useCallback } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ROUTES } from '../../../../config/constants';
 import { COLORS, ACCENT_RGB, SHADOW } from '../../../../config/theme';
 import { Pagination } from '../../../../shared/components/ui/Pagination';
+import { ConfirmModal } from '../../../../shared/components/ui/ConfirmModal';
 import { useEquationList } from '../../hooks/useEquationList';
 import { useAuthStore } from '../../../../stores';
 import { canDeleteEquation } from '../../utils/equationPermissions';
@@ -12,7 +13,10 @@ const MESSAGES = {
   LOADING: 'Cargando ecuaciones...',
   EMPTY_TITLE: 'No hay ecuaciones',
   EMPTY_DESCRIPTION: 'Crea tu primera ecuación para comenzar a resolver paso a paso.',
-  DELETE_CONFIRM: '¿Estás seguro de eliminar esta ecuación?',
+  DELETE_CONFIRM_TITLE: 'Eliminar ecuación',
+  DELETE_CONFIRM_MESSAGE: '¿Estás seguro de eliminar esta ecuación? Esta acción no se puede deshacer.',
+  DELETE_CONFIRM_BTN: 'Eliminar',
+  CANCEL_BTN: 'Cancelar',
 } as const;
 
 export const EquationsCardList = () => {
@@ -27,11 +31,22 @@ export const EquationsCardList = () => {
     deleteEquation,
   } = useEquationList();
   const user = useAuthStore((state) => state.user);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
-  const handleDelete = useCallback((id: string) => {
-    if (!confirm(MESSAGES.DELETE_CONFIRM)) return;
-    deleteEquation(id);
-  }, [deleteEquation]);
+  function handleDeleteClick(id: string) {
+    setPendingDeleteId(id);
+  }
+
+  function handleConfirmDelete() {
+    if (pendingDeleteId) {
+      deleteEquation(pendingDeleteId);
+      setPendingDeleteId(null);
+    }
+  }
+
+  function handleCancelDelete() {
+    setPendingDeleteId(null);
+  }
 
   if (isLoading) {
     return (
@@ -89,25 +104,38 @@ export const EquationsCardList = () => {
   }
 
   return (
-    <div className="space-y-4 w-full">
-      <div className="grid w-full gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {equations.map((equation) => (
-          <EquationCard
-            key={equation.id}
-            equation={equation}
-            onDelete={handleDelete}
-            canDelete={canDeleteEquation(equation, user)}
+    <>
+      <div className="space-y-4 w-full">
+        <div className="grid w-full gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {equations.map((equation) => (
+            <EquationCard
+              key={equation.id}
+              equation={equation}
+              onDelete={handleDeleteClick}
+              canDelete={canDeleteEquation(equation, user)}
+            />
+          ))}
+        </div>
+
+        {totalPages > 1 && (
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={goToPage}
           />
-        ))}
+        )}
       </div>
 
-      {totalPages > 1 && (
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={goToPage}
-        />
-      )}
-    </div>
+      <ConfirmModal
+        open={pendingDeleteId !== null}
+        title={MESSAGES.DELETE_CONFIRM_TITLE}
+        message={MESSAGES.DELETE_CONFIRM_MESSAGE}
+        confirmLabel={MESSAGES.DELETE_CONFIRM_BTN}
+        cancelLabel={MESSAGES.CANCEL_BTN}
+        variant="danger"
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+      />
+    </>
   );
 };

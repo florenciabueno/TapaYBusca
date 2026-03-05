@@ -1,5 +1,13 @@
 import { API_URL } from '../../../config/constants';
-import type { Equation, PaginatedResponse } from '../types';
+import type {
+  Equation,
+  EquationOrigin,
+  EquationStatus,
+  PaginatedResponse,
+  UploadableEquation,
+  DownloadEquationsParams,
+  DownloadEquationsResult,
+} from '../types';
 
 const getAuthHeaders = (token?: string | null) => ({
   'Content-Type': 'application/json',
@@ -21,10 +29,23 @@ export const equationService = {
   async getAllEquations(
     token: string | null | undefined,
     page: number,
-    limit: number
+    limit: number,
+    origins?: EquationOrigin[],
+    statuses?: EquationStatus[],
+    fromDate?: string,
+    toDate?: string
   ): Promise<PaginatedResponse<Equation>> {
     const endpoint = token ? `${API_URL}/equations` : `${API_URL}/equations/public`;
-    const url = `${endpoint}?page=${page}&limit=${limit}`;
+    const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+    if (origins && origins.length > 0) {
+      params.set('origins', origins.join(','));
+    }
+    if (statuses && statuses.length > 0) {
+      params.set('statuses', statuses.join(','));
+    }
+    if (fromDate) params.set('fromDate', fromDate);
+    if (toDate) params.set('toDate', toDate);
+    const url = `${endpoint}?${params.toString()}`;
 
     const response = await fetch(url, {
       method: 'GET',
@@ -60,19 +81,22 @@ export const equationService = {
     return response.json();
   },
 
-  async createEquation(equation: string, origin: string = 'creada', token?: string | null): Promise<Equation> {
+  async createEquation(equation: string, token?: string | null): Promise<Equation> {
     const response = await fetch(`${API_URL}/equations`, {
       method: 'POST',
       headers: getAuthHeaders(token),
       credentials: 'include',
-      body: JSON.stringify({ equation, origin: origin.toUpperCase() }),
+      body: JSON.stringify({ equation }),
     });
 
+    const data = await response.json().catch(() => ({}));
+
     if (!response.ok) {
-      throw new Error('Error al crear la ecuación');
+      const message = typeof data?.error === 'string' ? data.error : 'Error al crear la ecuación';
+      throw new Error(message);
     }
 
-    return response.json();
+    return mapItem(data);
   },
 
   async updateEquation(id: string, data: { status?: string; steps?: number }, token?: string | null): Promise<Equation> {
@@ -100,5 +124,63 @@ export const equationService = {
     if (!response.ok) {
       throw new Error('Error al eliminar la ecuación');
     }
+  },
+
+  async getEquationsForUpload(token?: string | null): Promise<{ data: UploadableEquation[] }> {
+    const response = await fetch(`${API_URL}/equations/for-upload`, {
+      method: 'GET',
+      headers: getAuthHeaders(token),
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      throw new Error('Error al obtener ecuaciones para subir');
+    }
+
+    const raw = await response.json();
+    return { data: raw.data ?? [] };
+  },
+
+  async uploadEquations(
+    userEquationIds: string[],
+    token?: string | null
+  ): Promise<void> {
+    const response = await fetch(`${API_URL}/equations/upload`, {
+      method: 'POST',
+      headers: getAuthHeaders(token),
+      credentials: 'include',
+      body: JSON.stringify({ userEquationIds }),
+    });
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      const message = typeof data?.error === 'string' ? data.error : 'Error al subir ecuaciones';
+      throw new Error(message);
+    }
+  },
+
+  async downloadEquations(
+    params: DownloadEquationsParams,
+    token?: string | null
+  ): Promise<DownloadEquationsResult> {
+    const response = await fetch(`${API_URL}/equations/download`, {
+      method: 'POST',
+      headers: getAuthHeaders(token),
+      credentials: 'include',
+      body: JSON.stringify(params),
+    });
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      const message = typeof data?.error === 'string' ? data.error : 'Error al descargar ecuaciones';
+      throw new Error(message);
+    }
+
+    return {
+      added: data.added ?? 0,
+      totalRequested: data.totalRequested ?? 0,
+    };
   },
 };

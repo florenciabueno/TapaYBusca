@@ -1,3 +1,3 @@
-import { PlaceholderPage } from './PlaceholderPage';
+import { CreateEquationForm } from '../components/CreateEquationForm';
 
-export const CreateEquationPage = () => <PlaceholderPage title="Crear Ecuación" />;
+export const CreateEquationPage = () => <CreateEquationForm />;
