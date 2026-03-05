@@ -20,6 +20,17 @@ const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 9;
 const MAX_LIMIT = 50;
 
+const STATUS_ORDER: EquationStatus[] = [
+  EquationStatus.IN_PROGRESS,
+  EquationStatus.NOT_STARTED,
+  EquationStatus.SOLVED,
+];
+
+function statusOrderIndex(status: string): number {
+  const i = STATUS_ORDER.indexOf(status as EquationStatus);
+  return i === -1 ? STATUS_ORDER.length : i;
+}
+
 function sanitizePagination(page: number, limit: number): { page: number; limit: number } {
   const p = Math.max(1, Math.floor(page));
   const l = Math.min(MAX_LIMIT, Math.max(1, Math.floor(limit)));
@@ -29,13 +40,24 @@ function sanitizePagination(page: number, limit: number): { page: number; limit:
 export class EquationService {
   constructor(private equationRepository: EquationRepository) {}
 
-  async getAllEquations(userId: string, page = DEFAULT_PAGE, limit = DEFAULT_LIMIT): Promise<PaginatedEquationsResponse> {
+  async getAllEquations(
+    userId: string,
+    page = DEFAULT_PAGE,
+    limit = DEFAULT_LIMIT,
+    origins?: EquationOrigin[]
+  ): Promise<PaginatedEquationsResponse> {
     const { page: p, limit: l } = sanitizePagination(page, limit);
     const [userEquations, total] = await Promise.all([
-      this.equationRepository.findAllForUser(userId, p, l),
-      this.equationRepository.countForUser(userId),
+      this.equationRepository.findAllForUser(userId, p, l, origins),
+      this.equationRepository.countForUser(userId, origins),
     ]);
-    const data = userEquations.map((eu) => this.toEquationResponse(eu));
+    const sorted = [...userEquations].sort((a, b) => {
+      const statusA = statusOrderIndex(a.status);
+      const statusB = statusOrderIndex(b.status);
+      if (statusA !== statusB) return statusA - statusB;
+      return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+    });
+    const data = sorted.map((eu) => this.toEquationResponse(eu));
     const totalPages = Math.ceil(total / l) || 1;
     return { data, total, page: p, limit: l, totalPages };
   }
@@ -148,7 +170,7 @@ export class EquationService {
       throw new Error('La fecha desde no puede ser posterior a la fecha hasta.');
     }
     const limit = Math.min(quantity * 3, 200);
-    const rows = await this.equationRepository.findPublishedInDateRange(fromDate, toDate, limit);
+    const rows = await this.equationRepository.findPublishedInDateRange(limit, fromDate, toDate);
     const uniqueEquationIds = [...new Set(rows.map((r) => r.equationId))];
     const ownedIds = await this.equationRepository.getEquationIdsOwnedByUser(userId);
     const toAdd = uniqueEquationIds.filter((id) => !ownedIds.includes(id)).slice(0, quantity);

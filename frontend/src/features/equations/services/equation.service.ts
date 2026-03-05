@@ -1,6 +1,7 @@
 import { API_URL } from '../../../config/constants';
 import type {
   Equation,
+  EquationOrigin,
   PaginatedResponse,
   UploadableEquation,
   DownloadEquationsParams,
@@ -27,10 +28,15 @@ export const equationService = {
   async getAllEquations(
     token: string | null | undefined,
     page: number,
-    limit: number
+    limit: number,
+    origins?: EquationOrigin[]
   ): Promise<PaginatedResponse<Equation>> {
     const endpoint = token ? `${API_URL}/equations` : `${API_URL}/equations/public`;
-    const url = `${endpoint}?page=${page}&limit=${limit}`;
+    const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+    if (origins && origins.length > 0) {
+      params.set('origins', origins.join(','));
+    }
+    const url = `${endpoint}?${params.toString()}`;
 
     const response = await fetch(url, {
       method: 'GET',

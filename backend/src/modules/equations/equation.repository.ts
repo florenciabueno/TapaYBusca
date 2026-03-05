@@ -4,12 +4,21 @@ import { CreateEquationDto, UpdateEquationUserDto, EquationStatus, EquationOrigi
 const prisma = new PrismaClient();
 
 export class EquationRepository {
-  async findAllForUser(userId: string, page: number, limit: number) {
+  async findAllForUser(
+    userId: string,
+    page: number,
+    limit: number,
+    origins?: EquationOrigin[]
+  ) {
+    const where: { userId: string; isActive: boolean; origin?: { in: EquationOrigin[] } } = {
+      userId,
+      isActive: true,
+    };
+    if (origins && origins.length > 0) {
+      where.origin = { in: origins };
+    }
     const userEquations = await prisma.userEquation.findMany({
-      where: {
-        userId: userId,
-        isActive: true,
-      },
+      where,
       include: {
         equation: true,
       },
@@ -24,13 +33,15 @@ export class EquationRepository {
     return userEquations;
   }
 
-  async countForUser(userId: string): Promise<number> {
-    return prisma.userEquation.count({
-      where: {
-        userId,
-        isActive: true,
-      },
-    });
+  async countForUser(userId: string, origins?: EquationOrigin[]): Promise<number> {
+    const where: { userId: string; isActive: boolean; origin?: { in: EquationOrigin[] } } = {
+      userId,
+      isActive: true,
+    };
+    if (origins && origins.length > 0) {
+      where.origin = { in: origins };
+    }
+    return prisma.userEquation.count({ where });
   }
 
   async findById(userEquationId: string) {
@@ -185,7 +196,7 @@ export class EquationRepository {
     });
   }
 
-  async findPublishedInDateRange(from?: Date, to?: Date, limit: number) {
+  async findPublishedInDateRange(limit: number, from?: Date, to?: Date) {
     const where: { publishedAt?: { gte?: Date; lte?: Date } } = {};
     if (from !== undefined || to !== undefined) {
       where.publishedAt = {};

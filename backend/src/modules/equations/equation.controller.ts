@@ -1,6 +1,24 @@
 import { Request, Response } from 'express';
 import { EquationService } from './equation.service.js';
-import { CreateEquationDto, UpdateEquationUserDto, DownloadEquationsDto } from './equation.types.js';
+import {
+  CreateEquationDto,
+  UpdateEquationUserDto,
+  DownloadEquationsDto,
+  EquationOrigin,
+} from './equation.types.js';
+
+const VALID_ORIGINS = new Set<string>(Object.values(EquationOrigin));
+
+function parseOriginsQuery(query: Request['query']): EquationOrigin[] | undefined {
+  const raw = query.origins;
+  if (raw === undefined || raw === '') return undefined;
+  const values = Array.isArray(raw) ? raw : [raw];
+  const parsed = values
+    .filter((v): v is string => typeof v === 'string')
+    .flatMap((v) => v.split(',').map((s) => s.trim()))
+    .filter((v) => VALID_ORIGINS.has(v));
+  return parsed.length === 0 ? undefined : (parsed as EquationOrigin[]);
+}
 
 const ERROR_GET_EQUATIONS = 'Error al obtener ecuaciones';
 const ERROR_EQUATION_NOT_FOUND = 'Ecuación no encontrada';
@@ -34,7 +52,8 @@ export class EquationController {
       const userId = req.userId!;
       const page = Math.max(1, parseInt(String(req.query.page), 10) || 1);
       const limit = Math.min(50, Math.max(1, parseInt(String(req.query.limit), 10) || 9));
-      const result = await this.equationService.getAllEquations(userId, page, limit);
+      const origins = parseOriginsQuery(req.query);
+      const result = await this.equationService.getAllEquations(userId, page, limit, origins);
       res.status(200).json(result);
     } catch (error: any) {
       res.status(500).json({
