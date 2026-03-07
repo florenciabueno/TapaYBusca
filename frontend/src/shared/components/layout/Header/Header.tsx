@@ -1,6 +1,6 @@
 import { useAuth } from '../../../../features/auth/hooks/useAuth';
 import { ROUTES } from '../../../../config/constants';
-import { COLORS, ACCENT_RGB } from '../../../../config/theme';
+import { COLORS, ACCENT_RGB, PURPLE_RGB } from '../../../../config/theme';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { EditProfileModal } from '../../../../features/users/components/EditProfileModal';
@@ -107,9 +107,17 @@ export const Header = () => {
             <button
               type="button"
               onClick={openEditProfile}
-              className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm font-medium transition-colors hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:ring-offset-2"
+              className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm font-medium transition-colors hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-purple-400/40 focus:ring-offset-2"
               style={{ color: COLORS.brandDark }}
               aria-label="Editar perfil"
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = `rgba(${PURPLE_RGB}, 0.1)`;
+                e.currentTarget.style.color = COLORS.accentSecondary;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = '';
+                e.currentTarget.style.color = COLORS.brandDark;
+              }}
             >
               <UserIcon className="w-5 h-5 flex-shrink-0" />
               <span>{user.name}</span>

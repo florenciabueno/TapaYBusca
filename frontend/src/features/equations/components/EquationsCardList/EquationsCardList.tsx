@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ROUTES } from '../../../../config/constants';
-import { COLORS, ACCENT_RGB, SHADOW } from '../../../../config/theme';
+import { COLORS, PURPLE_RGB, SHADOW } from '../../../../config/theme';
 import { Pagination } from '../../../../shared/components/ui/Pagination';
 import { ConfirmModal } from '../../../../shared/components/ui/ConfirmModal';
 import { useEquationList } from '../../hooks/useEquationList';
@@ -80,7 +80,7 @@ export const EquationsCardList = () => {
       >
         <div
           className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full"
-          style={{ backgroundColor: `rgba(${ACCENT_RGB}, 0.4)` }}
+          style={{ backgroundColor: `rgba(${PURPLE_RGB}, 0.25)` }}
         >
           <svg className="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />

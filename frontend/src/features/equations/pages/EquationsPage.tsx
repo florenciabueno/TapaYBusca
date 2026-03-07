@@ -22,7 +22,7 @@ export const EquationsPage = () => {
   return (
     <EquationsLayout>
       <div className="w-full">
-        <h1 className="text-2xl font-bold mb-1" style={{ color: COLORS.brandDark }}>
+        <h1 className="text-2xl font-bold mb-1" style={{ color: COLORS.accentSecondary }}>
           Mis ecuaciones
         </h1>
         <p className="mb-4 text-sm" style={{ color: COLORS.gray[600] }}>

@@ -33,8 +33,8 @@ export const OriginFilter = ({ selectedOrigins, onChange }: OriginFilterProps) =
             onClick={() => toggle(origin)}
             className="rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2"
             style={{
-              backgroundColor: isSelected ? COLORS.orange : 'transparent',
-              borderColor: isSelected ? COLORS.orange : COLORS.gray[300],
+              backgroundColor: isSelected ? COLORS.accentSecondary : 'transparent',
+              borderColor: isSelected ? COLORS.accentSecondary : COLORS.gray[300],
               color: isSelected ? '#fff' : COLORS.gray[700],
             }}
             aria-pressed={isSelected}

@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import { ROUTES } from '../../../../config/constants';
-import { COLORS, ACCENT_RGB } from '../../../../config/theme';
+import { COLORS, ACCENT_RGB, PURPLE_RGB } from '../../../../config/theme';
 import logoImage from '../../../../assets/logo.png';
 
 const navItems = [
@@ -100,7 +100,9 @@ export const Sidebar = () => {
             key={path}
             to={path}
             style={({ isActive }) =>
-              isActive ? { backgroundColor: `${COLORS.brandDark}22`, color: COLORS.brandDark } : undefined
+              isActive
+                ? { backgroundColor: `rgba(${PURPLE_RGB}, 0.28)`, color: COLORS.accentSecondary }
+                : undefined
             }
             className={({ isActive }) =>
               `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-150 ${

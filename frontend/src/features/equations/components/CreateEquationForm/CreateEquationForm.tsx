@@ -121,7 +121,7 @@ export const CreateEquationForm = () => {
             <div style={{ marginBottom: SPACING.lg }}>
               <label
                 className="block text-sm font-medium mb-2"
-                style={{ color: COLORS.primary }}
+                style={{ color: COLORS.accentSecondary }}
               >
                 Símbolos matemáticos:
               </label>
@@ -137,7 +137,7 @@ export const CreateEquationForm = () => {
                       backgroundColor: COLORS.gray[100],
                       color: COLORS.gray[800],
                       border: `1px solid ${COLORS.gray[200]}`,
-                      ['--tw-ring-color' as string]: COLORS.primary,
+                      ['--tw-ring-color' as string]: COLORS.accentSecondary,
                     }}
                   >
                     {label}

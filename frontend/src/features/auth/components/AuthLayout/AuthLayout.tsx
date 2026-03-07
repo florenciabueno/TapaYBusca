@@ -30,7 +30,7 @@ export const AuthLayout = ({ children, footer }: AuthLayoutProps) => {
           </div>
           <h1
             className="text-2xl sm:text-3xl font-bold mb-1"
-            style={{ color: COLORS.teal }}
+            style={{ color: COLORS.accentSecondary }}
           >
             Tapa y Busca
           </h1>
