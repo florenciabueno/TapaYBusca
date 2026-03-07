@@ -219,7 +219,7 @@ export const UploadPage = () => {
 
               <Button
                 type="submit"
-                variant="primary"
+                variant="accent"
                 disabled={canUploadList.length === 0 || selectedIds.size === 0 || isSubmitting}
                 isLoading={isSubmitting}
               >

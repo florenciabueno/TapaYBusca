@@ -129,7 +129,7 @@ export const DownloadPage = () => {
 
             <Button
               type="submit"
-              variant="primary"
+              variant="accent"
               disabled={isSubmitting}
               isLoading={isSubmitting}
             >

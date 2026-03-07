@@ -149,7 +149,7 @@ export const CreateEquationForm = () => {
             <div className="flex flex-wrap gap-3">
               <Button
                 type="submit"
-                variant="primary"
+                variant="accent"
                 isLoading={isLoading}
                 disabled={isLoading}
               >
