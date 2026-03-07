@@ -35,14 +35,12 @@ export interface PaginatedResponse<T> {
   totalPages: number;
 }
 
-/** Labels for equation cards (singular, per item). */
 export const ORIGIN_LABELS: Record<EquationOrigin, string> = {
   DEFAULT: 'Conjunto inicial',
   CREATED: 'Creada por mí',
   DOWNLOADED: 'Descargada',
 };
 
-/** Labels for the origin filter buttons (plural). */
 export const ORIGIN_FILTER_LABELS: Record<EquationOrigin, string> = {
   DEFAULT: 'Conjunto inicial',
   CREATED: 'Creadas por mí',
@@ -50,7 +48,7 @@ export const ORIGIN_FILTER_LABELS: Record<EquationOrigin, string> = {
 };
 
 export const STATUS_LABELS: Record<EquationStatus, string> = {
-  NOT_STARTED: 'sin comenzar',
-  IN_PROGRESS: 'en proceso',
-  SOLVED: 'resuelta',
+  NOT_STARTED: 'Sin comenzar',
+  IN_PROGRESS: 'En proceso',
+  SOLVED: 'Resuelta',
 };
