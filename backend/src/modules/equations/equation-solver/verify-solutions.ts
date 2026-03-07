@@ -40,7 +40,7 @@ export function getConstantSideValues(infixEquation: string): number[] {
 export function evaluateWithVariable(r: number, postfixSideWithVariable: string[]): number[] {
   const tree = postfixToTree(postfixSideWithVariable);
   if (!tree) return [];
-  return evaluateTree(tree, false, r);
+  return evaluateTree(tree, true, r);
 }
 
 export function verifiedSolutions(candidates: number[], infixEquation: string): number[] {

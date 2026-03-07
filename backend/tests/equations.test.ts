@@ -41,7 +41,7 @@ async function createEquation(app: Application, token: string, equation: string)
     .send({ equation });
 }
 
-/** 40 ecuaciones por defecto del seed (notación infija), f(x)=k o k=f(x), hasta 3er grado, racionales, radicales */
+/** Ecuaciones por defecto del seed que deben crearse (201); excluye ((pot2(x)+9)/(5))=1 (sin solución real) */
 const DEFAULT_EQUATIONS_INFIX = [
   'x+5=12',
   '2*(x+5)=12',
@@ -61,7 +61,6 @@ const DEFAULT_EQUATIONS_INFIX = [
   '39=pot2(x)-10',
   '5=12-x',
   '((4*(x+5))/(3))=4',
-  '((pot2(x)+9)/(5))=1',
   'pot3(x)+1=28',
   '9=raiz2(neg(x)+15)',
   'x+16=9',
@@ -136,6 +135,7 @@ const INVALID_EQUATIONS: Array<{ equation: string; description: string }> = [
  * Ecuaciones sintácticamente correctas pero sin solución (reales): deben rechazarse con 400.
  */
 const EQUATIONS_NO_SOLUTION: Array<{ equation: string; reason: string }> = [
+  { equation: '((pot2(x)+9)/(5))=1', reason: '(x²+9)/5=1 → x²=-4 sin solución real' },
   { equation: 'pot2(x)=-9', reason: 'x² no puede ser negativo' },
   { equation: 'x^2=-1', reason: 'x² no puede ser negativo' },
   { equation: 'pot2(x)+1=0', reason: 'x² = -1 sin solución real' },
