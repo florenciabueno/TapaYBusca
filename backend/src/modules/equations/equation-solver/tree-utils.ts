@@ -1,7 +1,3 @@
-/**
- * Tree helpers: containsVariable, getOppositeOperator for isolation step.
- */
-
 import type { TreeNode } from './types.js';
 import {
   VARIABLE,
@@ -24,7 +20,6 @@ export function containsVariable(tree: TreeNode | null | undefined): boolean {
   return containsVariable(tree.left) || containsVariable(tree.right);
 }
 
-/** Returns the inverse operator for isolation (e.g. ADD -> SUBTRACT). */
 export function getOppositeOperator(operator: string): string | null {
   switch (operator) {
     case ADD:

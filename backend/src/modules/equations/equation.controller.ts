@@ -8,47 +8,13 @@ import {
   EquationStatus,
 } from './equation.types.js';
 
+// ——— Constantes ———
 const VALID_ORIGINS = new Set<string>(Object.values(EquationOrigin));
 const VALID_STATUSES = new Set<string>(Object.values(EquationStatus));
 
-function parseOriginsQuery(query: Request['query']): EquationOrigin[] | undefined {
-  const raw = query.origins;
-  if (raw === undefined || raw === '') return undefined;
-  const values = Array.isArray(raw) ? raw : [raw];
-  const parsed = values
-    .filter((v): v is string => typeof v === 'string')
-    .flatMap((v) => v.split(',').map((s) => s.trim()))
-    .filter((v) => VALID_ORIGINS.has(v));
-  return parsed.length === 0 ? undefined : (parsed as EquationOrigin[]);
-}
-
-function parseStatusesQuery(query: Request['query']): EquationStatus[] | undefined {
-  const raw = query.statuses;
-  if (raw === undefined || raw === '') return undefined;
-  const values = Array.isArray(raw) ? raw : [raw];
-  const parsed = values
-    .filter((v): v is string => typeof v === 'string')
-    .flatMap((v) => v.split(',').map((s) => s.trim()))
-    .filter((v) => VALID_STATUSES.has(v));
-  return parsed.length === 0 ? undefined : (parsed as EquationStatus[]);
-}
-
-function parseOptionalDate(value: unknown): Date | undefined {
-  if (value === undefined || value === null || value === '') return undefined;
-  const str = typeof value === 'string' ? value.trim() : String(value);
-  if (!str) return undefined;
-  const date = new Date(str);
-  return Number.isNaN(date.getTime()) ? undefined : date;
-}
-
-function parseDateFilters(query: Request['query']): { fromDate?: Date; toDate?: Date } | { error: string } {
-  const fromDate = parseOptionalDate(query.fromDate);
-  const toDate = parseOptionalDate(query.toDate);
-  if (fromDate !== undefined && toDate !== undefined && fromDate > toDate) {
-    return { error: 'La fecha desde no puede ser posterior a la fecha hasta.' };
-  }
-  return { fromDate, toDate };
-}
+const DEFAULT_PAGE = 1;
+const DEFAULT_LIMIT = 9;
+const MAX_LIMIT = 50;
 
 const ERROR_GET_EQUATIONS = 'Error al obtener ecuaciones';
 const ERROR_EQUATION_NOT_FOUND = 'Ecuación no encontrada';
@@ -59,6 +25,7 @@ const ERROR_DELETE_EQUATION = 'Error al eliminar la ecuación';
 const ERROR_GET_FOR_UPLOAD = 'Error al obtener ecuaciones para subir';
 const ERROR_UPLOAD_EQUATIONS = 'Error al subir ecuaciones';
 const ERROR_DOWNLOAD_EQUATIONS = 'Error al descargar ecuaciones';
+const ERROR_DATE_RANGE = 'La fecha desde no puede ser posterior a la fecha hasta.';
 const PERMISSION_ERROR_KEYWORD = 'permisos';
 
 export class EquationController {
@@ -66,13 +33,24 @@ export class EquationController {
 
   getPublicEquations = async (req: Request, res: Response): Promise<void> => {
     try {
-      const page = Math.max(1, parseInt(String(req.query.page), 10) || 1);
-      const limit = Math.min(50, Math.max(1, parseInt(String(req.query.limit), 10) || 9));
-      const result = await this.equationService.getPublicEquations(page, limit);
+      const { page, limit } = this.parsePageAndLimit(req.query);
+      const statuses = this.parseStatusesQuery(req.query);
+      const dateFilters = this.parseDateFilters(req.query);
+      if ('error' in dateFilters) {
+        res.status(400).json({ error: dateFilters.error });
+        return;
+      }
+      const result = await this.equationService.getPublicEquations(
+        page,
+        limit,
+        statuses,
+        dateFilters.fromDate,
+        dateFilters.toDate
+      );
       res.status(200).json(result);
-    } catch (error: any) {
+    } catch (error: unknown) {
       res.status(500).json({
-        error: error.message || ERROR_GET_EQUATIONS,
+        error: this.getErrorMessage(error, ERROR_GET_EQUATIONS),
       });
     }
   };
@@ -80,11 +58,10 @@ export class EquationController {
   getAllEquations = async (req: Request, res: Response): Promise<void> => {
     try {
       const userId = req.userId!;
-      const page = Math.max(1, parseInt(String(req.query.page), 10) || 1);
-      const limit = Math.min(50, Math.max(1, parseInt(String(req.query.limit), 10) || 9));
-      const origins = parseOriginsQuery(req.query);
-      const statuses = parseStatusesQuery(req.query);
-      const dateFilters = parseDateFilters(req.query);
+      const { page, limit } = this.parsePageAndLimit(req.query);
+      const origins = this.parseOriginsQuery(req.query);
+      const statuses = this.parseStatusesQuery(req.query);
+      const dateFilters = this.parseDateFilters(req.query);
       if ('error' in dateFilters) {
         res.status(400).json({ error: dateFilters.error });
         return;
@@ -99,9 +76,9 @@ export class EquationController {
         dateFilters.toDate
       );
       res.status(200).json(result);
-    } catch (error: any) {
+    } catch (error: unknown) {
       res.status(500).json({
-        error: error.message || ERROR_GET_EQUATIONS,
+        error: this.getErrorMessage(error, ERROR_GET_EQUATIONS),
       });
     }
   };
@@ -111,9 +88,9 @@ export class EquationController {
       const userId = req.userId!;
       const result = await this.equationService.getEquationsForUpload(userId);
       res.status(200).json(result);
-    } catch (error: any) {
+    } catch (error: unknown) {
       res.status(500).json({
-        error: error.message || ERROR_GET_FOR_UPLOAD,
+        error: this.getErrorMessage(error, ERROR_GET_FOR_UPLOAD),
       });
     }
   };
@@ -121,14 +98,12 @@ export class EquationController {
   uploadEquations = async (req: Request, res: Response): Promise<void> => {
     try {
       const userId = req.userId!;
-      const userEquationIds = Array.isArray(req.body?.userEquationIds)
-        ? (req.body.userEquationIds as string[]).filter((id): id is string => typeof id === 'string')
-        : [];
+      const userEquationIds = this.parseUserEquationIds(req.body);
       await this.equationService.uploadEquations(userId, userEquationIds);
       res.status(200).json({ ok: true });
-    } catch (error: any) {
+    } catch (error: unknown) {
       res.status(400).json({
-        error: error.message || ERROR_UPLOAD_EQUATIONS,
+        error: this.getErrorMessage(error, ERROR_UPLOAD_EQUATIONS),
       });
     }
   };
@@ -136,17 +111,12 @@ export class EquationController {
   downloadEquations = async (req: Request, res: Response): Promise<void> => {
     try {
       const userId = req.userId!;
-      const body = req.body ?? {};
-      const dto: DownloadEquationsDto = {
-        quantity: typeof body.quantity === 'number' ? body.quantity : parseInt(String(body.quantity), 10),
-        fromDate: typeof body.fromDate === 'string' ? body.fromDate : undefined,
-        toDate: typeof body.toDate === 'string' ? body.toDate : undefined,
-      };
+      const dto = this.parseDownloadBody(req.body);
       const result = await this.equationService.downloadEquations(userId, dto);
       res.status(200).json(result);
-    } catch (error: any) {
+    } catch (error: unknown) {
       res.status(400).json({
-        error: error.message || ERROR_DOWNLOAD_EQUATIONS,
+        error: this.getErrorMessage(error, ERROR_DOWNLOAD_EQUATIONS),
       });
     }
   };
@@ -155,16 +125,14 @@ export class EquationController {
     try {
       const { id } = req.params;
       const equation = await this.equationService.getEquationById(id);
-
       if (!equation) {
         res.status(404).json({ error: ERROR_EQUATION_NOT_FOUND });
         return;
       }
-
       res.status(200).json(equation);
-    } catch (error: any) {
+    } catch (error: unknown) {
       res.status(500).json({
-        error: error.message || ERROR_GET_EQUATION,
+        error: this.getErrorMessage(error, ERROR_GET_EQUATION),
       });
     }
   };
@@ -176,12 +144,11 @@ export class EquationController {
         expression: req.body.equation,
         userId,
       };
-
       const equation = await this.equationService.createEquation(data);
       res.status(201).json(equation);
-    } catch (error: any) {
+    } catch (error: unknown) {
       res.status(400).json({
-        error: error.message || ERROR_CREATE_EQUATION,
+        error: this.getErrorMessage(error, ERROR_CREATE_EQUATION),
       });
     }
   };
@@ -191,12 +158,12 @@ export class EquationController {
       const { id } = req.params;
       const userId = req.userId!;
       const data: UpdateEquationUserDto = req.body;
-
       const equation = await this.equationService.updateEquation(id, data, userId);
       res.status(200).json(equation);
-    } catch (error: any) {
-      res.status(error.message.includes(PERMISSION_ERROR_KEYWORD) ? 403 : 400).json({
-        error: error.message || ERROR_UPDATE_EQUATION,
+    } catch (error: unknown) {
+      const status = this.isPermissionError(error) ? 403 : 400;
+      res.status(status).json({
+        error: this.getErrorMessage(error, ERROR_UPDATE_EQUATION),
       });
     }
   };
@@ -205,13 +172,92 @@ export class EquationController {
     try {
       const { id } = req.params;
       const userId = req.userId!;
-
       await this.equationService.deleteEquation(id, userId);
       res.status(204).send();
-    } catch (error: any) {
-      res.status(error.message.includes(PERMISSION_ERROR_KEYWORD) ? 403 : 400).json({
-        error: error.message || ERROR_DELETE_EQUATION,
+    } catch (error: unknown) {
+      const status = this.isPermissionError(error) ? 403 : 400;
+      res.status(status).json({
+        error: this.getErrorMessage(error, ERROR_DELETE_EQUATION),
       });
     }
   };
+
+  // ——— Private: parsing query/body ———
+
+  private parsePageAndLimit(query: Request['query']): { page: number; limit: number } {
+    const page = Math.max(DEFAULT_PAGE, parseInt(String(query.page), 10) || DEFAULT_PAGE);
+    const limit = Math.min(
+      MAX_LIMIT,
+      Math.max(1, parseInt(String(query.limit), 10) || DEFAULT_LIMIT)
+    );
+    return { page, limit };
+  }
+
+  private parseOriginsQuery(query: Request['query']): EquationOrigin[] | undefined {
+    const raw = query.origins;
+    if (raw === undefined || raw === '') return undefined;
+    const values = Array.isArray(raw) ? raw : [raw];
+    const parsed = values
+      .filter((v): v is string => typeof v === 'string')
+      .flatMap((v) => v.split(',').map((s) => s.trim()))
+      .filter((v) => VALID_ORIGINS.has(v));
+    return parsed.length === 0 ? undefined : (parsed as EquationOrigin[]);
+  }
+
+  private parseStatusesQuery(query: Request['query']): EquationStatus[] | undefined {
+    const raw = query.statuses;
+    if (raw === undefined || raw === '') return undefined;
+    const values = Array.isArray(raw) ? raw : [raw];
+    const parsed = values
+      .filter((v): v is string => typeof v === 'string')
+      .flatMap((v) => v.split(',').map((s) => s.trim()))
+      .filter((v) => VALID_STATUSES.has(v));
+    return parsed.length === 0 ? undefined : (parsed as EquationStatus[]);
+  }
+
+  private parseOptionalDate(value: unknown): Date | undefined {
+    if (value === undefined || value === null || value === '') return undefined;
+    const str = typeof value === 'string' ? value.trim() : String(value);
+    if (!str) return undefined;
+    const date = new Date(str);
+    return Number.isNaN(date.getTime()) ? undefined : date;
+  }
+
+  private parseDateFilters(
+    query: Request['query']
+  ): { fromDate?: Date; toDate?: Date } | { error: string } {
+    const fromDate = this.parseOptionalDate(query.fromDate);
+    const toDate = this.parseOptionalDate(query.toDate);
+    if (fromDate !== undefined && toDate !== undefined && fromDate > toDate) {
+      return { error: ERROR_DATE_RANGE };
+    }
+    return { fromDate, toDate };
+  }
+
+  private parseUserEquationIds(body: unknown): string[] {
+    if (body == null || typeof body !== 'object') return [];
+    const arr = (body as Record<string, unknown>).userEquationIds;
+    if (!Array.isArray(arr)) return [];
+    return arr.filter((id): id is string => typeof id === 'string');
+  }
+
+  private parseDownloadBody(body: unknown): DownloadEquationsDto {
+    const b = body && typeof body === 'object' ? (body as Record<string, unknown>) : {};
+    return {
+      quantity:
+        typeof b.quantity === 'number'
+          ? b.quantity
+          : parseInt(String(b.quantity ?? 0), 10),
+      fromDate: typeof b.fromDate === 'string' ? b.fromDate : undefined,
+      toDate: typeof b.toDate === 'string' ? b.toDate : undefined,
+    };
+  }
+
+  private getErrorMessage(error: unknown, fallback: string): string {
+    return error instanceof Error ? error.message : fallback;
+  }
+
+  private isPermissionError(error: unknown): boolean {
+    return error instanceof Error && error.message.includes(PERMISSION_ERROR_KEYWORD);
+  }
 }

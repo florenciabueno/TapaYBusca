@@ -1,11 +1,12 @@
 import { User } from '@prisma/client';
 import { AuthRepository } from './auth.repository.js';
-import { LoginCredentials, AuthResponse, RegisterCredentials, ValidationResult, CreateUserPayload } from './auth.types.js';
+import { LoginCredentials, AuthResponse, RegisterCredentials, CreateUserPayload } from './auth.types.js';
 import { validateLoginCredentials, validateRegisterCredentials } from './auth.validators.js';
 import jwt from 'jsonwebtoken';
 import { config } from '../../config/env.js';
 import { EquationRepository } from '../equations/equation.repository.js';
 import { verifyPassword, hashPassword } from '../../shared/utils/password.js';
+import { ensureValidationPassed } from '../../shared/utils/validation.js';
 import type { VerifyPasswordParams } from '../../shared/types/password.types.js';
 
 const INVALID_CREDENTIALS_MESSAGE = 'Usuario o contraseña inválidos';
@@ -19,7 +20,7 @@ export class AuthService {
   ) {}
 
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
-    this.ensureValidationPassed(validateLoginCredentials(credentials));
+    ensureValidationPassed(validateLoginCredentials(credentials), CREDENTIALS_VALIDATION_ERROR_PREFIX);
     const user = await this.findUserByEmailOrThrow(credentials.email);
     await verifyPassword({
       plainPassword: credentials.password,
@@ -31,7 +32,7 @@ export class AuthService {
   }
 
   async register(credentials: RegisterCredentials): Promise<AuthResponse> {
-    this.ensureValidationPassed(validateRegisterCredentials(credentials));
+    ensureValidationPassed(validateRegisterCredentials(credentials), CREDENTIALS_VALIDATION_ERROR_PREFIX);
     await this.ensureEmailNotRegistered(credentials.email);
     const passwordHash = await hashPassword(credentials.password);
     const user = await this.authRepository.create({
@@ -42,13 +43,6 @@ export class AuthService {
     await this.equationRepository.addDefaultEquationsToUser(user.id);
     const token = this.createToken(user.id, user.email);
     return this.toAuthResponse(user, token);
-  }
-
-  private ensureValidationPassed(validation: ValidationResult): void {
-    if (!validation.isValid) {
-      const message = Object.values(validation.errors).filter(Boolean).join(', ');
-      throw new Error(CREDENTIALS_VALIDATION_ERROR_PREFIX + message);
-    }
   }
 
   private async findUserByEmailOrThrow(email: string): Promise<User> {

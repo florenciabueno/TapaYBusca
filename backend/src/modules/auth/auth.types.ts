@@ -7,7 +7,6 @@ export interface RegisterCredentials extends LoginCredentials {
   name: string;
 }
 
-/** Payload para crear usuario en el repository (nunca contraseña en claro) */
 export interface CreateUserPayload {
   email: string;
   name: string;
@@ -18,10 +17,7 @@ export type LoginValidationErrors = Partial<Record<keyof LoginCredentials, strin
 
 export type RegisterValidationErrors = Partial<Record<keyof RegisterCredentials, string>>;
 
-export interface ValidationResult<T = Record<string, string | undefined>> {
-  isValid: boolean;
-  errors: T;
-}
+export type { ValidationResult } from '../../shared/types/validation.types.js';
 
 export interface AuthResponse {
   user: {

@@ -1,8 +1,3 @@
-/**
- * Evaluates the expression tree and returns a list of numeric results. Square root yields [r, -r].
- * Division by zero or sqrt(negative) skips that value.
- */
-
 import type { TreeNode } from './types.js';
 import {
   ADD,
@@ -22,7 +17,6 @@ export function listContainsElement(list: number[], value: number, tolerance: nu
   return list.some((v) => Math.abs(v - value) <= tolerance);
 }
 
-/** Returns true when every element of listToVerify is in list (within tolerance). */
 export function listContainsList(list: number[], listToVerify: number[], tolerance: number = DEFAULT_TOLERANCE): boolean {
   return listToVerify.every((elem) => listContainsElement(list, elem, tolerance));
 }

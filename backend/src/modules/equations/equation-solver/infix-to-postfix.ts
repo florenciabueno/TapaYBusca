@@ -1,7 +1,3 @@
-/**
- * Converts infix token list to postfix (Shunting Yard). Returns null if parentheses are unbalanced.
- */
-
 import { LEFT_PAREN, RIGHT_PAREN, VARIABLE, isStackTopPrecedenceGte } from './constants.js';
 
 function isNumber(token: string): boolean {
@@ -14,7 +10,6 @@ function isVariable(token: string): boolean {
   return token === VARIABLE;
 }
 
-/** Converts infix to postfix. Returns null if a ')' has no matching '('. */
 export function infixToPostfix(infixTokens: string[]): string[] | null {
   const output: string[] = [];
   const stack: string[] = [];

@@ -81,3 +81,9 @@ export interface DownloadEquationsResult {
   added: number;
   totalRequested: number;
 }
+
+/** Resultado de validación de sintaxis de ecuación (errors como lista de mensajes). */
+export interface EquationValidationResult {
+  isValid: boolean;
+  errors: string[];
+}

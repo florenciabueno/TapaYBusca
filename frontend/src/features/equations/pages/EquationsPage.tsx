@@ -4,9 +4,11 @@ import { OriginFilter } from '../components/OriginFilter';
 import { StatusFilter } from '../components/StatusFilter';
 import { DateFilter } from '../components/DateFilter';
 import { useEquationList } from '../hooks/useEquationList';
+import { useAuthStore } from '../../../stores';
 import { COLORS } from '../../../config/theme';
 
 export const EquationsPage = () => {
+  const user = useAuthStore((state) => state.user);
   const {
     selectedOrigins,
     setOriginFilter,
@@ -28,7 +30,9 @@ export const EquationsPage = () => {
         </p>
 
         <div className="mb-4 flex flex-col gap-3">
-          <OriginFilter selectedOrigins={selectedOrigins} onChange={setOriginFilter} />
+          {user && (
+            <OriginFilter selectedOrigins={selectedOrigins} onChange={setOriginFilter} />
+          )}
           <StatusFilter selectedStatuses={selectedStatuses} onChange={setStatusFilter} />
           <DateFilter fromDate={fromDate} toDate={toDate} onChange={setDateFilter} />
         </div>
