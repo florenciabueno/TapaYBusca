@@ -85,14 +85,6 @@ const DEFAULT_EQUATIONS_INFIX = [
   'pot2(x+7)+10=74',
 ];
 
-/** Ecuaciones del seed que el solver actual no resuelve (devuelven 400); documentado como limitación conocida */
-const DEFAULT_EQUATIONS_SOLVER_LIMITATION = [
-  '((pot2(x)+9)/(5))=1',
-  '((neg(24))/(pot2(x)-13))=neg(2)',
-  'neg(10)=pot3(x)-2',
-  'neg(1)=raiz2(1+raiz2(x))-2',
-];
-
 /** Ecuaciones válidas adicionales: combinaciones permitidas (lineal, cuadrático, cúbico, raíz, neg) */
 const VALID_EQUATIONS_ADDITIONAL = [
   'x=1',
@@ -165,14 +157,8 @@ describe('Equations API', () => {
 
     describe('default equations (seed) - each must be created successfully', () => {
       DEFAULT_EQUATIONS_INFIX.forEach((equation) => {
-        const isSolverLimitation = DEFAULT_EQUATIONS_SOLVER_LIMITATION.includes(equation);
         it(`creates equation: ${equation}`, async () => {
           const response = await createEquation(app, token, equation);
-          if (isSolverLimitation) {
-            expect(response.status).toBe(400);
-            expect(response.body).toHaveProperty('error');
-            return;
-          }
           expect(response.status).toBe(201);
           expect(response.body).toMatchObject({
             equation: equation.trim(),
