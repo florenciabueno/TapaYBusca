@@ -1,7 +1,3 @@
-/**
- * Converts postfix token list to a binary expression tree. Returns null if invalid (stack underflow or not exactly one result).
- */
-
 import type { TreeNode } from './types.js';
 import {
   VARIABLE,

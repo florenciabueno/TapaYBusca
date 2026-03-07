@@ -17,7 +17,7 @@ const authController = new AuthController(authService);
 
 const passwordResetRepository = new PasswordResetRepository();
 const emailService = new EmailService();
-const passwordResetService = new PasswordResetService(passwordResetRepository, emailService);
+const passwordResetService = new PasswordResetService(authRepository, passwordResetRepository, emailService);
 const passwordResetController = new PasswordResetController(passwordResetService);
 
 const forgotPasswordLimiter = rateLimit({

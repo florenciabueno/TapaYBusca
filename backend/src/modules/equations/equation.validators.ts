@@ -1,18 +1,7 @@
-/**
- * Validación de sintaxis para ecuaciones de la forma f(x) = k o k = f(x).
- * k: expresión con constantes y operadores aritméticos (sin x).
- * f: expresión algebraica hasta tercer grado, racional, con radicales; una sola variable y una sola ocurrencia de x.
- */
+import type { EquationValidationResult } from './equation.types.js';
 
-export interface EquationValidationResult {
-  isValid: boolean;
-  errors: string[];
-}
-
-/** Variable permitida (incógnita) */
 export const EQUATION_VARIABLE = 'x';
 
-/** Funciones permitidas en el lado f(x) (alineadas al seed: raiz2, raiz3, pot2, pot3, neg) */
 export const ALLOWED_FUNCTIONS = new Set([
   'sqrt',
   'raiz2',
@@ -23,18 +12,56 @@ export const ALLOWED_FUNCTIONS = new Set([
   'neg',
 ]);
 
-/** Operadores permitidos en lado constante k */
-const CONSTANT_OPS = new Set(['+', '-', '*', '/']);
-/** Caracteres permitidos en lado constante (sin variable): números (incl. negativos), espacios, operadores + - * / ( ) */
 const CONSTANT_ALLOWED_CHARS = /^[-\d\s.+*\/()]+$/;
-
-/** Máximo grado permitido para la incógnita (lineal, cuadrático, cúbico) */
 const MAX_DEGREE = 3;
+
+const MESSAGE_EMPTY = 'La ecuación no puede estar vacía.';
+const MESSAGE_NO_EQUALS = 'La ecuación debe contener exactamente un signo =.';
+const MESSAGE_MULTIPLE_EQUALS = 'La ecuación debe tener exactamente un signo = (no varios).';
+const MESSAGE_SIDES_EMPTY = 'Cada lado del signo = debe tener una expresión.';
+const MESSAGE_BOTH_HAVE_X = 'Solo un lado de la ecuación puede contener la incógnita x.';
+const MESSAGE_NEITHER_HAS_X = 'Uno de los lados debe contener la incógnita x.';
+const MESSAGE_SIDE_EMPTY = 'Un lado de la ecuación está vacío.';
+const MESSAGE_CONSTANT_HAS_X = 'El lado constante (k) no debe contener la incógnita x.';
+const MESSAGE_CONSTANT_INVALID_CHARS =
+  'El lado constante solo puede contener números y los operadores +, -, *, /.';
+const MESSAGE_CONSTANT_PARENS = 'Paréntesis desbalanceados en el lado constante.';
+const MESSAGE_EXPRESSION_MULTIPLE_X = 'La expresión en x solo puede contener una vez la incógnita.';
+const MESSAGE_EXPRESSION_ALLOWED_FUNCTIONS =
+  'Función no permitida: "{id}". Permitidas: sqrt, raiz2, raiz3, cbrt, pot2, pot3, neg.';
+const MESSAGE_EXPRESSION_DEGREE = `Solo se permiten expresiones hasta grado ${MAX_DEGREE} (x, x^2, x^3).`;
+const MESSAGE_EXPRESSION_MUST_HAVE_X =
+  'Uno de los lados debe ser una expresión que contenga la incógnita x.';
 
 type TokenType = 'NUMBER' | 'ID' | 'OP' | 'LPAREN' | 'RPAREN';
 interface Token {
   type: TokenType;
   value: string;
+}
+
+function toEquationValidationResult(errors: string[]): EquationValidationResult {
+  return {
+    isValid: errors.length === 0,
+    errors,
+  };
+}
+
+function validateStructure(trimmed: string): string[] {
+  if (!trimmed) return [MESSAGE_EMPTY];
+
+  const eqCount = (trimmed.match(/=/g) || []).length;
+  if (eqCount === 0) return [MESSAGE_NO_EQUALS];
+  if (eqCount > 1) return [MESSAGE_MULTIPLE_EQUALS];
+
+  const [left, right] = trimmed.split('=').map((s) => s.trim());
+  if (!left || !right) return [MESSAGE_SIDES_EMPTY];
+
+  const leftHasX = left.includes(EQUATION_VARIABLE);
+  const rightHasX = right.includes(EQUATION_VARIABLE);
+  if (leftHasX && rightHasX) return [MESSAGE_BOTH_HAVE_X];
+  if (!leftHasX && !rightHasX) return [MESSAGE_NEITHER_HAS_X];
+
+  return [];
 }
 
 function tokenize(expr: string): { tokens: Token[]; error?: string } {
@@ -103,12 +130,10 @@ function balancedParentheses(s: string): boolean {
 
 function validateConstantSide(side: string): string | null {
   const trimmed = side.trim();
-  if (!trimmed) return 'Un lado de la ecuación está vacío.';
-  if (trimmed.includes(EQUATION_VARIABLE)) return 'El lado constante (k) no debe contener la incógnita x.';
-  if (!CONSTANT_ALLOWED_CHARS.test(trimmed)) {
-    return 'El lado constante solo puede contener números y los operadores +, -, *, /.';
-  }
-  if (!balancedParentheses(trimmed)) return 'Paréntesis desbalanceados en el lado constante.';
+  if (!trimmed) return MESSAGE_SIDE_EMPTY;
+  if (trimmed.includes(EQUATION_VARIABLE)) return MESSAGE_CONSTANT_HAS_X;
+  if (!CONSTANT_ALLOWED_CHARS.test(trimmed)) return MESSAGE_CONSTANT_INVALID_CHARS;
+  if (!balancedParentheses(trimmed)) return MESSAGE_CONSTANT_PARENS;
   return null;
 }
 
@@ -119,11 +144,11 @@ function validateExpressionSide(tokens: Token[]): string | null {
     if (t.type === 'ID') {
       if (t.value === EQUATION_VARIABLE) {
         xCount++;
-        if (xCount > 1) return 'La expresión en x solo puede contener una vez la incógnita.';
+        if (xCount > 1) return MESSAGE_EXPRESSION_MULTIPLE_X;
         continue;
       }
       if (!ALLOWED_FUNCTIONS.has(t.value.toLowerCase())) {
-        return `Función no permitida: "${t.value}". Permitidas: sqrt, raiz2, raiz3, cbrt, pot2, pot3, neg.`;
+        return MESSAGE_EXPRESSION_ALLOWED_FUNCTIONS.replace('{id}', t.value);
       }
     }
     if (t.type === 'OP' && t.value === '^' && i >= 2) {
@@ -131,51 +156,21 @@ function validateExpressionSide(tokens: Token[]): string | null {
       const next = tokens[i + 1];
       if (prev.value === EQUATION_VARIABLE && next?.type === 'NUMBER') {
         const exp = parseInt(next.value, 10);
-        if (Number.isNaN(exp) || exp < 0 || exp > MAX_DEGREE) {
-          return `Solo se permiten expresiones hasta grado ${MAX_DEGREE} (x, x^2, x^3).`;
-        }
+        if (Number.isNaN(exp) || exp < 0 || exp > MAX_DEGREE) return MESSAGE_EXPRESSION_DEGREE;
       }
     }
   }
-  if (xCount === 0) return 'Uno de los lados debe ser una expresión que contenga la incógnita x.';
+  if (xCount === 0) return MESSAGE_EXPRESSION_MUST_HAVE_X;
   return null;
 }
 
-/**
- * Valida la sintaxis de una ecuación f(x)=k o k=f(x).
- * Devuelve resultado con isValid y lista de mensajes de error en español.
- */
 export function validateEquation(equation: string): EquationValidationResult {
-  const errors: string[] = [];
   const trimmed = (equation ?? '').trim();
-
-  if (!trimmed) {
-    return { isValid: false, errors: ['La ecuación no puede estar vacía.'] };
-  }
-
-  const eqCount = (trimmed.match(/=/g) || []).length;
-  if (eqCount === 0) {
-    return { isValid: false, errors: ['La ecuación debe contener exactamente un signo =.'] };
-  }
-  if (eqCount > 1) {
-    return { isValid: false, errors: ['La ecuación debe tener exactamente un signo = (no varios).'] };
-  }
+  const errors = [...validateStructure(trimmed)];
+  if (errors.length > 0) return toEquationValidationResult(errors);
 
   const [left, right] = trimmed.split('=').map((s) => s.trim());
-  if (!left || !right) {
-    return { isValid: false, errors: ['Cada lado del signo = debe tener una expresión.'] };
-  }
-
   const leftHasX = left.includes(EQUATION_VARIABLE);
-  const rightHasX = right.includes(EQUATION_VARIABLE);
-
-  if (leftHasX && rightHasX) {
-    return { isValid: false, errors: ['Solo un lado de la ecuación puede contener la incógnita x.'] };
-  }
-  if (!leftHasX && !rightHasX) {
-    return { isValid: false, errors: ['Uno de los lados debe contener la incógnita x.'] };
-  }
-
   const constantSide = leftHasX ? right : left;
   const expressionSide = leftHasX ? left : right;
 
@@ -185,13 +180,11 @@ export function validateEquation(equation: string): EquationValidationResult {
   const { tokens, error: tokenError } = tokenize(expressionSide);
   if (tokenError) {
     errors.push(tokenError);
-    return { isValid: false, errors };
+    return toEquationValidationResult(errors);
   }
+
   const exprError = validateExpressionSide(tokens);
   if (exprError) errors.push(exprError);
 
-  return {
-    isValid: errors.length === 0,
-    errors,
-  };
+  return toEquationValidationResult(errors);
 }

@@ -1,7 +1,3 @@
-/**
- * Isolates the variable: from a tree with '=' at root, returns tree B (numeric side) so that x = B.
- */
-
 import type { TreeNode } from './types.js';
 import { VARIABLE, DIVIDE, SUBTRACT, NEGATE } from './constants.js';
 import { containsVariable, getOppositeOperator } from './tree-utils.js';

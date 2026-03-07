@@ -1,7 +1,3 @@
-/**
- * Types for the expression tree and solver result.
- */
-
 export type NodeType = 'NUMBER' | 'VARIABLE' | 'OPERATOR_BINARY' | 'OPERATOR_UNARY';
 
 export interface TreeNode {
@@ -25,7 +21,6 @@ export const ERROR_CODES = {
   NO_SOLUTION: 'NO_SOLUTION',
 } as const;
 
-/** User-facing messages (Spanish) for API responses. */
 export const ERROR_MESSAGES: Record<string, string> = {
   [ERROR_CODES.MISSING_PARENTHESES]: 'Paréntesis desbalanceados.',
   [ERROR_CODES.MALFORMED_EQUATION]: 'La ecuación está mal formada o no pudo resolverse.',
