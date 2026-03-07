@@ -3,7 +3,7 @@ import { Input } from '../../../../shared/components/ui/Input/Input';
 import { Button } from '../../../../shared/components/ui/Button/Button';
 import { ErrorMessage } from '../../../../shared/components/ui/ErrorMessage/ErrorMessage';
 import { useFormValidation } from '../../../../shared/hooks/useFormValidation';
-import { validateEmail, validatePassword, validateName } from '../../../../shared/utils/validation';
+import { validateEmail, validatePassword, validateName, createConfirmPasswordValidator } from '../../../../shared/utils/validation';
 import { useAuth } from '../../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '../../../../config/constants';
@@ -12,6 +12,7 @@ export const RegisterForm = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const { errors, validateForm, clearError } = useFormValidation();
   const { register, isLoading, error } = useAuth();
   const navigate = useNavigate();
@@ -34,23 +35,38 @@ export const RegisterForm = () => {
     clearError('password');
   };
 
+  const handleConfirmPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setConfirmPassword(value);
+    clearError('confirmPassword');
+  };
+
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    const form = e.currentTarget;
+    const payload = {
+      name: (form.elements.namedItem('name') as HTMLInputElement)?.value ?? '',
+      email: (form.elements.namedItem('email') as HTMLInputElement)?.value ?? '',
+      password: (form.elements.namedItem('password') as HTMLInputElement)?.value ?? '',
+      confirmPassword: (form.elements.namedItem('confirmPassword') as HTMLInputElement)?.value ?? '',
+    };
 
     const isValid = validateForm(
       {
         name: validateName,
         email: validateEmail,
         password: validatePassword,
+        confirmPassword: createConfirmPasswordValidator(payload.password),
       },
-      { name, email, password }
+      payload
     );
 
     if (!isValid) {
       return;
     }
 
-    const result = await register({ name, email, password });
+    const result = await register({ name: payload.name, email: payload.email, password: payload.password });
     if (result.success) {
       navigate(ROUTES.DASHBOARD);
     }
@@ -98,6 +114,20 @@ export const RegisterForm = () => {
         value={password}
         onChange={handlePasswordChange}
         error={errors?.password}
+        autoComplete="new-password"
+        required
+      />
+
+      <Input
+        id="confirmPassword"
+        name="confirmPassword"
+        type="password"
+        density="sm"
+        label="Confirmar contraseña"
+        placeholder="Repite tu contraseña"
+        value={confirmPassword}
+        onChange={handleConfirmPasswordChange}
+        error={errors?.confirmPassword}
         autoComplete="new-password"
         required
       />
