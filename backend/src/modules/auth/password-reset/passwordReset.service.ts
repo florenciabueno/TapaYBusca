@@ -1,62 +1,56 @@
 import crypto from 'crypto';
 import { config } from '../../../config/env.js';
 import { hashPassword } from '../../../shared/utils/password.js';
+import { ensureValidationPassed } from '../../../shared/utils/validation.js';
 import type { EmailService } from '../../../shared/services/email/email.service.js';
+import { AuthRepository } from '../auth.repository.js';
 import { PasswordResetRepository } from './passwordReset.repository.js';
+import type {
+  ForgotPasswordBody,
+  ResetPasswordBody,
+  PasswordResetMessageResponse,
+} from './passwordReset.types.js';
+import { validateForgotPasswordBody, validateResetPasswordBody } from './passwordReset.validators.js';
 
 const FORGOT_PASSWORD_GENERIC_MESSAGE =
   'Si el correo existe, enviaremos un enlace para restablecer la contraseña.';
-
-const RESET_PASSWORD_INVALID_TOKEN_MESSAGE = 'Token inválido o expirado';
-
-function hashToken(token: string): string {
-  return crypto.createHash('sha256').update(token).digest('hex');
-}
-
-function generateToken(): string {
-  return crypto.randomBytes(32).toString('base64url');
-}
+const RESET_PASSWORD_INVALID_TOKEN_MESSAGE = 'Token inválido o expirado.';
+const RESET_PASSWORD_SUCCESS_MESSAGE = 'Contraseña actualizada correctamente';
+const VALIDATION_ERROR_PREFIX = 'Datos inválidos: ';
 
 export class PasswordResetService {
   constructor(
+    private authRepository: AuthRepository,
     private repository: PasswordResetRepository,
     private emailService: EmailService
   ) {}
 
-  async requestPasswordReset(email: string): Promise<{ message: string }> {
-    const userId = await this.repository.findUserIdByEmail(email);
-    if (!userId) {
+  async requestPasswordReset(payload: ForgotPasswordBody): Promise<PasswordResetMessageResponse> {
+    ensureValidationPassed(validateForgotPasswordBody(payload), VALIDATION_ERROR_PREFIX);
+    const user = await this.authRepository.findByEmail(payload.email);
+    if (!user) {
       return { message: FORGOT_PASSWORD_GENERIC_MESSAGE };
     }
 
     const now = new Date();
-    const ttlMs = config.passwordResetTokenTtlMinutes * 60 * 1000;
-    const expiresAt = new Date(now.getTime() + ttlMs);
+    const expiresAt = this.getExpiresAt(now);
+    const token = this.generateToken();
+    const tokenHash = this.hashToken(token);
 
-    const token = generateToken();
-    const tokenHash = hashToken(token);
+    await this.repository.createToken({ userId: user.id, tokenHash, expiresAt, now });
 
-    await this.repository.createToken({ userId, tokenHash, expiresAt, now });
-
-    const resetUrl = `${config.frontendBaseUrl}/reset-password/${token}`;
-
-    try {
-      await this.emailService.sendPasswordResetEmail({
-        to: email,
-        resetUrl,
-        expiresInMinutes: config.passwordResetTokenTtlMinutes,
-      });
-    } catch (error) {
-      console.error('Error enviando email de reset password:', error);
-    }
+    const resetUrl = this.buildResetUrl(token);
+    this.trySendResetEmail(payload.email, resetUrl);
 
     return { message: FORGOT_PASSWORD_GENERIC_MESSAGE };
   }
 
-  async resetPassword(token: string, newPassword: string): Promise<{ message: string }> {
+  async resetPassword(payload: ResetPasswordBody): Promise<PasswordResetMessageResponse> {
+    ensureValidationPassed(validateResetPasswordBody(payload), VALIDATION_ERROR_PREFIX);
+
     const now = new Date();
-    const tokenHash = hashToken(token);
-    const newPasswordHash = await hashPassword(newPassword);
+    const tokenHash = this.hashToken(payload.token);
+    const newPasswordHash = await hashPassword(payload.newPassword);
 
     const success = await this.repository.resetPasswordWithToken({
       tokenHash,
@@ -66,7 +60,35 @@ export class PasswordResetService {
 
     if (!success) throw new Error(RESET_PASSWORD_INVALID_TOKEN_MESSAGE);
 
-    return { message: 'Contraseña actualizada correctamente' };
+    return { message: RESET_PASSWORD_SUCCESS_MESSAGE };
+  }
+
+  private getExpiresAt(from: Date): Date {
+    const ttlMs = config.passwordResetTokenTtlMinutes * 60 * 1000;
+    return new Date(from.getTime() + ttlMs);
+  }
+
+  private hashToken(token: string): string {
+    return crypto.createHash('sha256').update(token).digest('hex');
+  }
+
+  private generateToken(): string {
+    return crypto.randomBytes(32).toString('base64url');
+  }
+
+  private buildResetUrl(token: string): string {
+    return `${config.frontendBaseUrl}/reset-password/${token}`;
+  }
+
+  private trySendResetEmail(to: string, resetUrl: string): void {
+    this.emailService
+      .sendPasswordResetEmail({
+        to,
+        resetUrl,
+        expiresInMinutes: config.passwordResetTokenTtlMinutes,
+      })
+      .catch((error) => {
+        console.error('Error enviando email de reset password:', error);
+      });
   }
 }
-

@@ -1,7 +1,3 @@
-/**
- * Public API: solves the equation and determines if it has a solution before saving.
- */
-
 import type { SolveResult } from './types.js';
 import { ERROR_CODES, ERROR_MESSAGES } from './types.js';
 import { tokenizeInfix } from './tokenizer.js';
@@ -11,7 +7,6 @@ import { isolateVariable } from './isolate-variable.js';
 import { evaluateTree } from './evaluate-tree.js';
 import { checkSolutions } from './solution-check.js';
 
-/** Solves the equation in infix notation. Returns ok + solutions if at least one verified solution; otherwise ok=false with errorCode and message. */
 export function solveEquation(infixExpression: string): SolveResult {
   const trimmed = (infixExpression ?? '').trim();
   if (!trimmed) {

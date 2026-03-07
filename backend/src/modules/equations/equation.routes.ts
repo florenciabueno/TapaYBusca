@@ -9,10 +9,8 @@ const equationRepository = new EquationRepository();
 const equationService = new EquationService(equationRepository);
 const equationController = new EquationController(equationService);
 
-// Endpoint público - ecuaciones por defecto (sin autenticación)
 router.get('/public', equationController.getPublicEquations.bind(equationController));
 
-// Endpoints protegidos - requieren autenticación
 router.get('/', authMiddleware, equationController.getAllEquations.bind(equationController));
 router.get('/for-upload', authMiddleware, equationController.getForUpload.bind(equationController));
 router.post('/upload', authMiddleware, equationController.uploadEquations.bind(equationController));

@@ -1,8 +1,3 @@
-/**
- * Converts infix equation string into a list of tokens.
- * Split order: raiz3, raiz2, powers, +, -, *, /, (, ), =, neg.
- */
-
 import {
   SUBTRACT,
   NEGATE,
@@ -14,10 +9,8 @@ import {
 } from './constants.js';
 import { TOKENIZE_ORDER } from './constants.js';
 
-/** Tokens after which a '-' is unary (negate). */
 const UNARY_MINUS_AFTER = new Set([EQUALS, LEFT_PAREN, ADD, SUBTRACT, MULTIPLY, DIVIDE]);
 
-/** Normalizes validator-accepted aliases to solver token names. Handles sqrt, cbrt, and x^n. */
 export function normalizeInfix(equation: string): string {
   let s = equation.replace(/\s/g, '');
   s = s.replace(/\bsqrt\b/gi, 'raiz2');
@@ -28,9 +21,6 @@ export function normalizeInfix(equation: string): string {
   return s;
 }
 
-/**
- * Splits segments by delimiter and interleaves the delimiter. E.g. splitAndAdd(["a+b+c"], "+") -> ["a", "+", "b", "+", "c"]
- */
 function splitAndAdd(parts: string[], delimiter: string): string[] {
   const result: string[] = [];
   for (const part of parts) {
@@ -51,9 +41,6 @@ function splitAndAdd(parts: string[], delimiter: string): string[] {
   return result;
 }
 
-/**
- * Converts unary minus to NEGATE token. Unary minus occurs at start, after '=', or after '('.
- */
 function unaryMinusToNeg(tokens: string[]): string[] {
   const result: string[] = [];
   for (let i = 0; i < tokens.length; i++) {
@@ -68,7 +55,6 @@ function unaryMinusToNeg(tokens: string[]): string[] {
   return result;
 }
 
-/** Returns the infix token list (numbers, variable x, operators, parentheses). Unary minus becomes 'neg'. */
 export function tokenizeInfix(equation: string): string[] {
   const normalized = normalizeInfix(equation);
   let arr: string[] = [normalized];

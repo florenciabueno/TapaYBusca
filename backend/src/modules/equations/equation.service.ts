@@ -14,11 +14,16 @@ import {
 } from './equation.types.js';
 import { validateEquation } from './equation.validators.js';
 import { solveEquation } from './equation-solver/index.js';
+import { ensureValidationPassedWithErrorList } from '../../shared/utils/validation.js';
 
 const STEPS_DEFAULT = 0;
 const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 9;
 const MAX_LIMIT = 50;
+const DOWNLOAD_QUANTITY_MIN = 1;
+const DOWNLOAD_QUANTITY_MAX = 50;
+const DOWNLOAD_FETCH_MULTIPLIER = 3;
+const DOWNLOAD_FETCH_MAX = 200;
 
 const STATUS_ORDER: EquationStatus[] = [
   EquationStatus.IN_PROGRESS,
@@ -26,16 +31,16 @@ const STATUS_ORDER: EquationStatus[] = [
   EquationStatus.SOLVED,
 ];
 
-function statusOrderIndex(status: string): number {
-  const i = STATUS_ORDER.indexOf(status as EquationStatus);
-  return i === -1 ? STATUS_ORDER.length : i;
-}
-
-function sanitizePagination(page: number, limit: number): { page: number; limit: number } {
-  const p = Math.max(1, Math.floor(page));
-  const l = Math.min(MAX_LIMIT, Math.max(1, Math.floor(limit)));
-  return { page: p, limit: l };
-}
+const MESSAGE_EQUATION_VALIDATION_PREFIX = '';
+const MESSAGE_EQUATION_NO_SOLUTION = 'La ecuación no tiene solución.';
+const MESSAGE_NO_PERMISSION_MODIFY = 'No tienes permisos para modificar esta ecuación';
+const MESSAGE_NO_PERMISSION_DELETE = 'No tienes permisos para eliminar esta ecuación';
+const MESSAGE_UPLOAD_EQUATIONS_NOT_FOUND = 'Una o más ecuaciones no existen o no te pertenecen.';
+const MESSAGE_UPLOAD_ALREADY_PUBLISHED = 'Una o más ecuaciones ya fueron subidas. Solo puedes subir cada ecuación una vez.';
+const MESSAGE_DOWNLOAD_QUANTITY_RANGE = `Cantidad debe estar entre ${DOWNLOAD_QUANTITY_MIN} y ${DOWNLOAD_QUANTITY_MAX}.`;
+const MESSAGE_DOWNLOAD_FROM_DATE_INVALID = 'Fecha desde no válida.';
+const MESSAGE_DOWNLOAD_TO_DATE_INVALID = 'Fecha hasta no válida.';
+const MESSAGE_DOWNLOAD_DATE_RANGE = 'La fecha desde no puede ser posterior a la fecha hasta.';
 
 export class EquationService {
   constructor(private equationRepository: EquationRepository) {}
@@ -49,20 +54,14 @@ export class EquationService {
     fromDate?: Date,
     toDate?: Date
   ): Promise<PaginatedEquationsResponse> {
-    const { page: p, limit: l } = sanitizePagination(page, limit);
+    const { page: p, limit: l } = this.sanitizePagination(page, limit);
     const [userEquations, total] = await Promise.all([
       this.equationRepository.findAllForUser(userId, p, l, origins, statuses, fromDate, toDate),
       this.equationRepository.countForUser(userId, origins, statuses, fromDate, toDate),
     ]);
-    const sorted = [...userEquations].sort((a, b) => {
-      const statusA = statusOrderIndex(a.status);
-      const statusB = statusOrderIndex(b.status);
-      if (statusA !== statusB) return statusA - statusB;
-      return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
-    });
-    const data = sorted.map((eu) => this.toEquationResponse(eu));
-    const totalPages = Math.ceil(total / l) || 1;
-    return { data, total, page: p, limit: l, totalPages };
+    const sorted = this.sortByStatusAndUpdatedAt(userEquations);
+    const data = sorted.map((row) => this.toEquationResponse(row));
+    return this.buildPaginatedResponse(data, total, p, l);
   }
 
   async getEquationById(userEquationId: string): Promise<EquationResponse | null> {
@@ -72,44 +71,46 @@ export class EquationService {
   }
 
   async createEquation(data: CreateEquationDto): Promise<EquationResponse> {
-    const validation = validateEquation(data.expression);
-    if (!validation.isValid) {
-      throw new Error(validation.errors.join(' '));
-    }
+    ensureValidationPassedWithErrorList(validateEquation(data.expression), MESSAGE_EQUATION_VALIDATION_PREFIX);
     const solveResult = solveEquation(data.expression);
-    if (!solveResult.ok) {
-      throw new Error(solveResult.message ?? 'La ecuación no tiene solución.');
-    }
+    this.ensureEquationHasSolution(solveResult);
     const equationUser = await this.equationRepository.create(data);
     return this.toEquationResponse(equationUser);
   }
 
-  async updateEquation(equationUserId: string, data: UpdateEquationUserDto, userId: string): Promise<EquationResponse> {
-    const canModify = await this.equationRepository.canUserModify(equationUserId, userId);
-    if (!canModify) {
-      throw new Error('No tienes permisos para modificar esta ecuación');
-    }
+  async updateEquation(
+    equationUserId: string,
+    data: UpdateEquationUserDto,
+    userId: string
+  ): Promise<EquationResponse> {
+    await this.ensureCanModifyEquation(equationUserId, userId);
     const equationUser = await this.equationRepository.update(equationUserId, data);
     return this.toEquationResponse(equationUser);
   }
 
   async deleteEquation(equationUserId: string, userId: string): Promise<void> {
-    const canModify = await this.equationRepository.canUserModify(equationUserId, userId);
-    if (!canModify) {
-      throw new Error('No tienes permisos para eliminar esta ecuación');
-    }
+    await this.ensureCanDeleteEquation(equationUserId, userId);
     await this.equationRepository.softDelete(equationUserId);
   }
 
-  async getPublicEquations(page = DEFAULT_PAGE, limit = DEFAULT_LIMIT): Promise<PaginatedEquationsResponse> {
-    const { page: p, limit: l } = sanitizePagination(page, limit);
+  async getPublicEquations(
+    page = DEFAULT_PAGE,
+    limit = DEFAULT_LIMIT,
+    statuses?: EquationStatus[],
+    fromDate?: Date,
+    toDate?: Date
+  ): Promise<PaginatedEquationsResponse> {
+    const { page: p, limit: l } = this.sanitizePagination(page, limit);
+    const showOnlyNotStarted = this.publicListIncludesNotStarted(statuses);
+    if (!showOnlyNotStarted) {
+      return this.buildPaginatedResponse([], 0, p, l);
+    }
     const [defaultEquations, total] = await Promise.all([
-      this.equationRepository.findDefaultEquations(p, l),
-      this.equationRepository.countDefaultEquations(),
+      this.equationRepository.findDefaultEquations(p, l, fromDate, toDate),
+      this.equationRepository.countDefaultEquations(fromDate, toDate),
     ]);
     const data = defaultEquations.map((eq) => this.toEquationResponseFromDefault(eq));
-    const totalPages = Math.ceil(total / l) || 1;
-    return { data, total, page: p, limit: l, totalPages };
+    return this.buildPaginatedResponse(data, total, p, l);
   }
 
   async getEquationsForUpload(userId: string): Promise<{ data: UploadableEquationResponse[] }> {
@@ -117,32 +118,13 @@ export class EquationService {
       this.equationRepository.findCreatedForUser(userId),
       this.equationRepository.getPublishedEquationIdsForUser(userId),
     ]);
-    const data: UploadableEquationResponse[] = rows.map((row) => ({
-      id: row.id,
-      equation: this.getDisplayExpression(row.equation),
-      isPublished: publishedIds.includes(row.equationId),
-    }));
+    const data = rows.map((row) => this.toUploadableItem(row, publishedIds));
     return { data };
   }
 
   async uploadEquations(userId: string, userEquationIds: string[]): Promise<void> {
     if (userEquationIds.length === 0) return;
-
-    const alreadyPublished: string[] = [];
-    for (const userEquationId of userEquationIds) {
-      const row = await this.equationRepository.findUserEquationByIdAndUser(userEquationId, userId);
-      if (!row) {
-        throw new Error('Una o más ecuaciones no existen o no te pertenecen.');
-      }
-      const isPublished = await this.equationRepository.isEquationPublishedByUser(row.equationId, userId);
-      if (isPublished) {
-        alreadyPublished.push(row.equation.infixExpression || row.equation.postfixExpression || row.equationId);
-      }
-    }
-    if (alreadyPublished.length > 0) {
-      throw new Error('Una o más ecuaciones ya fueron subidas. Solo puedes subir cada ecuación una vez.');
-    }
-
+    await this.ensureCanUploadEquations(userId, userEquationIds);
     for (const userEquationId of userEquationIds) {
       const row = await this.equationRepository.findUserEquationByIdAndUser(userEquationId, userId);
       if (row) {
@@ -151,34 +133,53 @@ export class EquationService {
     }
   }
 
-  private static readonly DOWNLOAD_QUANTITY_MIN = 1;
-  private static readonly DOWNLOAD_QUANTITY_MAX = 50;
-
   async downloadEquations(userId: string, dto: DownloadEquationsDto): Promise<DownloadEquationsResult> {
-    const quantity = Math.floor(Number(dto.quantity));
-    if (quantity < EquationService.DOWNLOAD_QUANTITY_MIN || quantity > EquationService.DOWNLOAD_QUANTITY_MAX) {
-      throw new Error(`Cantidad debe estar entre ${EquationService.DOWNLOAD_QUANTITY_MIN} y ${EquationService.DOWNLOAD_QUANTITY_MAX}.`);
-    }
-    let fromDate: Date | undefined;
-    let toDate: Date | undefined;
-    if (dto.fromDate) {
-      fromDate = new Date(dto.fromDate);
-      if (Number.isNaN(fromDate.getTime())) throw new Error('Fecha desde no válida.');
-    }
-    if (dto.toDate) {
-      toDate = new Date(dto.toDate);
-      if (Number.isNaN(toDate.getTime())) throw new Error('Fecha hasta no válida.');
-    }
-    if (fromDate !== undefined && toDate !== undefined && fromDate > toDate) {
-      throw new Error('La fecha desde no puede ser posterior a la fecha hasta.');
-    }
-    const limit = Math.min(quantity * 3, 200);
-    const rows = await this.equationRepository.findPublishedInDateRange(limit, fromDate, toDate);
+    const params = this.parseAndValidateDownloadParams(dto);
+    const limit = Math.min(params.quantity * DOWNLOAD_FETCH_MULTIPLIER, DOWNLOAD_FETCH_MAX);
+    const rows = await this.equationRepository.findPublishedInDateRange(
+      limit,
+      params.fromDate,
+      params.toDate
+    );
     const uniqueEquationIds = [...new Set(rows.map((r) => r.equationId))];
     const ownedIds = await this.equationRepository.getEquationIdsOwnedByUser(userId);
-    const toAdd = uniqueEquationIds.filter((id) => !ownedIds.includes(id)).slice(0, quantity);
-    const added = await this.equationRepository.addEquationsToUser(userId, toAdd, EquationOrigin.DOWNLOADED);
-    return { added, totalRequested: quantity };
+    const toAdd = uniqueEquationIds.filter((id) => !ownedIds.includes(id)).slice(0, params.quantity);
+    const added = await this.equationRepository.addEquationsToUser(
+      userId,
+      toAdd,
+      EquationOrigin.DOWNLOADED
+    );
+    return { added, totalRequested: params.quantity };
+  }
+
+  private sanitizePagination(page: number, limit: number): { page: number; limit: number } {
+    const p = Math.max(1, Math.floor(page));
+    const l = Math.min(MAX_LIMIT, Math.max(1, Math.floor(limit)));
+    return { page: p, limit: l };
+  }
+
+  private statusOrderIndex(status: string): number {
+    const i = STATUS_ORDER.indexOf(status as EquationStatus);
+    return i === -1 ? STATUS_ORDER.length : i;
+  }
+
+  private sortByStatusAndUpdatedAt(rows: UserEquationRow[]): UserEquationRow[] {
+    return [...rows].sort((a, b) => {
+      const statusA = this.statusOrderIndex(a.status);
+      const statusB = this.statusOrderIndex(b.status);
+      if (statusA !== statusB) return statusA - statusB;
+      return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+    });
+  }
+
+  private buildPaginatedResponse(
+    data: EquationResponse[],
+    total: number,
+    page: number,
+    limit: number
+  ): PaginatedEquationsResponse {
+    const totalPages = Math.ceil(total / limit) || 1;
+    return { data, total, page, limit, totalPages };
   }
 
   private toEquationResponse(row: UserEquationRow): EquationResponse {
@@ -205,6 +206,17 @@ export class EquationService {
     };
   }
 
+  private toUploadableItem(
+    row: { id: string; equationId: string; equation: UserEquationRow['equation'] },
+    publishedIds: string[]
+  ): UploadableEquationResponse {
+    return {
+      id: row.id,
+      equation: this.getDisplayExpression(row.equation),
+      isPublished: publishedIds.includes(row.equationId),
+    };
+  }
+
   private getDisplayExpression(equation: {
     latexExpression?: string | null;
     infixExpression?: string | null;
@@ -217,7 +229,70 @@ export class EquationService {
     return new Intl.DateTimeFormat('es-ES', {
       day: '2-digit',
       month: '2-digit',
-      year: 'numeric'
+      year: 'numeric',
     }).format(new Date(date));
+  }
+
+  private ensureEquationHasSolution(solveResult: { ok: boolean; message?: string }): void {
+    if (!solveResult.ok) {
+      throw new Error(solveResult.message ?? MESSAGE_EQUATION_NO_SOLUTION);
+    }
+  }
+
+  private async ensureCanModifyEquation(equationUserId: string, userId: string): Promise<void> {
+    const canModify = await this.equationRepository.canUserModify(equationUserId, userId);
+    if (!canModify) throw new Error(MESSAGE_NO_PERMISSION_MODIFY);
+  }
+
+  private async ensureCanDeleteEquation(equationUserId: string, userId: string): Promise<void> {
+    const canModify = await this.equationRepository.canUserModify(equationUserId, userId);
+    if (!canModify) throw new Error(MESSAGE_NO_PERMISSION_DELETE);
+  }
+
+  private async ensureCanUploadEquations(
+    userId: string,
+    userEquationIds: string[]
+  ): Promise<void> {
+    const alreadyPublished: string[] = [];
+    for (const userEquationId of userEquationIds) {
+      const row = await this.equationRepository.findUserEquationByIdAndUser(userEquationId, userId);
+      if (!row) throw new Error(MESSAGE_UPLOAD_EQUATIONS_NOT_FOUND);
+      const isPublished = await this.equationRepository.isEquationPublishedByUser(row.equationId, userId);
+      if (isPublished) {
+        const label = row.equation.infixExpression || row.equation.postfixExpression || row.equationId;
+        alreadyPublished.push(label);
+      }
+    }
+    if (alreadyPublished.length > 0) throw new Error(MESSAGE_UPLOAD_ALREADY_PUBLISHED);
+  }
+
+  private publicListIncludesNotStarted(statuses?: EquationStatus[]): boolean {
+    if (!statuses || statuses.length === 0) return true;
+    return statuses.includes(EquationStatus.NOT_STARTED);
+  }
+
+  private parseAndValidateDownloadParams(dto: DownloadEquationsDto): {
+    quantity: number;
+    fromDate?: Date;
+    toDate?: Date;
+  } {
+    const quantity = Math.floor(Number(dto.quantity));
+    if (quantity < DOWNLOAD_QUANTITY_MIN || quantity > DOWNLOAD_QUANTITY_MAX) {
+      throw new Error(MESSAGE_DOWNLOAD_QUANTITY_RANGE);
+    }
+    let fromDate: Date | undefined;
+    let toDate: Date | undefined;
+    if (dto.fromDate) {
+      fromDate = new Date(dto.fromDate);
+      if (Number.isNaN(fromDate.getTime())) throw new Error(MESSAGE_DOWNLOAD_FROM_DATE_INVALID);
+    }
+    if (dto.toDate) {
+      toDate = new Date(dto.toDate);
+      if (Number.isNaN(toDate.getTime())) throw new Error(MESSAGE_DOWNLOAD_TO_DATE_INVALID);
+    }
+    if (fromDate !== undefined && toDate !== undefined && fromDate > toDate) {
+      throw new Error(MESSAGE_DOWNLOAD_DATE_RANGE);
+    }
+    return { quantity, fromDate, toDate };
   }
 }

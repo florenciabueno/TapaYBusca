@@ -1,7 +1,3 @@
-/**
- * Operator and function name tokens for the solver (values aligned with Java Constantes).
- */
-
 export const ADD = '+';
 export const SUBTRACT = '-';
 export const LEFT_PAREN = '(';
@@ -22,7 +18,6 @@ export const NEGATE = 'neg';
 
 export const VARIABLE = 'x';
 
-/** Order for tokenization: split by each and add the operator to the array. */
 export const TOKENIZE_ORDER: string[] = [
   CUBE_ROOT,
   SQUARE_ROOT,
@@ -43,7 +38,6 @@ export const TOKENIZE_ORDER: string[] = [
   NEGATE,
 ];
 
-/** Precedence for Shunting Yard: higher number = higher precedence. Pop when stackTop >= current. */
 export const PRECEDENCE: Record<string, number> = {
   [SQUARE_POWER]: 4,
   [CUBE_POWER]: 4,
@@ -77,7 +71,6 @@ export const UNARY_OPERATORS = new Set([
   NEGATE,
 ]);
 
-/** Returns true when stack top (op2) has greater or equal precedence than current token (op1). */
 export function isStackTopPrecedenceGte(currentToken: string, stackTop: string): boolean {
   const p1 = PRECEDENCE[currentToken];
   const p2 = PRECEDENCE[stackTop];

@@ -1,7 +1,3 @@
-/**
- * Checks for infinite/NaN results and applies final decision logic.
- */
-
 import { ERROR_CODES, ERROR_MESSAGES } from './types.js';
 import { verifiedSolutions } from './verify-solutions.js';
 
@@ -11,7 +7,6 @@ export function hasInfiniteResult(solutions: number[]): boolean {
   );
 }
 
-/** Given raw evaluation results and the infix equation, returns verified solutions and ok/error. */
 export function checkSolutions(
   rawResults: number[],
   infixEquation: string
