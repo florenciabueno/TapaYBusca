@@ -1,6 +1,5 @@
 import express from 'express';
 import cors from 'cors';
-import { config } from './config/env.js';
 import authRoutes from './modules/auth/auth.routes.js';
 import userRoutes from './modules/user/user.routes.js';
 import equationRoutes from './modules/equations/equation.routes.js';
@@ -25,23 +24,6 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   res.status(err.statusCode || 500).json({
     error: err.message || 'Error interno del servidor',
   });
-});
-
-const PORT = config.port;
-
-const server = app.listen(PORT, () => {
-  console.log(`✅ Servidor ejecutándose en puerto ${PORT}`);
-  console.log(`📍 Endpoint de login: http://localhost:${PORT}/api/auth/login`);
-});
-
-// Manejo de errores del servidor
-server.on('error', (error: any) => {
-  if (error.code === 'EADDRINUSE') {
-    console.error(`❌ Error: El puerto ${PORT} ya está en uso`);
-  } else {
-    console.error('❌ Error al iniciar el servidor:', error);
-  }
-  process.exit(1);
 });
 
 export default app;
