@@ -132,6 +132,24 @@ const INVALID_EQUATIONS: Array<{ equation: string; description: string }> = [
   { equation: 'x#2=3', description: 'carácter no permitido (#)' },
 ];
 
+/**
+ * Ecuaciones sintácticamente correctas pero sin solución (reales): deben rechazarse con 400.
+ */
+const EQUATIONS_NO_SOLUTION: Array<{ equation: string; reason: string }> = [
+  { equation: 'pot2(x)=-9', reason: 'x² no puede ser negativo' },
+  { equation: 'x^2=-1', reason: 'x² no puede ser negativo' },
+  { equation: 'pot2(x)+1=0', reason: 'x² = -1 sin solución real' },
+  { equation: 'pot2(x)+5=3', reason: 'x² = -2 sin solución real' },
+  { equation: 'pot2(x+1)=-4', reason: '(x+1)² no puede ser negativo' },
+  { equation: 'raiz2(x)=-4', reason: 'raíz cuadrada no puede ser negativa' },
+  { equation: 'sqrt(x)=-1', reason: 'raíz cuadrada no puede ser negativa' },
+  { equation: 'raiz2(x+1)=-5', reason: 'raíz cuadrada no puede ser negativa' },
+  { equation: 'raiz2(x+10)=-3', reason: 'raíz cuadrada no puede ser negativa' },
+  { equation: '2*raiz2(x)=-6', reason: 'raíz cuadrada no puede ser negativa' },
+  { equation: 'raiz2(2*x)=-2', reason: 'raíz cuadrada no puede ser negativa' },
+  { equation: 'raiz2(neg(x))=-1', reason: 'raíz cuadrada no puede ser negativa' },
+];
+
 describe('Equations API', () => {
   const token = createAuthToken();
 
@@ -192,6 +210,17 @@ describe('Equations API', () => {
     describe('invalid equations - must be rejected with 400', () => {
       INVALID_EQUATIONS.forEach(({ equation, description }) => {
         it(`rejects: ${description} (${equation || '(empty)'})`, async () => {
+          const response = await createEquation(app, token, equation);
+          expect(response.status).toBe(400);
+          expect(response.body).toHaveProperty('error');
+          expect(response.body.error).toBeTruthy();
+        });
+      });
+    });
+
+    describe('equations with no solution - must be rejected with 400', () => {
+      EQUATIONS_NO_SOLUTION.forEach(({ equation, reason }) => {
+        it(`rejects no solution: ${equation} (${reason})`, async () => {
           const response = await createEquation(app, token, equation);
           expect(response.status).toBe(400);
           expect(response.body).toHaveProperty('error');
