@@ -141,6 +141,7 @@ const EQUATIONS_NO_SOLUTION: Array<{ equation: string; reason: string }> = [
   { equation: 'pot2(x)+1=0', reason: 'x² = -1 sin solución real' },
   { equation: 'pot2(x)+5=3', reason: 'x² = -2 sin solución real' },
   { equation: 'pot2(x+1)=-4', reason: '(x+1)² no puede ser negativo' },
+  { equation: 'neg(pot2(x))=5', reason: 'equivale a x² = -5, sin solución real' },
   { equation: 'raiz2(x)=-4', reason: 'raíz cuadrada no puede ser negativa' },
   { equation: 'sqrt(x)=-1', reason: 'raíz cuadrada no puede ser negativa' },
   { equation: 'raiz2(x+1)=-5', reason: 'raíz cuadrada no puede ser negativa' },
@@ -148,6 +149,12 @@ const EQUATIONS_NO_SOLUTION: Array<{ equation: string; reason: string }> = [
   { equation: '2*raiz2(x)=-6', reason: 'raíz cuadrada no puede ser negativa' },
   { equation: 'raiz2(2*x)=-2', reason: 'raíz cuadrada no puede ser negativa' },
   { equation: 'raiz2(neg(x))=-1', reason: 'raíz cuadrada no puede ser negativa' },
+  { equation: 'raiz2(pot2(x)+1)=-1', reason: '√(x²+1) ≥ 1, no puede ser negativo' },
+  { equation: '0*x=1', reason: '0·x nunca es 1' },
+  { equation: '0*x=5', reason: '0·x nunca es 5' },
+  { equation: '1/x=0', reason: '1/x nunca es 0 en reales' },
+  { equation: '5/(x+1)=0', reason: 'cociente constante/expr nunca es 0' },
+  { equation: '((10)/(x))=0', reason: 'cociente constante/expr nunca es 0' },
 ];
 
 describe('Equations API', () => {
