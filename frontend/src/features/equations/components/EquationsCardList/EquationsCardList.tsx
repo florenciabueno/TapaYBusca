@@ -13,6 +13,8 @@ const MESSAGES = {
   LOADING: 'Cargando ecuaciones...',
   EMPTY_TITLE: 'No hay ecuaciones',
   EMPTY_DESCRIPTION: 'Crea tu primera ecuación para comenzar a resolver paso a paso.',
+  EMPTY_DOWNLOADED_TITLE: 'No hay ecuaciones descargadas',
+  EMPTY_DOWNLOADED_DESCRIPTION: 'Descarga ecuaciones para agregarlas a tu listado.',
   DELETE_CONFIRM_TITLE: 'Eliminar ecuación',
   DELETE_CONFIRM_MESSAGE: '¿Estás seguro de eliminar esta ecuación? Esta acción no se puede deshacer.',
   DELETE_CONFIRM_BTN: 'Eliminar',
@@ -29,6 +31,7 @@ export const EquationsCardList = () => {
     total,
     goToPage,
     deleteEquation,
+    selectedOrigins,
   } = useEquationList();
   const user = useAuthStore((state) => state.user);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
@@ -73,6 +76,9 @@ export const EquationsCardList = () => {
   }
 
   if (equations.length === 0 && total === 0) {
+    const isOnlyDownloadedFilter =
+      selectedOrigins?.length === 1 && selectedOrigins[0] === 'DOWNLOADED';
+
     return (
       <div
         className="rounded-lg border bg-white px-4 py-10 text-center transition-shadow"
@@ -82,22 +88,28 @@ export const EquationsCardList = () => {
           className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full"
           style={{ backgroundColor: `rgba(${PURPLE_RGB}, 0.25)` }}
         >
-          <svg className="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-          </svg>
+          {isOnlyDownloadedFilter ? (
+            <svg className="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+          ) : (
+            <svg className="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
+          )}
         </div>
         <p className="mb-1 text-sm font-medium text-gray-700">
-          {MESSAGES.EMPTY_TITLE}
+          {isOnlyDownloadedFilter ? MESSAGES.EMPTY_DOWNLOADED_TITLE : MESSAGES.EMPTY_TITLE}
         </p>
         <p className="mb-4 text-xs text-gray-500">
-          {MESSAGES.EMPTY_DESCRIPTION}
+          {isOnlyDownloadedFilter ? MESSAGES.EMPTY_DOWNLOADED_DESCRIPTION : MESSAGES.EMPTY_DESCRIPTION}
         </p>
         <Link
-          to={ROUTES.CREATE_EQUATION}
+          to={isOnlyDownloadedFilter ? ROUTES.DOWNLOAD : ROUTES.CREATE_EQUATION}
           className="inline-flex rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-blue-400/40 focus:ring-offset-2"
-          style={{ backgroundColor: COLORS.teal }}
+          style={{ backgroundColor: COLORS.orange }}
         >
-          Crear ecuación
+          {isOnlyDownloadedFilter ? 'Descargar ecuaciones' : 'Crear ecuación'}
         </Link>
       </div>
     );
