@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer';
 import { config } from '../../../config/env.js';
+import { buildPasswordResetEmail } from './templates/password-reset.email.js';
 
 export interface SendPasswordResetEmailParams {
   to: string;
@@ -26,21 +27,10 @@ export class EmailService {
       auth: { user: config.smtp.user!, pass: config.smtp.pass! },
     });
 
-    const subject = 'Restablecer contraseña';
-    const text =
-      `Recibimos una solicitud para restablecer tu contraseña.\n\n` +
-      `Abre este enlace para crear una nueva contraseña (expira en ${params.expiresInMinutes} minutos):\n` +
-      `${params.resetUrl}\n\n` +
-      `Si no solicitaste este cambio, puedes ignorar este mensaje.`;
-
-    const html = `
-      <p>Recibimos una solicitud para restablecer tu contraseña.</p>
-      <p>
-        Abre este enlace para crear una nueva contraseña (expira en <b>${params.expiresInMinutes}</b> minutos):
-      </p>
-      <p><a href="${params.resetUrl}">${params.resetUrl}</a></p>
-      <p>Si no solicitaste este cambio, puedes ignorar este mensaje.</p>
-    `;
+    const { subject, text, html } = buildPasswordResetEmail({
+      resetUrl: params.resetUrl,
+      expiresInMinutes: params.expiresInMinutes,
+    });
 
     await transporter.sendMail({
       from: config.smtp.from,
@@ -51,4 +41,3 @@ export class EmailService {
     });
   }
 }
-
