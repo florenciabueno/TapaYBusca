@@ -3,6 +3,7 @@ import { EquationsCardList } from '../components/EquationsCardList';
 import { OriginFilter } from '../components/OriginFilter';
 import { StatusFilter } from '../components/StatusFilter';
 import { DateFilter } from '../components/DateFilter';
+import { SignUpPromoBanner } from '../components/SignUpPromoBanner/SignUpPromoBanner';
 import { useEquationList } from '../hooks/useEquationList';
 import { useAuthStore } from '../../../stores';
 import { COLORS } from '../../../config/theme';
@@ -22,6 +23,8 @@ export const EquationsPage = () => {
   return (
     <EquationsLayout>
       <div className="w-full">
+        {!user && <SignUpPromoBanner />}
+
         <h1 className="text-2xl font-bold mb-1" style={{ color: COLORS.accentSecondary }}>
           Mis ecuaciones
         </h1>

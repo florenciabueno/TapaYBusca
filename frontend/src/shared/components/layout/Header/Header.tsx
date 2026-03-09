@@ -136,7 +136,7 @@ export const Header = () => {
           <button
             type="button"
             onClick={handleLogin}
-            className="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:brightness-95 focus:outline-none focus:ring-2 focus:ring-orange-400/40 focus:ring-offset-2"
+            className="cursor-pointer px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:brightness-95 focus:outline-none focus:ring-2 focus:ring-orange-400/40 focus:ring-offset-2"
             style={{ backgroundColor: COLORS.orange, color: COLORS.surface }}
           >
             Iniciar sesión
