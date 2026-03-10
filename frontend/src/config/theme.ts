@@ -6,17 +6,19 @@ export const PALETTE = {
   lightTeal: '#219B9D',
   teal: '#219B9D',
   orange: '#FF8000',
-  mutedOrange: '#C97B50', // naranja suave que combina con el verde agua
+  mutedOrange: '#C97B50',
   violet: '#6B4A8E',
-  brandDark: '#33555D', // teal oscuro del logo / texto marca
+  purple: '#4C1F7A',
+  brandDark: '#33555D',
 } as const;
 
-/** Base RGB para header/sidebar y fondos (33, 155, 157) */
 export const ACCENT_RGB = '33, 155, 157' as const;
+export const PURPLE_RGB = '76, 31, 122' as const;
 
 export const COLORS = {
   ...PALETTE,
   primary: PALETTE.teal,
+  accentSecondary: PALETTE.purple,
   primaryHover: '#1A7D7F',
   secondary: PALETTE.mutedOrange,
   background: PALETTE.cream,
@@ -40,8 +42,8 @@ export const COLORS = {
   status: {
     pending: '#5a7a80',
     pendingSoft: `rgba(${ACCENT_RGB}, 0.35)`,
-    inProgress: '#c4a03e',
-    inProgressSoft: '#fef3c7',
+    inProgress: PALETTE.purple,
+    inProgressSoft: `rgba(${PURPLE_RGB}, 0.2)`,
     completed: '#22C55E',
     completedSoft: '#dcfce7',
   },

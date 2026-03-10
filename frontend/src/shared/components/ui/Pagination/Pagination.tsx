@@ -1,4 +1,4 @@
-import { COLORS } from '../../../../config/theme';
+import { COLORS, PURPLE_RGB } from '../../../../config/theme';
 
 export interface PaginationProps {
   currentPage: number;
@@ -26,18 +26,18 @@ export const Pagination = ({
         disabled={currentPage <= 1}
         className="rounded-lg border px-3 py-2 text-sm font-medium transition-colors disabled:pointer-events-none disabled:opacity-50"
         style={{
-          borderColor: COLORS.brandDark,
-          color: COLORS.brandDark,
+          borderColor: COLORS.accentSecondary,
+          color: COLORS.accentSecondary,
         }}
         onMouseEnter={(e) => {
           if (currentPage > 1) {
-            e.currentTarget.style.backgroundColor = `${COLORS.brandDark}22`;
-            e.currentTarget.style.borderColor = COLORS.brandDark;
+            e.currentTarget.style.backgroundColor = `rgba(${PURPLE_RGB}, 0.12)`;
+            e.currentTarget.style.borderColor = COLORS.accentSecondary;
           }
         }}
         onMouseLeave={(e) => {
           e.currentTarget.style.backgroundColor = '';
-          e.currentTarget.style.borderColor = COLORS.brandDark;
+          e.currentTarget.style.borderColor = COLORS.accentSecondary;
         }}
       >
         {previousLabel}
@@ -54,18 +54,18 @@ export const Pagination = ({
         disabled={currentPage >= totalPages}
         className="rounded-lg border px-3 py-2 text-sm font-medium transition-colors disabled:pointer-events-none disabled:opacity-50"
         style={{
-          borderColor: COLORS.brandDark,
-          color: COLORS.brandDark,
+          borderColor: COLORS.accentSecondary,
+          color: COLORS.accentSecondary,
         }}
         onMouseEnter={(e) => {
           if (currentPage < totalPages) {
-            e.currentTarget.style.backgroundColor = `${COLORS.brandDark}22`;
-            e.currentTarget.style.borderColor = COLORS.brandDark;
+            e.currentTarget.style.backgroundColor = `rgba(${PURPLE_RGB}, 0.12)`;
+            e.currentTarget.style.borderColor = COLORS.accentSecondary;
           }
         }}
         onMouseLeave={(e) => {
           e.currentTarget.style.backgroundColor = '';
-          e.currentTarget.style.borderColor = COLORS.brandDark;
+          e.currentTarget.style.borderColor = COLORS.accentSecondary;
         }}
       >
         {nextLabel}

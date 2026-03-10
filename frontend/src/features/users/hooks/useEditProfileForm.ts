@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { profileService } from '../services/profile.service';
 import { useAuthStore } from '../../../stores';
+import { MSG_PASSWORDS_DONT_MATCH } from '../../../shared/utils/validation';
 
 interface EditProfileFormData {
   name: string;
@@ -63,7 +64,7 @@ export const useEditProfileForm = () => {
       }
 
       if (formData.password !== formData.confirmPassword) {
-        setError('Las contraseñas no coinciden');
+        setError(MSG_PASSWORDS_DONT_MATCH);
         return false;
       }
     }

@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import { ROUTES } from '../../../../config/constants';
-import { COLORS, ACCENT_RGB } from '../../../../config/theme';
+import { COLORS, ACCENT_RGB, PURPLE_RGB } from '../../../../config/theme';
 import logoImage from '../../../../assets/logo.png';
 
 const navItems = [
@@ -89,8 +89,10 @@ export const Sidebar = () => {
           alt="Tapa y Busca"
           className="w-10 h-10 object-contain shrink-0"
         />
-        <span className="text-base font-semibold" style={{ color: COLORS.brandDark }}>
-          Tapa y Busca
+        <span className="text-xl font-semibold">
+          <span style={{ color: COLORS.accentSecondary }}>Tapa </span>
+          <span style={{ color: COLORS.orange }}>y</span>
+          <span style={{ color: COLORS.accentSecondary }}> Busca</span>
         </span>
       </div>
 
@@ -100,7 +102,9 @@ export const Sidebar = () => {
             key={path}
             to={path}
             style={({ isActive }) =>
-              isActive ? { backgroundColor: `${COLORS.brandDark}22`, color: COLORS.brandDark } : undefined
+              isActive
+                ? { backgroundColor: `rgba(${PURPLE_RGB}, 0.28)`, color: COLORS.accentSecondary }
+                : undefined
             }
             className={({ isActive }) =>
               `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-150 ${

@@ -36,3 +36,16 @@ export const validateName = (name: string): string | null => {
   }
   return null;
 };
+
+export const MSG_CONFIRM_PASSWORD_REQUIRED = 'Confirma la contraseña';
+export const MSG_PASSWORDS_DONT_MATCH = 'Las contraseñas no coinciden';
+
+export const createConfirmPasswordValidator = (
+  passwordToMatch: string
+): ((value: string) => string | null) => {
+  return (value: string): string | null => {
+    if (!value) return MSG_CONFIRM_PASSWORD_REQUIRED;
+    if (value !== passwordToMatch) return MSG_PASSWORDS_DONT_MATCH;
+    return null;
+  };
+};

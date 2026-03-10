@@ -28,11 +28,10 @@ export const AuthLayout = ({ children, footer }: AuthLayoutProps) => {
               className="w-full h-full object-contain"
             />
           </div>
-          <h1
-            className="text-2xl sm:text-3xl font-bold mb-1"
-            style={{ color: COLORS.teal }}
-          >
-            Tapa y Busca
+          <h1 className="text-2xl sm:text-3xl font-bold mb-1">
+            <span style={{ color: COLORS.accentSecondary }}>Tapa </span>
+            <span style={{ color: COLORS.orange }}>y</span>
+            <span style={{ color: COLORS.accentSecondary }}> Busca</span>
           </h1>
           <p className="text-xs sm:text-sm font-medium text-gray-500 text-center">
             Aplicación educativa de matemáticas

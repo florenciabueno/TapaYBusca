@@ -3,7 +3,7 @@ import { Input } from '../../../../shared/components/ui/Input/Input';
 import { Button } from '../../../../shared/components/ui/Button/Button';
 import { ErrorMessage } from '../../../../shared/components/ui/ErrorMessage/ErrorMessage';
 import { useFormValidation } from '../../../../shared/hooks/useFormValidation';
-import { validatePassword } from '../../../../shared/utils/validation';
+import { validatePassword, createConfirmPasswordValidator } from '../../../../shared/utils/validation';
 import { resetPassword } from '../../services/auth.service';
 
 export interface ResetPasswordFormProps {
@@ -19,19 +19,13 @@ export const ResetPasswordForm = ({ token, onSuccess }: ResetPasswordFormProps) 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { errors, validateForm, clearError } = useFormValidation();
 
-  const validateConfirmPassword = (value: string): string | null => {
-    if (!value) return 'Confirma la contraseña';
-    if (value !== newPassword) return 'Las contraseñas no coinciden';
-    return null;
-  };
-
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setSuccessMessage(null);
     setErrorMessage(null);
 
     const isValid = validateForm(
-      { newPassword: validatePassword, confirmPassword: validateConfirmPassword },
+      { newPassword: validatePassword, confirmPassword: createConfirmPasswordValidator(newPassword) },
       { newPassword, confirmPassword }
     );
     if (!isValid) return;
