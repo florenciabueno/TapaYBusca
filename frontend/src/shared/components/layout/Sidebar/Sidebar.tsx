@@ -89,8 +89,10 @@ export const Sidebar = () => {
           alt="Tapa y Busca"
           className="w-10 h-10 object-contain shrink-0"
         />
-        <span className="text-base font-semibold" style={{ color: COLORS.brandDark }}>
-          Tapa y Busca
+        <span className="text-xl font-semibold">
+          <span style={{ color: COLORS.accentSecondary }}>Tapa </span>
+          <span style={{ color: COLORS.orange }}>y</span>
+          <span style={{ color: COLORS.accentSecondary }}> Busca</span>
         </span>
       </div>
 
