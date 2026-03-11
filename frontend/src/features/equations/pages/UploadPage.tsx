@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { EquationsLayout } from '../components/EquationsLayout';
 import { FormPageCard } from '../components/FormPageCard';
@@ -9,6 +9,7 @@ import { useUploadableEquations } from '../hooks/useUploadableEquations';
 import { equationService } from '../services/equation.service';
 import { useAuthStore } from '../../../stores';
 import { queryKeys } from '../../../shared/query-keys';
+import { useDismissAfterDelay } from '../../../shared/hooks/useDismissAfterDelay';
 import { COLORS, SPACING, SHADOW } from '../../../config/theme';
 
 const UPLOAD_SUCCESS = 'Ecuaciones subidas correctamente. Se han compartido con el resto de estudiantes.';
@@ -23,7 +24,7 @@ export const UploadPage = () => {
   const { uploadableEquations, isLoading, error } = useUploadableEquations();
   const [activeTab, setActiveTab] = useState<UploadTab>('can-upload');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [success, setSuccess] = useState<string | null>(null);
+  const [success, setSuccess] = useDismissAfterDelay<string | null>(null, SUCCESS_MESSAGE_DURATION_MS);
   const [validationError, setValidationError] = useState<string | null>(null);
 
   const uploadMutation = useMutation({
@@ -46,12 +47,6 @@ export const UploadPage = () => {
 
   const canUploadList = uploadableEquations.filter((e) => !e.isPublished);
   const alreadyUploadedList = uploadableEquations.filter((e) => e.isPublished);
-
-  useEffect(() => {
-    if (!success) return;
-    const timer = setTimeout(() => setSuccess(null), SUCCESS_MESSAGE_DURATION_MS);
-    return () => clearTimeout(timer);
-  }, [success]);
 
   const handleToggle = useCallback((id: string) => {
     const item = canUploadList.find((e) => e.id === id);

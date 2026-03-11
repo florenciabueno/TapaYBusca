@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { EquationsLayout } from '../components/EquationsLayout';
 import { FormPageCard } from '../components/FormPageCard';
@@ -8,6 +8,7 @@ import { Button } from '../../../shared/components/ui/Button/Button';
 import { equationService } from '../services/equation.service';
 import { useAuthStore } from '../../../stores';
 import { queryKeys } from '../../../shared/query-keys';
+import { useDismissAfterDelay } from '../../../shared/hooks/useDismissAfterDelay';
 import { SPACING } from '../../../config/theme';
 
 const QUANTITY_MIN = 1;
@@ -20,7 +21,7 @@ export const DownloadPage = () => {
   const [quantity, setQuantity] = useState<string>(String(QUANTITY_MIN));
   const [fromDate, setFromDate] = useState<string>('');
   const [toDate, setToDate] = useState<string>('');
-  const [success, setSuccess] = useState<string | null>(null);
+  const [success, setSuccess] = useDismissAfterDelay<string | null>(null, SUCCESS_MESSAGE_DURATION_MS);
   const [validationError, setValidationError] = useState<string | null>(null);
 
   const downloadMutation = useMutation({
@@ -48,12 +49,6 @@ export const DownloadPage = () => {
         ? downloadMutation.error.message
         : 'Error al descargar ecuaciones'
       : null);
-
-  useEffect(() => {
-    if (!success) return;
-    const timer = setTimeout(() => setSuccess(null), SUCCESS_MESSAGE_DURATION_MS);
-    return () => clearTimeout(timer);
-  }, [success]);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
