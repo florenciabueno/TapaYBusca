@@ -49,8 +49,8 @@ export const Header = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleLogout = () => {
-    logout();
     navigate(ROUTES.DASHBOARD);
+    logout();
   };
 
   const handleLogin = () => {

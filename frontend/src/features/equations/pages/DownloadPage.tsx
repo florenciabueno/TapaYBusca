@@ -73,7 +73,7 @@ export const DownloadPage = () => {
         >
           <h1
             className="text-2xl font-bold mb-1"
-            style={{ color: COLORS.brandDark }}
+            style={{ color: COLORS.accentSecondary }}
           >
             Descargar ecuaciones
           </h1>

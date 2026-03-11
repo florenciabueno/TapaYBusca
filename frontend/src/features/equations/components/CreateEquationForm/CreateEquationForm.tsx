@@ -77,7 +77,7 @@ export const CreateEquationForm = () => {
         >
           <h1
             className="text-2xl font-bold mb-1"
-            style={{ color: COLORS.brandDark }}
+            style={{ color: COLORS.accentSecondary }}
           >
             Crear nueva ecuación
           </h1>

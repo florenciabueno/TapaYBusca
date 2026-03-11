@@ -81,7 +81,7 @@ export const UploadPage = () => {
         >
           <h1
             className="text-2xl font-bold mb-1"
-            style={{ color: COLORS.brandDark }}
+            style={{ color: COLORS.accentSecondary }}
           >
             Subir ecuación
           </h1>
