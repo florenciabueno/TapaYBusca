@@ -2,12 +2,13 @@ import { useEffect, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { EquationsLayout } from '../components/EquationsLayout';
 import { FormPageCard } from '../components/FormPageCard';
+import { FormMessage } from '../../../shared/components/ui/FormMessage';
 import { Input } from '../../../shared/components/ui/Input/Input';
 import { Button } from '../../../shared/components/ui/Button/Button';
 import { equationService } from '../services/equation.service';
 import { useAuthStore } from '../../../stores';
 import { queryKeys } from '../../../shared/query-keys';
-import { COLORS, SPACING } from '../../../config/theme';
+import { SPACING } from '../../../config/theme';
 
 const QUANTITY_MIN = 1;
 const QUANTITY_MAX = 50;
@@ -113,13 +114,7 @@ export const DownloadPage = () => {
             </div>
 
             {success && (
-              <div
-                className="mb-4 rounded-lg p-3 text-sm"
-                style={{ backgroundColor: COLORS.success.bg, color: COLORS.success.text }}
-                role="status"
-              >
-                {success}
-              </div>
+              <FormMessage message={success} variant="success" className="mb-4" />
             )}
 
             <Button

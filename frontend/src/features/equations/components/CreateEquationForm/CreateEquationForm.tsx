@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { EquationsLayout } from '../EquationsLayout';
 import { FormPageCard } from '../FormPageCard';
+import { FormMessage } from '../../../../shared/components/ui/FormMessage';
 import { Input } from '../../../../shared/components/ui/Input/Input';
 import { Button } from '../../../../shared/components/ui/Button/Button';
 import { equationService } from '../../services/equation.service';
@@ -103,16 +104,7 @@ export const CreateEquationForm = () => {
             </div>
 
             {success && (
-              <div
-                className="flex items-center gap-2 p-3 rounded-lg mb-4"
-                style={{
-                  backgroundColor: COLORS.success.bg,
-                  color: COLORS.success.text,
-                }}
-                role="status"
-              >
-                <span>{success}</span>
-              </div>
+              <FormMessage message={success} variant="success" className="mb-4" />
             )}
 
             <div style={{ marginBottom: SPACING.lg }}>

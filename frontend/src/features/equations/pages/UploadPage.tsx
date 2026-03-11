@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { EquationsLayout } from '../components/EquationsLayout';
 import { FormPageCard } from '../components/FormPageCard';
+import { FormMessage } from '../../../shared/components/ui/FormMessage';
 import { UploadableEquationRow } from '../components/UploadableEquationRow';
 import { Button } from '../../../shared/components/ui/Button/Button';
 import { useUploadableEquations } from '../hooks/useUploadableEquations';
@@ -136,12 +137,7 @@ export const UploadPage = () => {
           )}
 
           {!isLoading && error && (
-            <div
-              className="mb-4 rounded-lg p-3 text-sm"
-              style={{ backgroundColor: COLORS.error.bg, color: COLORS.error.text }}
-            >
-              {error}
-            </div>
+            <FormMessage message={error} variant="error" className="mb-4" />
           )}
 
           {!isLoading && !error && uploadableEquations.length === 0 && (
@@ -194,22 +190,11 @@ export const UploadPage = () => {
               </div>
 
               {success && (
-                <div
-                  className="mb-4 rounded-lg p-3 text-sm"
-                  style={{ backgroundColor: COLORS.success.bg, color: COLORS.success.text }}
-                  role="status"
-                >
-                  {success}
-                </div>
+                <FormMessage message={success} variant="success" className="mb-4" />
               )}
 
               {submitError && (
-                <div
-                  className="mb-4 rounded-lg p-3 text-sm"
-                  style={{ backgroundColor: COLORS.error.bg, color: COLORS.error.text }}
-                >
-                  {submitError}
-                </div>
+                <FormMessage message={submitError} variant="error" className="mb-4" />
               )}
 
               <Button
