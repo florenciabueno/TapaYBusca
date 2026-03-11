@@ -1,4 +1,5 @@
 import { type FormEvent, useState } from 'react';
+import { useMutation } from '@tanstack/react-query';
 import { Input } from '../../../../shared/components/ui/Input/Input';
 import { Button } from '../../../../shared/components/ui/Button/Button';
 import { ErrorMessage } from '../../../../shared/components/ui/ErrorMessage/ErrorMessage';
@@ -8,36 +9,41 @@ import { requestPasswordReset } from '../../services/auth.service';
 
 export const ForgotPasswordForm = () => {
   const [email, setEmail] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { errors, validateForm, clearError } = useFormValidation();
+
+  const forgotMutation = useMutation({
+    mutationFn: requestPasswordReset,
+    onSuccess: (result) => {
+      setSuccessMessage(result.message);
+    },
+  });
+
+  const isSubmitting = forgotMutation.isPending;
+  const errorMessage =
+    forgotMutation.error != null
+      ? forgotMutation.error instanceof Error
+        ? forgotMutation.error.message
+        : 'No se pudo solicitar el restablecimiento'
+      : null;
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setEmail(value);
     setSuccessMessage(null);
-    setErrorMessage(null);
+    forgotMutation.reset();
     clearError('email');
   };
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setSuccessMessage(null);
-    setErrorMessage(null);
+    forgotMutation.reset();
 
     const isValid = validateForm({ email: validateEmail }, { email });
     if (!isValid) return;
 
-    setIsSubmitting(true);
-    try {
-      const result = await requestPasswordReset({ email });
-      setSuccessMessage(result.message);
-    } catch (error: any) {
-      setErrorMessage(error?.message || 'No se pudo solicitar el restablecimiento');
-    } finally {
-      setIsSubmitting(false);
-    }
+    forgotMutation.mutate({ email });
   };
 
   return (

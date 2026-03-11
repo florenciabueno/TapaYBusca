@@ -1,46 +1,56 @@
-import { useState } from 'react';
+import { useMutation } from '@tanstack/react-query';
 import { useAuthStore } from '../../../stores';
 import { login as loginService, register as registerService } from '../services/auth.service';
 import type { LoginCredentials, RegisterCredentials } from '../types/auth.types';
 
 export const useAuth = () => {
   const { user, token, setUserAndToken, logout } = useAuthStore();
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+
+  const loginMutation = useMutation({
+    mutationFn: loginService,
+    onSuccess: (response) => {
+      setUserAndToken(response.user, response.token || '');
+    },
+  });
+
+  const registerMutation = useMutation({
+    mutationFn: registerService,
+    onSuccess: (response) => {
+      setUserAndToken(response.user, response.token || '');
+    },
+  });
 
   const isAuthenticated = user !== null;
+  const isLoading = loginMutation.isPending || registerMutation.isPending;
+  const error =
+    loginMutation.error ?? registerMutation.error ?? null;
+  const errorMessage =
+    error != null
+      ? error instanceof Error
+        ? error.message
+        : 'Ocurrió un error'
+      : null;
 
-  const clearError = () => setError(null);
+  const clearError = () => {
+    loginMutation.reset();
+    registerMutation.reset();
+  };
 
   const login = async (credentials: LoginCredentials) => {
     try {
-      setIsLoading(true);
-      setError(null);
-      const response = await loginService(credentials);
-      setUserAndToken(response.user, response.token || '');
+      await loginMutation.mutateAsync(credentials);
       return { success: true };
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Ocurrió un error durante el inicio de sesión';
-      setError(errorMessage);
+    } catch {
       return { success: false };
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const register = async (credentials: RegisterCredentials) => {
     try {
-      setIsLoading(true);
-      setError(null);
-      const response = await registerService(credentials);
-      setUserAndToken(response.user, response.token || '');
+      await registerMutation.mutateAsync(credentials);
       return { success: true };
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Ocurrió un error durante el registro';
-      setError(errorMessage);
+    } catch {
       return { success: false };
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -49,7 +59,7 @@ export const useAuth = () => {
     token,
     isAuthenticated,
     isLoading,
-    error,
+    error: errorMessage,
     login,
     register,
     logout,

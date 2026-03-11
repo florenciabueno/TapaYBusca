@@ -26,6 +26,7 @@ export const EquationsCardList = () => {
     equations,
     isLoading,
     error,
+    deleteError,
     currentPage,
     totalPages,
     total,
@@ -42,8 +43,7 @@ export const EquationsCardList = () => {
 
   function handleConfirmDelete() {
     if (pendingDeleteId) {
-      deleteEquation(pendingDeleteId);
-      setPendingDeleteId(null);
+      deleteEquation(pendingDeleteId).finally(() => setPendingDeleteId(null));
     }
   }
 
@@ -74,6 +74,8 @@ export const EquationsCardList = () => {
       </div>
     );
   }
+
+  const showDeleteError = deleteError != null && deleteError !== '';
 
   if (equations.length === 0 && total === 0) {
     const isOnlyDownloadedFilter =
@@ -117,6 +119,14 @@ export const EquationsCardList = () => {
 
   return (
     <>
+      {showDeleteError && (
+        <div
+          className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700"
+          role="alert"
+        >
+          {deleteError}
+        </div>
+      )}
       <div className="space-y-4 w-full">
         <div className="grid w-full gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {equations.map((equation) => (

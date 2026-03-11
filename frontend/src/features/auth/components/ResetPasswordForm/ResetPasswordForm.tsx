@@ -1,4 +1,5 @@
 import { type FormEvent, useState } from 'react';
+import { useMutation } from '@tanstack/react-query';
 import { Input } from '../../../../shared/components/ui/Input/Input';
 import { Button } from '../../../../shared/components/ui/Button/Button';
 import { ErrorMessage } from '../../../../shared/components/ui/ErrorMessage/ErrorMessage';
@@ -14,15 +15,31 @@ export interface ResetPasswordFormProps {
 export const ResetPasswordForm = ({ token, onSuccess }: ResetPasswordFormProps) => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { errors, validateForm, clearError } = useFormValidation();
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+  const resetMutation = useMutation({
+    mutationFn: (data: { token: string; newPassword: string }) => resetPassword(data),
+    onSuccess: (result) => {
+      setSuccessMessage(result.message);
+      setNewPassword('');
+      setConfirmPassword('');
+      onSuccess?.();
+    },
+  });
+
+  const isSubmitting = resetMutation.isPending;
+  const errorMessage =
+    resetMutation.error != null
+      ? resetMutation.error instanceof Error
+        ? resetMutation.error.message
+        : 'No se pudo restablecer la contraseña'
+      : null;
+
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setSuccessMessage(null);
-    setErrorMessage(null);
+    resetMutation.reset();
 
     const isValid = validateForm(
       { newPassword: validatePassword, confirmPassword: createConfirmPasswordValidator(newPassword) },
@@ -30,18 +47,7 @@ export const ResetPasswordForm = ({ token, onSuccess }: ResetPasswordFormProps) 
     );
     if (!isValid) return;
 
-    setIsSubmitting(true);
-    try {
-      const result = await resetPassword({ token, newPassword });
-      setSuccessMessage(result.message);
-      setNewPassword('');
-      setConfirmPassword('');
-      onSuccess?.();
-    } catch (error: any) {
-      setErrorMessage(error?.message || 'No se pudo restablecer la contraseña');
-    } finally {
-      setIsSubmitting(false);
-    }
+    resetMutation.mutate({ token, newPassword });
   };
 
   return (
@@ -64,7 +70,7 @@ export const ResetPasswordForm = ({ token, onSuccess }: ResetPasswordFormProps) 
         onChange={(e) => {
           setNewPassword(e.target.value);
           setSuccessMessage(null);
-          setErrorMessage(null);
+          resetMutation.reset();
           clearError('newPassword');
         }}
         error={errors?.newPassword}
@@ -83,7 +89,7 @@ export const ResetPasswordForm = ({ token, onSuccess }: ResetPasswordFormProps) 
         onChange={(e) => {
           setConfirmPassword(e.target.value);
           setSuccessMessage(null);
-          setErrorMessage(null);
+          resetMutation.reset();
           clearError('confirmPassword');
         }}
         error={errors?.confirmPassword}

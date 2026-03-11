@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { EquationsLayout } from '../EquationsLayout';
 import { Input } from '../../../../shared/components/ui/Input/Input';
 import { Button } from '../../../../shared/components/ui/Button/Button';
 import { equationService } from '../../services/equation.service';
 import { useAuthStore } from '../../../../stores';
+import { queryKeys } from '../../../../shared/query-keys';
 import { COLORS, SPACING, RADIUS, SHADOW } from '../../../../config/theme';
 import { ROUTES } from '../../../../config/constants';
 
@@ -23,45 +25,56 @@ const SYMBOLS: { label: string; insert: string }[] = [
 
 export const CreateEquationForm = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const token = useAuthStore((s) => s.token);
   const [value, setValue] = useState('');
-  const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
+
+  const createMutation = useMutation({
+    mutationFn: (equation: string) => equationService.createEquation(equation, token),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.equations.lists() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.equations.all });
+      setSuccess('Ecuación guardada correctamente.');
+      setValue('');
+      setTimeout(() => navigate(ROUTES.DASHBOARD), 1500);
+    },
+  });
+
+  const error =
+    validationError ||
+    (createMutation.error
+      ? createMutation.error instanceof Error
+        ? createMutation.error.message
+        : 'Error al crear la ecuación.'
+      : null);
+  const isLoading = createMutation.isPending;
 
   function handleSymbolClick(insert: string) {
     setValue((prev) => prev + insert);
-    setError(null);
+    setValidationError(null);
+    createMutation.reset();
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError(null);
+    createMutation.reset();
     setSuccess(null);
+    setValidationError(null);
     const trimmed = value.trim();
     if (!trimmed) {
-      setError('Escribe una ecuación antes de guardar.');
+      setValidationError('Escribe una ecuación antes de guardar.');
       return;
     }
-    setIsLoading(true);
-    try {
-      await equationService.createEquation(trimmed, token);
-      setSuccess('Ecuación guardada correctamente.');
-      setValue('');
-      setTimeout(() => {
-        navigate(ROUTES.DASHBOARD);
-      }, 1500);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al crear la ecuación.');
-    } finally {
-      setIsLoading(false);
-    }
+    createMutation.mutate(trimmed);
   }
 
   function handleClear() {
     setValue('');
-    setError(null);
+    setValidationError(null);
     setSuccess(null);
+    createMutation.reset();
   }
 
   return (
@@ -95,7 +108,8 @@ export const CreateEquationForm = () => {
                 value={value}
                 onChange={(e) => {
                   setValue(e.target.value);
-                  setError(null);
+                  setValidationError(null);
+                  createMutation.reset();
                 }}
                 placeholder="Ej: x+5=12, sqrt(x+1)=3, raiz2(x)=4"
                 error={error}

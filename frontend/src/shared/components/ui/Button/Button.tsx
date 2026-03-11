@@ -32,8 +32,8 @@ export const Button = ({
   };
 
   const getTextColor = () => {
-    if (isOutline) return COLORS.primary;
     if (variant === 'outlineSuccess') return COLORS.success.main;
+    if (isOutline) return COLORS.primary;
     if (variant === 'light') return COLORS.gray[700];
     if (variant === 'secondary') return 'white';
     return 'white';

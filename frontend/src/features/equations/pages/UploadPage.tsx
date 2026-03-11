@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { EquationsLayout } from '../components/EquationsLayout';
 import { UploadableEquationRow } from '../components/UploadableEquationRow';
 import { Button } from '../../../shared/components/ui/Button/Button';
 import { useUploadableEquations } from '../hooks/useUploadableEquations';
 import { equationService } from '../services/equation.service';
 import { useAuthStore } from '../../../stores';
+import { queryKeys } from '../../../shared/query-keys';
 import { COLORS, SPACING, RADIUS, SHADOW } from '../../../config/theme';
 
 const UPLOAD_SUCCESS = 'Ecuaciones subidas correctamente. Se han compartido con el resto de estudiantes.';
@@ -14,13 +16,31 @@ const SUCCESS_MESSAGE_DURATION_MS = 4000;
 type UploadTab = 'can-upload' | 'already-uploaded';
 
 export const UploadPage = () => {
+  const queryClient = useQueryClient();
   const token = useAuthStore((state) => state.token);
-  const { uploadableEquations, isLoading, error, refetch } = useUploadableEquations();
+  const { uploadableEquations, isLoading, error } = useUploadableEquations();
   const [activeTab, setActiveTab] = useState<UploadTab>('can-upload');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
-  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [validationError, setValidationError] = useState<string | null>(null);
+
+  const uploadMutation = useMutation({
+    mutationFn: (ids: string[]) => equationService.uploadEquations(ids, token),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.equations.all });
+      setSuccess(UPLOAD_SUCCESS);
+      setSelectedIds(new Set());
+    },
+  });
+
+  const isSubmitting = uploadMutation.isPending;
+  const submitError =
+    validationError ||
+    (uploadMutation.error != null
+      ? uploadMutation.error instanceof Error
+        ? uploadMutation.error.message
+        : 'Error al subir ecuaciones'
+      : null);
 
   const canUploadList = uploadableEquations.filter((e) => !e.isPublished);
   const alreadyUploadedList = uploadableEquations.filter((e) => e.isPublished);
@@ -40,32 +60,24 @@ export const UploadPage = () => {
       else next.add(id);
       return next;
     });
-    setSubmitError(null);
-  }, [canUploadList]);
+    setValidationError(null);
+    uploadMutation.reset();
+  }, [canUploadList, uploadMutation]);
 
   const handleSubmit = useCallback(
-    async (e: React.FormEvent) => {
+    (e: React.FormEvent) => {
       e.preventDefault();
-      setSubmitError(null);
+      uploadMutation.reset();
       setSuccess(null);
+      setValidationError(null);
       const ids = Array.from(selectedIds);
       if (ids.length === 0) {
-        setSubmitError(UPLOAD_SELECT_AT_LEAST_ONE);
+        setValidationError(UPLOAD_SELECT_AT_LEAST_ONE);
         return;
       }
-      setIsSubmitting(true);
-      try {
-        await equationService.uploadEquations(ids, token);
-        setSuccess(UPLOAD_SUCCESS);
-        setSelectedIds(new Set());
-        await refetch();
-      } catch (err) {
-        setSubmitError(err instanceof Error ? err.message : 'Error al subir ecuaciones');
-      } finally {
-        setIsSubmitting(false);
-      }
+      uploadMutation.mutate(ids);
     },
-    [selectedIds, token, refetch]
+    [selectedIds, uploadMutation]
   );
 
   return (

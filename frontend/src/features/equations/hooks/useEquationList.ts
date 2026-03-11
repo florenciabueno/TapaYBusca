@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { EQUATIONS_PAGE_SIZE } from '../../../config/constants';
-import { useEquationsStore } from '../store/equationsSlice';
+import { queryKeys } from '../../../shared/query-keys';
 import { equationService } from '../services/equation.service';
 import { useAuthStore } from '../../../stores';
 import type { EquationOrigin, EquationStatus } from '../types';
@@ -35,21 +36,8 @@ function parseStatusesFromUrl(searchParams: URLSearchParams): EquationStatus[] |
 
 export const useEquationList = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const user = useAuthStore((state) => state.user);
-  const {
-    equations,
-    isLoading,
-    error,
-    currentPage,
-    total,
-    totalPages,
-    setEquations,
-    setLoading,
-    setError,
-    clearError,
-    setPagination,
-    setPage,
-  } = useEquationsStore();
+  const queryClient = useQueryClient();
+  const token = useAuthStore((state) => state.token);
 
   const pageFromUrl = Number(searchParams.get('page') || 1);
   const selectedOrigins = useMemo(() => parseOriginsFromUrl(searchParams), [searchParams]);
@@ -57,49 +45,58 @@ export const useEquationList = () => {
   const fromDate = searchParams.get(FROM_DATE_PARAM) || undefined;
   const toDate = searchParams.get(TO_DATE_PARAM) || undefined;
 
-  const fetchEquations = useCallback(
-    async (page?: number) => {
-      const pageToFetch = page ?? useEquationsStore.getState().currentPage;
-      try {
-        setLoading(true);
-        clearError();
-        const token = useAuthStore.getState().token;
-        const result = await equationService.getAllEquations(
-          token,
-          pageToFetch,
-          EQUATIONS_PAGE_SIZE,
-          selectedOrigins,
-          selectedStatuses,
-          fromDate,
-          toDate
-        );
-        setEquations(result.data);
-        setPagination(result.total, result.page, result.totalPages);
-        setPage(result.page);
-      } catch (err) {
-        console.error('Error al cargar ecuaciones:', err);
-        setError('Error al cargar las ecuaciones');
-      } finally {
-        setLoading(false);
-      }
-    },
-    [
-      selectedOrigins,
-      selectedStatuses,
-      fromDate,
-      toDate,
-      setEquations,
-      setLoading,
-      setError,
-      clearError,
-      setPagination,
-      setPage,
-    ]
+  const listFilters = useMemo(
+    () => ({
+      page: pageFromUrl,
+      origins: selectedOrigins,
+      statuses: selectedStatuses,
+      fromDate: fromDate || undefined,
+      toDate: toDate || undefined,
+      hasToken: !!token,
+    }),
+    [pageFromUrl, selectedOrigins, selectedStatuses, fromDate, toDate, token]
   );
 
+  const {
+    data,
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: queryKeys.equations.list(listFilters),
+    queryFn: () =>
+      equationService.getAllEquations(
+        token,
+        listFilters.page,
+        EQUATIONS_PAGE_SIZE,
+        listFilters.origins,
+        listFilters.statuses,
+        listFilters.fromDate,
+        listFilters.toDate
+      ),
+    enabled: true,
+  });
+
+  const equations = data?.data ?? [];
+  const total = data?.total ?? 0;
+  const totalPages = data?.totalPages ?? 1;
+  const currentPage = data?.page ?? 1;
+  const errorMessage =
+    error != null
+      ? error instanceof Error
+        ? error.message
+        : 'Error al cargar las ecuaciones'
+      : null;
+
   useEffect(() => {
-    fetchEquations(pageFromUrl);
-  }, [pageFromUrl, user, fetchEquations]);
+    if (totalPages > 0 && pageFromUrl > totalPages) {
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev);
+        next.set('page', String(totalPages));
+        return next;
+      });
+    }
+  }, [totalPages, pageFromUrl, setSearchParams]);
 
   function setOriginFilter(origins: EquationOrigin[]) {
     const next = new URLSearchParams(searchParams);
@@ -133,40 +130,48 @@ export const useEquationList = () => {
     setSearchParams(next);
   }
 
-  useEffect(() => {
-    if (totalPages > 0 && pageFromUrl > totalPages) {
-      setSearchParams({ page: String(totalPages) });
-    }
-  }, [totalPages, pageFromUrl, setSearchParams]);
-
   function goToPage(page: number) {
-    setSearchParams({ page: String(page) });
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.set('page', String(page));
+      return next;
+    });
   }
 
-  const deleteEquation = async (id: string) => {
-    try {
-      const token = useAuthStore.getState().token;
-      await equationService.deleteEquation(id, token);
-      clearError();
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => equationService.deleteEquation(id, token),
+    onSuccess: () => {
       const nextPage = equations.length === 1 && currentPage > 1 ? currentPage - 1 : currentPage;
-      await fetchEquations(nextPage);
-    } catch (err) {
-      console.error('Error al eliminar ecuación:', err);
-      setError('Error al eliminar la ecuación');
-    }
-  };
+      if (nextPage !== currentPage) {
+        setSearchParams((prev) => {
+          const next = new URLSearchParams(prev);
+          next.set('page', String(nextPage));
+          return next;
+        });
+      }
+      queryClient.invalidateQueries({ queryKey: queryKeys.equations.lists() });
+    },
+  });
+
+  const deleteError =
+    deleteMutation.error != null
+      ? deleteMutation.error instanceof Error
+        ? deleteMutation.error.message
+        : 'Error al eliminar la ecuación'
+      : null;
 
   return {
     equations,
     isLoading,
-    error,
+    error: errorMessage,
+    deleteError,
     currentPage,
     total,
     totalPages,
     goToPage,
-    fetchEquations,
-    deleteEquation,
-    clearError,
+    fetchEquations: refetch,
+    deleteEquation: deleteMutation.mutateAsync,
+    clearError: () => {},
     selectedOrigins,
     setOriginFilter,
     selectedStatuses,
