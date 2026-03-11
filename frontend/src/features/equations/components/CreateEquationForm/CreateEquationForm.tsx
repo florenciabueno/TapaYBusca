@@ -2,12 +2,13 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { EquationsLayout } from '../EquationsLayout';
+import { FormPageCard } from '../FormPageCard';
 import { Input } from '../../../../shared/components/ui/Input/Input';
 import { Button } from '../../../../shared/components/ui/Button/Button';
 import { equationService } from '../../services/equation.service';
 import { useAuthStore } from '../../../../stores';
 import { queryKeys } from '../../../../shared/query-keys';
-import { COLORS, SPACING, RADIUS, SHADOW } from '../../../../config/theme';
+import { COLORS, SPACING } from '../../../../config/theme';
 import { ROUTES } from '../../../../config/constants';
 
 const SYMBOLS: { label: string; insert: string }[] = [
@@ -79,29 +80,11 @@ export const CreateEquationForm = () => {
 
   return (
     <EquationsLayout>
-      <div className="max-w-3xl mx-auto">
-        <div
-          className="p-8 rounded-2xl"
-          style={{
-            backgroundColor: COLORS.surface,
-            borderRadius: RADIUS.xl,
-            boxShadow: SHADOW.lg,
-          }}
-        >
-          <h1
-            className="text-2xl font-bold mb-1"
-            style={{ color: COLORS.accentSecondary }}
-          >
-            Crear nueva ecuación
-          </h1>
-          <p
-            className="mb-6 text-sm"
-            style={{ color: COLORS.gray[600] }}
-          >
-            Construye tu ecuación en la forma f(x) = k o k = f(x), con una sola incógnita.
-          </p>
-
-          <form onSubmit={handleSubmit}>
+      <FormPageCard
+        title="Crear nueva ecuación"
+        description="Construye tu ecuación en la forma f(x) = k o k = f(x), con una sola incógnita."
+      >
+        <form onSubmit={handleSubmit}>
             <div style={{ marginBottom: SPACING.lg }}>
               <Input
                 label="Tu ecuación:"
@@ -179,8 +162,7 @@ export const CreateEquationForm = () => {
               </Button>
             </div>
           </form>
-        </div>
-      </div>
+      </FormPageCard>
     </EquationsLayout>
   );
 };

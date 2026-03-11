@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { EquationsLayout } from '../components/EquationsLayout';
+import { FormPageCard } from '../components/FormPageCard';
 import { Input } from '../../../shared/components/ui/Input/Input';
 import { Button } from '../../../shared/components/ui/Button/Button';
 import { equationService } from '../services/equation.service';
 import { useAuthStore } from '../../../stores';
 import { queryKeys } from '../../../shared/query-keys';
-import { COLORS, SPACING, RADIUS, SHADOW } from '../../../config/theme';
+import { COLORS, SPACING } from '../../../config/theme';
 
 const QUANTITY_MIN = 1;
 const QUANTITY_MAX = 50;
@@ -72,29 +73,11 @@ export const DownloadPage = () => {
 
   return (
     <EquationsLayout>
-      <div className="max-w-3xl mx-auto">
-        <div
-          className="p-8 rounded-2xl"
-          style={{
-            backgroundColor: COLORS.surface,
-            borderRadius: RADIUS.xl,
-            boxShadow: SHADOW.lg,
-          }}
-        >
-          <h1
-            className="text-2xl font-bold mb-1"
-            style={{ color: COLORS.accentSecondary }}
-          >
-            Descargar ecuaciones
-          </h1>
-          <p
-            className="mb-6 text-sm"
-            style={{ color: COLORS.gray[600] }}
-          >
-            Añade a &quot;Mis ecuaciones&quot; ecuaciones compartidas por otros estudiantes. Indica cuántas quieres y, si lo deseas, un intervalo de fechas (por fecha de publicación).
-          </p>
-
-          <form onSubmit={handleSubmit}>
+      <FormPageCard
+        title="Descargar ecuaciones"
+        description='Añade a "Mis ecuaciones" ecuaciones compartidas por otros estudiantes. Indica cuántas quieres y, si lo deseas, un intervalo de fechas (por fecha de publicación).'
+      >
+        <form onSubmit={handleSubmit}>
             <div style={{ marginBottom: SPACING.lg }}>
               <Input
                 label="Cantidad de ecuaciones"
@@ -148,8 +131,7 @@ export const DownloadPage = () => {
               Descargar ecuaciones
             </Button>
           </form>
-        </div>
-      </div>
+      </FormPageCard>
     </EquationsLayout>
   );
 };

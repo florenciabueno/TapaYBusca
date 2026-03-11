@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { EquationsLayout } from '../components/EquationsLayout';
+import { FormPageCard } from '../components/FormPageCard';
 import { UploadableEquationRow } from '../components/UploadableEquationRow';
 import { Button } from '../../../shared/components/ui/Button/Button';
 import { useUploadableEquations } from '../hooks/useUploadableEquations';
 import { equationService } from '../services/equation.service';
 import { useAuthStore } from '../../../stores';
 import { queryKeys } from '../../../shared/query-keys';
-import { COLORS, SPACING, RADIUS, SHADOW } from '../../../config/theme';
+import { COLORS, SPACING, SHADOW } from '../../../config/theme';
 
 const UPLOAD_SUCCESS = 'Ecuaciones subidas correctamente. Se han compartido con el resto de estudiantes.';
 const UPLOAD_SELECT_AT_LEAST_ONE = 'Selecciona al menos una ecuación para subir.';
@@ -82,29 +83,11 @@ export const UploadPage = () => {
 
   return (
     <EquationsLayout>
-      <div className="max-w-3xl mx-auto">
-        <div
-          className="p-8 rounded-2xl"
-          style={{
-            backgroundColor: COLORS.surface,
-            borderRadius: RADIUS.xl,
-            boxShadow: SHADOW.lg,
-          }}
-        >
-          <h1
-            className="text-2xl font-bold mb-1"
-            style={{ color: COLORS.accentSecondary }}
-          >
-            Subir ecuación
-          </h1>
-          <p
-            className="mb-4 text-sm"
-            style={{ color: COLORS.gray[600] }}
-          >
-            Selecciona las ecuaciones creadas que quieras compartir con el resto de estudiantes. Cada ecuación solo puede subirse una vez.
-          </p>
-
-          {!isLoading && !error && uploadableEquations.length > 0 && (
+      <FormPageCard
+        title="Subir ecuación"
+        description="Selecciona las ecuaciones creadas que quieras compartir con el resto de estudiantes. Cada ecuación solo puede subirse una vez."
+      >
+        {!isLoading && !error && uploadableEquations.length > 0 && (
             <div
               className="flex gap-1 rounded-lg p-1 mb-6"
               style={{ backgroundColor: COLORS.gray[100] }}
@@ -239,8 +222,7 @@ export const UploadPage = () => {
               </Button>
             </form>
           )}
-        </div>
-      </div>
+      </FormPageCard>
     </EquationsLayout>
   );
 };
