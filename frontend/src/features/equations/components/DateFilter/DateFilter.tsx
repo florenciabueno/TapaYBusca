@@ -36,7 +36,7 @@ export const DateFilter = ({ fromDate, toDate, onChange }: DateFilterProps) => {
           type="date"
           value={fromDate ?? ''}
           onChange={handleFromChange}
-          className="rounded-lg border px-2 py-1.5 text-sm"
+          className="cursor-pointer rounded-lg border px-2 py-1.5 text-sm"
           style={{ borderColor: COLORS.gray[300] }}
           aria-label="Fecha desde"
         />
@@ -44,7 +44,7 @@ export const DateFilter = ({ fromDate, toDate, onChange }: DateFilterProps) => {
           <button
             type="button"
             onClick={clearFrom}
-            className="text-xs font-medium text-gray-500 hover:text-gray-700"
+            className="cursor-pointer text-xs font-medium text-gray-500 hover:text-gray-700"
           >
             Limpiar
           </button>
@@ -56,7 +56,7 @@ export const DateFilter = ({ fromDate, toDate, onChange }: DateFilterProps) => {
           type="date"
           value={toDate ?? ''}
           onChange={handleToChange}
-          className="rounded-lg border px-2 py-1.5 text-sm"
+          className="cursor-pointer rounded-lg border px-2 py-1.5 text-sm"
           style={{ borderColor: COLORS.gray[300] }}
           aria-label="Fecha hasta"
         />
@@ -64,7 +64,7 @@ export const DateFilter = ({ fromDate, toDate, onChange }: DateFilterProps) => {
           <button
             type="button"
             onClick={clearTo}
-            className="text-xs font-medium text-gray-500 hover:text-gray-700"
+            className="cursor-pointer text-xs font-medium text-gray-500 hover:text-gray-700"
           >
             Limpiar
           </button>

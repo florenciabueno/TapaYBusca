@@ -106,7 +106,7 @@ export const UploadPage = () => {
                 aria-controls="tabpanel-can-upload"
                 id="tab-can-upload"
                 onClick={() => setActiveTab('can-upload')}
-                className="rounded-md px-4 py-2 text-sm font-medium transition-colors"
+                className="cursor-pointer rounded-md px-4 py-2 text-sm font-medium transition-colors"
                 style={{
                   backgroundColor: activeTab === 'can-upload' ? COLORS.surface : 'transparent',
                   color: activeTab === 'can-upload' ? COLORS.brandDark : COLORS.gray[600],
@@ -122,7 +122,7 @@ export const UploadPage = () => {
                 aria-controls="tabpanel-already-uploaded"
                 id="tab-already-uploaded"
                 onClick={() => setActiveTab('already-uploaded')}
-                className="rounded-md px-4 py-2 text-sm font-medium transition-colors"
+                className="cursor-pointer rounded-md px-4 py-2 text-sm font-medium transition-colors"
                 style={{
                   backgroundColor: activeTab === 'already-uploaded' ? COLORS.surface : 'transparent',
                   color: activeTab === 'already-uploaded' ? COLORS.brandDark : COLORS.gray[600],

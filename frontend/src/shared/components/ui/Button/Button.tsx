@@ -15,10 +15,11 @@ export const Button = ({
   className,
   ...props
 }: ButtonProps) => {
-  const baseClasses = 'px-4 py-3 rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2';
-  
   const isDisabled = disabled || isLoading;
   const isOutline = variant === 'outline' || variant === 'outlineSuccess';
+  const baseClasses =
+    'cursor-pointer px-4 py-3 rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2';
+  const hoverClass = !isOutline && !isDisabled ? 'hover:brightness-95' : '';
   
   const getBackgroundColor = () => {
     if (isOutline) return 'transparent';
@@ -45,7 +46,7 @@ export const Button = ({
 
   return (
     <button
-      className={className ? `${baseClasses} ${className}` : baseClasses}
+      className={[baseClasses, hoverClass, className].filter(Boolean).join(' ')}
       style={{ backgroundColor, border: borderColor ? `2px solid ${borderColor}` : undefined, color: textColor, opacity }}
       disabled={isDisabled}
       {...props}

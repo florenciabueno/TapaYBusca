@@ -31,7 +31,7 @@ export const StatusFilter = ({ selectedStatuses, onChange }: StatusFilterProps) 
             key={status}
             type="button"
             onClick={() => toggle(status)}
-            className="rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2"
+            className="cursor-pointer rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2"
             style={{
               backgroundColor: isSelected ? COLORS.orange : 'transparent',
               borderColor: isSelected ? COLORS.orange : COLORS.gray[300],

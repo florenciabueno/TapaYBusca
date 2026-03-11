@@ -107,6 +107,7 @@ export const DownloadPage = () => {
                 value={fromDate}
                 onChange={(e) => setFromDate(e.target.value)}
                 disabled={isSubmitting}
+                className="cursor-pointer"
               />
               <Input
                 label="Fecha hasta (opcional)"
@@ -114,6 +115,7 @@ export const DownloadPage = () => {
                 value={toDate}
                 onChange={(e) => setToDate(e.target.value)}
                 disabled={isSubmitting}
+                className="cursor-pointer"
               />
             </div>
 

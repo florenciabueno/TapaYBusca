@@ -17,7 +17,7 @@ export const AuthPage = () => {
             ¿Ya tienes una cuenta?{' '}
             <Link
               to={ROUTES.LOGIN}
-              className="font-medium hover:underline"
+              className="cursor-pointer font-medium hover:underline"
               style={{ color: COLORS.secondary }}
             >
               Inicia sesión
@@ -26,7 +26,7 @@ export const AuthPage = () => {
         ) : (
           <Link
             to={ROUTES.REGISTER}
-            className="block w-full py-2.5 text-center border-2 rounded-lg font-semibold transition-colors hover:opacity-90 text-sm"
+            className="cursor-pointer block w-full py-2.5 text-center border-2 rounded-lg font-semibold transition-colors hover:opacity-90 text-sm"
             style={{
               borderColor: COLORS.teal,
               color: COLORS.teal,

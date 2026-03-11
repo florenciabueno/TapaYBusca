@@ -90,7 +90,7 @@ export const Header = () => {
             <button
               type="button"
               onClick={openEditProfile}
-              className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm font-medium transition-colors hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-purple-400/40 focus:ring-offset-2"
+              className="cursor-pointer flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm font-medium transition-colors hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-purple-400/40 focus:ring-offset-2"
               style={{ color: COLORS.brandDark }}
               aria-label="Editar perfil"
               onMouseEnter={(e) => {
@@ -108,7 +108,7 @@ export const Header = () => {
             <button
               type="button"
               onClick={handleLogout}
-              className="flex items-center justify-center w-8 h-8 rounded-lg transition-colors hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:ring-offset-2"
+              className="cursor-pointer flex items-center justify-center w-8 h-8 rounded-lg transition-colors hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:ring-offset-2"
               style={{ color: COLORS.gray[600] }}
               aria-label="Cerrar sesión"
             >

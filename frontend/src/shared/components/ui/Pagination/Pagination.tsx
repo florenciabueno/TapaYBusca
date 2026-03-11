@@ -24,7 +24,7 @@ export const Pagination = ({
         type="button"
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage <= 1}
-        className="rounded-lg border px-3 py-2 text-sm font-medium transition-colors disabled:pointer-events-none disabled:opacity-50"
+        className="cursor-pointer rounded-lg border px-3 py-2 text-sm font-medium transition-colors disabled:pointer-events-none disabled:opacity-50"
         style={{
           borderColor: COLORS.accentSecondary,
           color: COLORS.accentSecondary,
@@ -52,7 +52,7 @@ export const Pagination = ({
         type="button"
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage >= totalPages}
-        className="rounded-lg border px-3 py-2 text-sm font-medium transition-colors disabled:pointer-events-none disabled:opacity-50"
+        className="cursor-pointer rounded-lg border px-3 py-2 text-sm font-medium transition-colors disabled:pointer-events-none disabled:opacity-50"
         style={{
           borderColor: COLORS.accentSecondary,
           color: COLORS.accentSecondary,
