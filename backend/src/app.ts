@@ -7,6 +7,8 @@ import equationRoutes from './modules/equations/equation.routes.js';
 
 const app = express();
 
+app.set('trust proxy', 1);
+
 // Middleware: CORS usa FRONTEND_BASE_URL (en Render: tu URL de Vercel)
 app.use(cors({
   origin: config.frontendBaseUrl,
