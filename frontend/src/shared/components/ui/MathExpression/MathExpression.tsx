@@ -6,16 +6,13 @@ interface MathExpressionProps {
   className?: string;
 }
 
-export const MathExpression = ({ 
-  expression, 
-  className = ''
+export const MathExpression = ({
+  expression,
+  className = '',
 }: MathExpressionProps) => {
   return (
     <span className={className}>
-      <InlineMath 
-        math={expression} 
-        {...KATEX_OPTIONS}
-      />
+      <InlineMath math={expression} {...KATEX_OPTIONS} />
     </span>
   );
 };

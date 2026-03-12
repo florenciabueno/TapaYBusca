@@ -14,6 +14,7 @@ import {
 } from './equation.types.js';
 import { validateEquation } from './equation.validators.js';
 import { solveEquation } from './equation-solver/index.js';
+import { infixToLatex } from './infix-to-latex.js';
 import { ensureValidationPassedWithErrorList } from '../../shared/utils/validation.js';
 
 const STEPS_DEFAULT = 0;
@@ -74,7 +75,11 @@ export class EquationService {
     ensureValidationPassedWithErrorList(validateEquation(data.expression), MESSAGE_EQUATION_VALIDATION_PREFIX);
     const solveResult = solveEquation(data.expression);
     this.ensureEquationHasSolution(solveResult);
-    const equationUser = await this.equationRepository.create(data);
+    const latexExpression = infixToLatex(data.expression.trim());
+    const equationUser = await this.equationRepository.create({
+      ...data,
+      latexExpression,
+    });
     return this.toEquationResponse(equationUser);
   }
 
@@ -222,7 +227,10 @@ export class EquationService {
     infixExpression?: string | null;
     postfixExpression?: string | null;
   }): string {
-    return equation.latexExpression || equation.infixExpression || equation.postfixExpression || '';
+    const latex = equation.latexExpression?.trim();
+    if (latex) return latex;
+    const raw = equation.infixExpression || equation.postfixExpression || '';
+    return raw ? infixToLatex(raw) : '';
   }
 
   private formatDate(date: Date): string {

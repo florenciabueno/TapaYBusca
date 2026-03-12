@@ -46,6 +46,7 @@ export interface DefaultEquationRow {
 export interface CreateEquationDto {
   expression: string;
   userId: string;
+  latexExpression?: string;
 }
 
 export interface UpdateEquationUserDto {

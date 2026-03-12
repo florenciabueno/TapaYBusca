@@ -3,10 +3,11 @@ import request from 'supertest';
 import type { Application } from 'express';
 import jwt from 'jsonwebtoken';
 import { config } from '../src/config/env.js';
+import { infixToLatex } from '../src/modules/equations/infix-to-latex.js';
 
 vi.mock('../src/modules/equations/equation.repository.js', () => ({
   EquationRepository: class MockEquationRepository {
-    async create(data: { expression: string; userId: string }) {
+    async create(data: { expression: string; userId: string; latexExpression?: string }) {
       const expression = (data.expression ?? '').trim();
       return {
         id: 'mock-equation-id',
@@ -17,7 +18,7 @@ vi.mock('../src/modules/equations/equation.repository.js', () => ({
         equation: {
           infixExpression: expression,
           postfixExpression: expression,
-          latexExpression: null,
+          latexExpression: data.latexExpression ?? null,
         },
       };
     }
@@ -186,7 +187,7 @@ describe('Equations API', () => {
           const response = await createEquation(app, token, equation);
           expect(response.status).toBe(201);
           expect(response.body).toMatchObject({
-            equation: equation.trim(),
+            equation: infixToLatex(equation.trim()),
             origin: 'CREATED',
             status: 'NOT_STARTED',
             isActive: true,
@@ -204,7 +205,7 @@ describe('Equations API', () => {
           const response = await createEquation(app, token, equation);
           expect(response.status).toBe(201);
           expect(response.body).toMatchObject({
-            equation: equation.trim(),
+            equation: infixToLatex(equation.trim()),
             origin: 'CREATED',
             status: 'NOT_STARTED',
             isActive: true,
