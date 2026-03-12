@@ -1,71 +1,24 @@
-import { useState } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { EquationsLayout } from '../components/EquationsLayout';
 import { FormPageCard } from '../components/FormPageCard';
 import { FormMessage } from '../../../shared/components/ui/FormMessage';
 import { Input } from '../../../shared/components/ui/Input/Input';
 import { Button } from '../../../shared/components/ui/Button/Button';
-import { equationService } from '../services/equation.service';
-import { useAuthStore } from '../../../stores';
-import { queryKeys } from '../../../shared/query-keys';
-import { useDismissAfterDelay } from '../../../shared/hooks/useDismissAfterDelay';
+import { useDownloadForm, QUANTITY_MIN, QUANTITY_MAX } from '../hooks/useDownloadForm';
 import { SPACING } from '../../../config/theme';
 
-const QUANTITY_MIN = 1;
-const QUANTITY_MAX = 50;
-const SUCCESS_MESSAGE_DURATION_MS = 5000;
-
 export const DownloadPage = () => {
-  const queryClient = useQueryClient();
-  const token = useAuthStore((state) => state.token);
-  const [quantity, setQuantity] = useState<string>(String(QUANTITY_MIN));
-  const [fromDate, setFromDate] = useState<string>('');
-  const [toDate, setToDate] = useState<string>('');
-  const [success, setSuccess] = useDismissAfterDelay<string | null>(null, SUCCESS_MESSAGE_DURATION_MS);
-  const [validationError, setValidationError] = useState<string | null>(null);
-
-  const downloadMutation = useMutation({
-    mutationFn: (params: { quantity: number; fromDate?: string; toDate?: string }) =>
-      equationService.downloadEquations(params, token),
-    onSuccess: (result) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.equations.lists() });
-      if (result.added === 0 && result.totalRequested > 0) {
-        setSuccess('No se encontraron ecuaciones nuevas para añadir. Es posible que ya las tengas en tu listado.');
-      } else {
-        setSuccess(
-          result.added < result.totalRequested
-            ? `Se añadieron ${result.added} de ${result.totalRequested} ecuaciones a tu listado. Algunas ya estaban en tu listado.`
-            : `Se añadieron ${result.added} ecuaciones a tu listado.`
-        );
-      }
-    },
-  });
-
-  const isSubmitting = downloadMutation.isPending;
-  const error =
-    validationError ||
-    (downloadMutation.error != null
-      ? downloadMutation.error instanceof Error
-        ? downloadMutation.error.message
-        : 'Error al descargar ecuaciones'
-      : null);
-
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    downloadMutation.reset();
-    setSuccess(null);
-    setValidationError(null);
-    const num = parseInt(quantity, 10);
-    if (Number.isNaN(num) || num < QUANTITY_MIN || num > QUANTITY_MAX) {
-      setValidationError(`La cantidad debe estar entre ${QUANTITY_MIN} y ${QUANTITY_MAX}.`);
-      return;
-    }
-    downloadMutation.mutate({
-      quantity: num,
-      fromDate: fromDate.trim() || undefined,
-      toDate: toDate.trim() || undefined,
-    });
-  }
+  const {
+    quantity,
+    setQuantity,
+    fromDate,
+    setFromDate,
+    toDate,
+    setToDate,
+    success,
+    error,
+    isSubmitting,
+    handleSubmit,
+  } = useDownloadForm();
 
   return (
     <EquationsLayout>
@@ -74,53 +27,53 @@ export const DownloadPage = () => {
         description='Añade a "Mis ecuaciones" ecuaciones compartidas por otros estudiantes. Indica cuántas quieres y, si lo deseas, un intervalo de fechas (por fecha de publicación).'
       >
         <form onSubmit={handleSubmit}>
-            <div style={{ marginBottom: SPACING.lg }}>
-              <Input
-                label="Cantidad de ecuaciones"
-                type="number"
-                min={QUANTITY_MIN}
-                max={QUANTITY_MAX}
-                value={quantity}
-                onChange={(e) => setQuantity(e.target.value)}
-                placeholder={`${QUANTITY_MIN} a ${QUANTITY_MAX}`}
-                error={error}
-                disabled={isSubmitting}
-                autoComplete="off"
-              />
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4" style={{ marginBottom: SPACING.lg }}>
-              <Input
-                label="Fecha desde (opcional)"
-                type="date"
-                value={fromDate}
-                onChange={(e) => setFromDate(e.target.value)}
-                disabled={isSubmitting}
-                className="cursor-pointer"
-              />
-              <Input
-                label="Fecha hasta (opcional)"
-                type="date"
-                value={toDate}
-                onChange={(e) => setToDate(e.target.value)}
-                disabled={isSubmitting}
-                className="cursor-pointer"
-              />
-            </div>
-
-            {success && (
-              <FormMessage message={success} variant="success" className="mb-4" />
-            )}
-
-            <Button
-              type="submit"
-              variant="accent"
+          <div style={{ marginBottom: SPACING.lg }}>
+            <Input
+              label="Cantidad de ecuaciones"
+              type="number"
+              min={QUANTITY_MIN}
+              max={QUANTITY_MAX}
+              value={quantity}
+              onChange={(e) => setQuantity(e.target.value)}
+              placeholder={`${QUANTITY_MIN} a ${QUANTITY_MAX}`}
+              error={error}
               disabled={isSubmitting}
-              isLoading={isSubmitting}
-            >
-              Descargar ecuaciones
-            </Button>
-          </form>
+              autoComplete="off"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4" style={{ marginBottom: SPACING.lg }}>
+            <Input
+              label="Fecha desde (opcional)"
+              type="date"
+              value={fromDate}
+              onChange={(e) => setFromDate(e.target.value)}
+              disabled={isSubmitting}
+              className="cursor-pointer"
+            />
+            <Input
+              label="Fecha hasta (opcional)"
+              type="date"
+              value={toDate}
+              onChange={(e) => setToDate(e.target.value)}
+              disabled={isSubmitting}
+              className="cursor-pointer"
+            />
+          </div>
+
+          {success && (
+            <FormMessage message={success} variant="success" className="mb-4" />
+          )}
+
+          <Button
+            type="submit"
+            variant="accent"
+            disabled={isSubmitting}
+            isLoading={isSubmitting}
+          >
+            Descargar ecuaciones
+          </Button>
+        </form>
       </FormPageCard>
     </EquationsLayout>
   );
