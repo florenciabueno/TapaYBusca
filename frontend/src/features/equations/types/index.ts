@@ -7,8 +7,3 @@ export type {
   DownloadEquationsParams,
   DownloadEquationsResult,
 } from './equation.types';
-export {
-  ORIGIN_LABELS,
-  ORIGIN_FILTER_LABELS,
-  STATUS_LABELS,
-} from './equation.types';

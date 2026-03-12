@@ -1,4 +1,4 @@
-import type { EquationOrigin, EquationStatus } from './types/equations';
+import type { EquationOrigin, EquationStatus } from '../features/equations/types';
 
 export interface EquationsListFilters {
   page: number;

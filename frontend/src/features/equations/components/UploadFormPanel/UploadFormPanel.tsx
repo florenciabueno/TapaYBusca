@@ -2,7 +2,7 @@ import { FormMessage } from '../../../../shared/components/ui/FormMessage';
 import { Button } from '../../../../shared/components/ui/Button/Button';
 import { UploadableEquationRow } from '../UploadableEquationRow';
 import { COLORS, SPACING } from '../../../../config/theme';
-import type { UploadableEquation } from '../../../../shared/types/equations';
+import type { UploadableEquation } from '../../types';
 
 export interface UploadFormPanelProps {
   canUploadList: UploadableEquation[];

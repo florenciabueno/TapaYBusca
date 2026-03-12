@@ -1,10 +1,11 @@
 import { useCallback, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { uploadEquationsService } from '../services/upload-equations.service';
+import { equationService } from '../services/equation.service';
 import { useAuthStore } from '../../../stores';
 import { queryKeys } from '../../../shared/query-keys';
 import { useDismissAfterDelay } from '../../../shared/hooks/useDismissAfterDelay';
 import { useUploadableEquations } from './useUploadableEquations';
+import type { UploadableEquation } from '../types';
 
 const UPLOAD_SUCCESS = 'Ecuaciones subidas correctamente. Se han compartido con el resto de estudiantes.';
 const UPLOAD_SELECT_AT_LEAST_ONE = 'Selecciona al menos una ecuación para subir.';
@@ -22,7 +23,7 @@ export function useUploadForm() {
   const [validationError, setValidationError] = useState<string | null>(null);
 
   const uploadMutation = useMutation({
-    mutationFn: (ids: string[]) => uploadEquationsService.uploadEquations(ids, token),
+    mutationFn: (ids: string[]) => equationService.uploadEquations(ids, token),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.equations.all });
       setSuccess(UPLOAD_SUCCESS);

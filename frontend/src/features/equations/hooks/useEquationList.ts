@@ -5,7 +5,7 @@ import { EQUATIONS_PAGE_SIZE } from '../../../config/constants';
 import { queryKeys } from '../../../shared/query-keys';
 import { equationService } from '../services/equation.service';
 import { useAuthStore } from '../../../stores';
-import type { EquationOrigin, EquationStatus } from '../../../shared/types/equations';
+import type { EquationOrigin, EquationStatus } from '../types';
 
 const ORIGINS_PARAM = 'origins';
 const STATUSES_PARAM = 'statuses';
