@@ -12,4 +12,4 @@ export const ROUTES = {
   DOWNLOAD: '/descargar',
 } as const;
 
-export const EQUATIONS_PAGE_SIZE = 9;
+export const EQUATIONS_PAGE_SIZE = 12;
