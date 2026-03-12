@@ -1,14 +1,15 @@
 import express from 'express';
 import cors from 'cors';
+import { config } from './config/env.js';
 import authRoutes from './modules/auth/auth.routes.js';
 import userRoutes from './modules/user/user.routes.js';
 import equationRoutes from './modules/equations/equation.routes.js';
 
 const app = express();
 
-// Middleware
+// Middleware: CORS usa FRONTEND_BASE_URL (en Render: tu URL de Vercel)
 app.use(cors({
-  origin: 'http://localhost:5173',
+  origin: config.frontendBaseUrl,
   credentials: true,
 }));
 app.use(express.json());
