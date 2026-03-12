@@ -1,6 +1,6 @@
 import { COLORS } from '../../../../config/theme';
-import type { EquationStatus } from '../../types/equation.types';
-import { STATUS_LABELS } from '../../types/equation.types';
+import type { EquationStatus } from '../../../../shared/types/equations';
+import { STATUS_LABELS } from '../../../../shared/types/equations';
 
 const STATUSES: EquationStatus[] = ['NOT_STARTED', 'IN_PROGRESS', 'SOLVED'];
 

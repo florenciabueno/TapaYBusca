@@ -1,12 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { EquationsLayout } from '../EquationsLayout';
-import { FormPageCard } from '../FormPageCard';
+import { EquationsLayout, FormPageCard } from '../../../../shared/components/layout';
 import { FormMessage } from '../../../../shared/components/ui/FormMessage';
 import { Input } from '../../../../shared/components/ui/Input/Input';
 import { Button } from '../../../../shared/components/ui/Button/Button';
-import { equationService } from '../../services/equation.service';
+import { createEquationService } from '../../services/create-equation.service';
 import { useAuthStore } from '../../../../stores';
 import { queryKeys } from '../../../../shared/query-keys';
 import { COLORS, SPACING } from '../../../../config/theme';
@@ -34,7 +33,7 @@ export const CreateEquationForm = () => {
   const [validationError, setValidationError] = useState<string | null>(null);
 
   const createMutation = useMutation({
-    mutationFn: (equation: string) => equationService.createEquation(equation, token),
+    mutationFn: (equation: string) => createEquationService.createEquation(equation, token),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.equations.lists() });
       queryClient.invalidateQueries({ queryKey: queryKeys.equations.all });

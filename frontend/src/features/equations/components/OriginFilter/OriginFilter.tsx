@@ -1,6 +1,6 @@
 import { COLORS } from '../../../../config/theme';
-import type { EquationOrigin } from '../../types/equation.types';
-import { ORIGIN_FILTER_LABELS } from '../../types/equation.types';
+import type { EquationOrigin } from '../../../../shared/types/equations';
+import { ORIGIN_FILTER_LABELS } from '../../../../shared/types/equations';
 
 const ORIGINS: EquationOrigin[] = ['DEFAULT', 'CREATED', 'DOWNLOADED'];
 

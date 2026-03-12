@@ -1,7 +1,7 @@
 import { COLORS, RADIUS, SHADOW } from '../../../../config/theme';
 import { MathExpression } from '../../../../shared/components/ui/MathExpression';
-import type { Equation, EquationStatus } from '../../types/equation.types';
-import { ORIGIN_LABELS, STATUS_LABELS } from '../../types/equation.types';
+import type { Equation, EquationStatus } from '../../../../shared/types/equations';
+import { ORIGIN_LABELS, STATUS_LABELS } from '../../../../shared/types/equations';
 
 const STATUS_STYLES: Record<
   EquationStatus,

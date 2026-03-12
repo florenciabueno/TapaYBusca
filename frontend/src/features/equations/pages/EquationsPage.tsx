@@ -1,4 +1,4 @@
-import { EquationsLayout } from '../components/EquationsLayout';
+import { EquationsLayout } from '../../../shared/components/layout';
 import { EquationsCardList } from '../components/EquationsCardList';
 import { OriginFilter } from '../components/OriginFilter';
 import { StatusFilter } from '../components/StatusFilter';

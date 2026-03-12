@@ -1,6 +1,6 @@
 import { COLORS, RADIUS, SHADOW } from '../../../../config/theme';
 import { MathExpression } from '../../../../shared/components/ui/MathExpression';
-import type { UploadableEquation } from '../../types';
+import type { UploadableEquation } from '../../../../shared/types/equations';
 
 export interface UploadableEquationRowProps {
   item: UploadableEquation;

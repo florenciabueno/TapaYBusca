@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Sidebar, Header } from '../../../../shared/components/layout';
+import { Sidebar, Header } from '../index';
 import { useAuthStore } from '../../../../stores';
 import { COLORS } from '../../../../config/theme';
 

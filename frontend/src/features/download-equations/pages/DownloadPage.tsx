@@ -1,5 +1,4 @@
-import { EquationsLayout } from '../components/EquationsLayout';
-import { FormPageCard } from '../components/FormPageCard';
+import { EquationsLayout, FormPageCard } from '../../../shared/components/layout';
 import { FormMessage } from '../../../shared/components/ui/FormMessage';
 import { Input } from '../../../shared/components/ui/Input/Input';
 import { Button } from '../../../shared/components/ui/Button/Button';
