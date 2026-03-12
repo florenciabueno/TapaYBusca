@@ -1,4 +1,4 @@
-import { API_BASE_URL } from '../../../config/constants';
+import { API_URL } from '../../../config/constants';
 import type { LoginCredentials, RegisterCredentials, AuthResponse } from '../types/auth.types';
 import type {
   ForgotPasswordRequest,
@@ -8,7 +8,7 @@ import type {
 } from '../types/passwordReset.types';
 
 export const login = async (credentials: LoginCredentials): Promise<AuthResponse> => {
-  const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+  const response = await fetch(`${API_URL}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(credentials),
@@ -23,7 +23,7 @@ export const login = async (credentials: LoginCredentials): Promise<AuthResponse
 };
 
 export const register = async (credentials: RegisterCredentials): Promise<AuthResponse> => {
-  const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
+  const response = await fetch(`${API_URL}/auth/register`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(credentials),
@@ -38,7 +38,7 @@ export const register = async (credentials: RegisterCredentials): Promise<AuthRe
 };
 
 export const requestPasswordReset = async (data: ForgotPasswordRequest): Promise<ForgotPasswordResponse> => {
-  const response = await fetch(`${API_BASE_URL}/api/auth/forgot-password`, {
+  const response = await fetch(`${API_URL}/auth/forgot-password`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
@@ -53,7 +53,7 @@ export const requestPasswordReset = async (data: ForgotPasswordRequest): Promise
 };
 
 export const resetPassword = async (data: ResetPasswordRequest): Promise<ResetPasswordResponse> => {
-  const response = await fetch(`${API_BASE_URL}/api/auth/reset-password`, {
+  const response = await fetch(`${API_URL}/auth/reset-password`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
