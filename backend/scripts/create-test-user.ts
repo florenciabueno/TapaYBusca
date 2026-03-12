@@ -10,14 +10,14 @@ async function createTestUser() {
   try {
     const email = 'test@example.com';
     const password = 'test1234';
-    const name = 'Usuario de Prueba';
+    const name = 'Test User';
 
     const existingUser = await prisma.user.findUnique({
       where: { email },
     });
 
     if (existingUser) {
-      console.log('❌ El usuario ya existe:', email);
+      console.log('❌ User already exists:', email);
       return;
     }
 
@@ -31,15 +31,15 @@ async function createTestUser() {
       },
     });
 
-    console.log('✅ Usuario de prueba creado exitosamente:');
+    console.log('✅ Test user created successfully:');
     console.log('   Email:', user.email);
-    console.log('   Nombre:', user.name);
+    console.log('   Name:', user.name);
     console.log('   ID:', user.id);
-    console.log('\n📝 Credenciales para login:');
+    console.log('\n📝 Login credentials:');
     console.log('   Email:', email);
     console.log('   Password:', password);
   } catch (error) {
-    console.error('❌ Error al crear usuario:', error);
+    console.error('❌ Error creating user:', error);
   } finally {
     await prisma.$disconnect();
   }
