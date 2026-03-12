@@ -1,8 +1,8 @@
 import { ROUTES } from '../config/constants';
 import { EquationsPage } from '../features/equations/pages/EquationsPage';
-import { CreateEquationPage } from '../features/create-equation/pages/CreateEquationPage';
-import { UploadPage } from '../features/upload-equations/pages/UploadPage';
-import { DownloadPage } from '../features/download-equations/pages/DownloadPage';
+import { CreateEquationPage } from '../features/equations/pages/CreateEquationPage';
+import { UploadPage } from '../features/equations/pages/UploadPage';
+import { DownloadPage } from '../features/equations/pages/DownloadPage';
 import { AuthPage } from '../features/auth/pages/AuthPage';
 import { ForgotPasswordPage } from '../features/auth/pages/ForgotPasswordPage';
 import { ResetPasswordPage } from '../features/auth/pages/ResetPasswordPage';

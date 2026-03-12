@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { downloadEquationsService } from '../services/download-equations.service';
+import { equationService } from '../services/equation.service';
 import { useAuthStore } from '../../../stores';
 import { queryKeys } from '../../../shared/query-keys';
 import { useDismissAfterDelay } from '../../../shared/hooks/useDismissAfterDelay';
@@ -20,7 +20,7 @@ export function useDownloadForm() {
 
   const downloadMutation = useMutation({
     mutationFn: (params: { quantity: number; fromDate?: string; toDate?: string }) =>
-      downloadEquationsService.downloadEquations(params, token),
+      equationService.downloadEquations(params, token),
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.equations.lists() });
       if (result.added === 0 && result.totalRequested > 0) {

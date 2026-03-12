@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { queryKeys } from '../../../shared/query-keys';
-import { uploadEquationsService } from '../services/upload-equations.service';
+import { equationService } from '../services/equation.service';
 import { useAuthStore } from '../../../stores';
 
 export const useUploadableEquations = () => {
@@ -8,7 +8,7 @@ export const useUploadableEquations = () => {
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: queryKeys.equations.uploadable(token),
-    queryFn: () => uploadEquationsService.getEquationsForUpload(token),
+    queryFn: () => equationService.getEquationsForUpload(token),
     enabled: !!token,
   });
 
