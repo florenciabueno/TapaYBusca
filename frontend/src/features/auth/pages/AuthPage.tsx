@@ -1,9 +1,10 @@
+import { useLocation } from 'react-router-dom';
 import { LoginForm } from '../components/LoginForm/LoginForm';
 import { RegisterForm } from '../components/RegisterForm/RegisterForm';
-import { Link, useLocation } from 'react-router-dom';
+import { AuthLayout } from '../components/AuthLayout/AuthLayout';
+import { AuthFooter } from '../components/AuthFooter/AuthFooter';
 import { ROUTES } from '../../../config/constants';
 import { COLORS } from '../../../config/theme';
-import { AuthLayout } from '../components/AuthLayout/AuthLayout';
 
 export const AuthPage = () => {
   const location = useLocation();
@@ -13,27 +14,19 @@ export const AuthPage = () => {
     <AuthLayout
       footer={
         isRegister ? (
-          <p className="text-sm text-center text-gray-600">
-            ¿Ya tienes una cuenta?{' '}
-            <Link
-              to={ROUTES.LOGIN}
-              className="cursor-pointer font-medium hover:underline"
-              style={{ color: COLORS.secondary }}
-            >
-              Inicia sesión
-            </Link>
-          </p>
+          <AuthFooter
+            text="¿Ya tienes una cuenta? "
+            linkTo={ROUTES.LOGIN}
+            linkLabel="Inicia sesión"
+            variant="inline"
+            linkColor={COLORS.secondary}
+          />
         ) : (
-          <Link
-            to={ROUTES.REGISTER}
-            className="cursor-pointer block w-full py-2.5 text-center border-2 rounded-lg font-semibold transition-colors hover:opacity-90 text-sm"
-            style={{
-              borderColor: COLORS.teal,
-              color: COLORS.teal,
-            }}
-          >
-            Crear una cuenta
-          </Link>
+          <AuthFooter
+            linkTo={ROUTES.REGISTER}
+            linkLabel="Crear una cuenta"
+            variant="button"
+          />
         )
       }
     >

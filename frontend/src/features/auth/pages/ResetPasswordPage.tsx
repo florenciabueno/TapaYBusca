@@ -1,7 +1,8 @@
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { ROUTES } from '../../../config/constants';
 import { COLORS } from '../../../config/theme';
 import { AuthLayout } from '../components/AuthLayout/AuthLayout';
+import { AuthFooter } from '../components/AuthFooter/AuthFooter';
 import { ResetPasswordForm } from '../components/ResetPasswordForm/ResetPasswordForm';
 
 export const ResetPasswordPage = () => {
@@ -12,15 +13,11 @@ export const ResetPasswordPage = () => {
     return (
       <AuthLayout
         footer={
-          <p className="text-sm text-center text-gray-600">
-            <Link
-              to={ROUTES.LOGIN}
-              className="font-medium hover:underline"
-              style={{ color: COLORS.teal }}
-            >
-              Volver a iniciar sesión
-            </Link>
-          </p>
+          <AuthFooter
+            linkTo={ROUTES.LOGIN}
+            linkLabel="Volver a iniciar sesión"
+            variant="inline"
+          />
         }
       >
         <div className="text-sm text-center text-gray-700 border rounded-lg p-3 bg-white/70">
@@ -33,15 +30,11 @@ export const ResetPasswordPage = () => {
   return (
     <AuthLayout
       footer={
-        <p className="text-sm text-center text-gray-600">
-          <Link
-            to={ROUTES.LOGIN}
-            className="font-medium hover:underline"
-            style={{ color: COLORS.teal }}
-          >
-            Volver a iniciar sesión
-          </Link>
-        </p>
+        <AuthFooter
+          linkTo={ROUTES.LOGIN}
+          linkLabel="Volver a iniciar sesión"
+          variant="inline"
+        />
       }
     >
       <div className="mb-4 text-center">
