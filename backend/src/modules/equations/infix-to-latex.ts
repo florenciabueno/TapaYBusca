@@ -95,10 +95,6 @@ function convertInfixPart(expr: string): string {
       }
     }
 
-    if (!changed && out.includes('*')) {
-      out = out.replace(/\*/g, '\\cdot ');
-      changed = true;
-    }
   }
 
   return out;
