@@ -77,9 +77,9 @@ export const Header = () => {
             className="h-9 w-9 object-contain shrink-0"
           />
           <h1 className="text-xl font-semibold">
-            <span style={{ color: COLORS.accentSecondary }}>Tapa </span>
-            <span style={{ color: COLORS.orange }}>y</span>
-            <span style={{ color: COLORS.accentSecondary }}> Busca</span>
+            <span style={{ color: COLORS.orange }}>Tapa </span>
+            <span style={{ color: COLORS.lightTeal }}>y </span>
+            <span style={{ color: COLORS.violet }}>Busca</span>
           </h1>
         </div>
       )}

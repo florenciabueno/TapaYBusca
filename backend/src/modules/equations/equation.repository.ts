@@ -288,6 +288,7 @@ export class EquationRepository {
       data: {
         postfixExpression: expression,
         infixExpression: expression,
+        latexExpression: data.latexExpression ?? null,
         creatorId: data.userId,
         isDefault: false,
       },

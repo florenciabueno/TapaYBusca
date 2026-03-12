@@ -128,7 +128,7 @@ export const EquationsCardList = () => {
         </div>
       )}
       <div className="space-y-4 w-full">
-        <div className="grid w-full gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid w-full gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {equations.map((equation) => (
             <EquationCard
               key={equation.id}

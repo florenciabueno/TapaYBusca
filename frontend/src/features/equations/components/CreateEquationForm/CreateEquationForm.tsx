@@ -14,7 +14,7 @@ import { ROUTES } from '../../../../config/constants';
 
 const SYMBOLS: { label: string; insert: string }[] = [
   { label: '√', insert: 'sqrt()' },
-  { label: '³√', insert: 'raiz3()' },
+  { label: '³√', insert: 'cbrt()' },
   { label: '^', insert: '^' },
   { label: '÷', insert: '/' },
   { label: '(', insert: '(' },
@@ -24,6 +24,12 @@ const SYMBOLS: { label: string; insert: string }[] = [
   { label: '×', insert: '*' },
   { label: '=', insert: '=' },
 ];
+
+const ALLOWED_KEYS = new Set([
+  '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+  'x', 'X', '=',
+  'Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight', 'Home', 'End',
+]);
 
 export const CreateEquationForm = () => {
   const navigate = useNavigate();
@@ -79,6 +85,25 @@ export const CreateEquationForm = () => {
     createMutation.reset();
   }
 
+  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (ALLOWED_KEYS.has(e.key)) return;
+    if (e.ctrlKey || e.metaKey) {
+      if (e.key === 'a' || e.key === 'c' || e.key === 'v' || e.key === 'x') return;
+    }
+    e.preventDefault();
+  }
+
+  function handlePaste(e: React.ClipboardEvent<HTMLInputElement>) {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData('text');
+    const sanitized = pasted.replace(/[^0-9x=]/gi, '');
+    if (!sanitized) return;
+    const input = e.target as HTMLInputElement;
+    const start = input.selectionStart ?? 0;
+    const end = input.selectionEnd ?? 0;
+    setValue((prev) => prev.slice(0, start) + sanitized + prev.slice(end));
+  }
+
   return (
     <EquationsLayout>
       <FormPageCard
@@ -95,9 +120,11 @@ export const CreateEquationForm = () => {
                   setValidationError(null);
                   createMutation.reset();
                 }}
-                placeholder="Ej: x+5=12, sqrt(x+1)=3, raiz2(x)=4"
+                onKeyDown={handleKeyDown}
+                onPaste={handlePaste}
+                placeholder="Solo números y x; usa la botonera para el resto"
                 error={error}
-                helperText="Usa los botones de abajo o escribe directamente. Una sola x permitida."
+                helperText="Escribe números y x con el teclado. Usa los botones para operadores y funciones (√, +, =, etc.)."
                 disabled={isLoading}
                 autoComplete="off"
               />

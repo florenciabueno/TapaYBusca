@@ -4,12 +4,9 @@ export const EQUATION_VARIABLE = 'x';
 
 export const ALLOWED_FUNCTIONS = new Set([
   'sqrt',
-  'raiz2',
-  'raiz3',
   'cbrt',
   'pot2',
   'pot3',
-  'neg',
 ]);
 
 const CONSTANT_ALLOWED_CHARS = /^[-\d\s.+*\/()]+$/;
@@ -28,7 +25,7 @@ const MESSAGE_CONSTANT_INVALID_CHARS =
 const MESSAGE_CONSTANT_PARENS = 'Paréntesis desbalanceados en el lado constante.';
 const MESSAGE_EXPRESSION_MULTIPLE_X = 'La expresión en x solo puede contener una vez la incógnita.';
 const MESSAGE_EXPRESSION_ALLOWED_FUNCTIONS =
-  'Función no permitida: "{id}". Permitidas: sqrt, raiz2, raiz3, cbrt, pot2, pot3, neg.';
+  'Función no permitida: "{id}". Permitidas: sqrt, cbrt, pot2, pot3.';
 const MESSAGE_EXPRESSION_DEGREE = `Solo se permiten expresiones hasta grado ${MAX_DEGREE} (x, x^2, x^3).`;
 const MESSAGE_EXPRESSION_MUST_HAVE_X =
   'Uno de los lados debe ser una expresión que contenga la incógnita x.';

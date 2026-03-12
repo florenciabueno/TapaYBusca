@@ -13,9 +13,6 @@ const UNARY_MINUS_AFTER = new Set([EQUALS, LEFT_PAREN, ADD, SUBTRACT, MULTIPLY, 
 
 export function normalizeInfix(equation: string): string {
   let s = equation.replace(/\s/g, '');
-  s = s.replace(/\bsqrt\b/gi, 'raiz2');
-  s = s.replace(/\bcbrt\b/gi, 'raiz3');
-  // x^2 and x^3 are not in TOKENIZE_ORDER; convert to pot2(x) / pot3(x) so the solver can parse them
   s = s.replace(/x\^3/g, 'pot3(x)');
   s = s.replace(/x\^2/g, 'pot2(x)');
   return s;

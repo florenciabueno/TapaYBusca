@@ -90,9 +90,9 @@ export const Sidebar = () => {
           className="w-10 h-10 object-contain shrink-0"
         />
         <span className="text-xl font-semibold">
-          <span style={{ color: COLORS.accentSecondary }}>Tapa </span>
-          <span style={{ color: COLORS.orange }}>y</span>
-          <span style={{ color: COLORS.accentSecondary }}> Busca</span>
+          <span style={{ color: COLORS.orange }}>Tapa </span>
+          <span style={{ color: COLORS.lightTeal }}>y </span>
+          <span style={{ color: COLORS.violet }}>Busca</span>
         </span>
       </div>
 

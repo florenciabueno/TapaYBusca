@@ -3,10 +3,11 @@ import request from 'supertest';
 import type { Application } from 'express';
 import jwt from 'jsonwebtoken';
 import { config } from '../src/config/env.js';
+import { infixToLatex } from '../src/modules/equations/infix-to-latex.js';
 
 vi.mock('../src/modules/equations/equation.repository.js', () => ({
   EquationRepository: class MockEquationRepository {
-    async create(data: { expression: string; userId: string }) {
+    async create(data: { expression: string; userId: string; latexExpression?: string }) {
       const expression = (data.expression ?? '').trim();
       return {
         id: 'mock-equation-id',
@@ -17,7 +18,7 @@ vi.mock('../src/modules/equations/equation.repository.js', () => ({
         equation: {
           infixExpression: expression,
           postfixExpression: expression,
-          latexExpression: null,
+          latexExpression: data.latexExpression ?? null,
         },
       };
     }
@@ -41,50 +42,48 @@ async function createEquation(app: Application, token: string, equation: string)
     .send({ equation });
 }
 
-/** Ecuaciones por defecto del seed que deben crearse (201); excluye ((pot2(x)+9)/(5))=1 (sin solución real) */
 const DEFAULT_EQUATIONS_INFIX = [
   'x+5=12',
   '2*(x+5)=12',
   '((150)/(x+10))=30',
-  'raiz2(x+5)=4',
+  'sqrt(x+5)=4',
   '25=pot2(x)',
   'pot2(x+2)+10=26',
-  'raiz3(((40)/(x+1)))=2',
+  'cbrt(((40)/(x+1)))=2',
   '20=84-pot3(x)',
   '((360)/(pot2(x)-13))=10',
   'x+15=10',
   '2*x+9=7',
   '10=3*x+4',
-  '9=raiz2(1+raiz2(x))',
+  '9=sqrt(1+sqrt(x))',
   '3=((15)/(x+2))',
   '((8)/(1+((2)/(1+((5)/(x))))))=4',
   '39=pot2(x)-10',
   '5=12-x',
   '((4*(x+5))/(3))=4',
   'pot3(x)+1=28',
-  '9=raiz2(neg(x)+15)',
+  '9=sqrt(-(x)+15)',
   'x+16=9',
-  '7=neg(2*x)+6',
-  '((neg(15))/(x-2))=5',
+  '7=-(2*x)+6',
+  '((-15)/(x-2))=5',
   '((20)/(1+((12)/(1+((14)/(x))))))=4',
-  'neg(5*x)=30',
-  'raiz2(x+25)=10',
+  '-(5*x)=30',
+  'sqrt(x+25)=10',
   '5=12+x',
   '((8*pot2(x)+3)/(5))=1',
   'pot3(x)-100=25',
   '((120)/(x+10))=20',
   '((-24)/(pot2(x)-13))=-2',
   '-10=pot3(x)-2',
-  'neg(2)*(x+5)=12',
-  '-1=raiz2(1+raiz2(x))-2',
+  '-2*(x+5)=12',
+  '-1=sqrt(1+sqrt(x))-2',
   '25*pot2(x)+8=9',
   '((55)/(x))+30=41',
-  'raiz3(((40)/(neg(x)+1)))=2',
+  'cbrt(((40)/((-x)+1)))=2',
   '7=2*x+6',
   'pot2(x+7)+10=74',
 ];
 
-/** Ecuaciones válidas adicionales: combinaciones permitidas (lineal, cuadrático, cúbico, raíz, neg) */
 const VALID_EQUATIONS_ADDITIONAL = [
   'x=1',
   'x=0',
@@ -98,18 +97,17 @@ const VALID_EQUATIONS_ADDITIONAL = [
   'x^2=4',
   'pot3(x)=8',
   'pot3(x)=-27',
-  'raiz2(x)=5',
+  'sqrt(x)=5',
   'sqrt(x)=2',
-  'raiz3(x)=3',
+  'cbrt(x)=3',
   'cbrt(x)=2',
-  'neg(x)=5',
+  '-(x)=5',
   '12-x=8',
-  '1+raiz2(x)=4',
+  '1+sqrt(x)=4',
   'pot2(x)+1=10',
   '2*x+3=11',
 ];
 
-/** Ecuaciones no permitidas: deben rechazarse con 400 */
 const INVALID_EQUATIONS: Array<{ equation: string; description: string }> = [
   { equation: '', description: 'ecuación vacía' },
   { equation: '   ', description: 'solo espacios' },
@@ -131,9 +129,7 @@ const INVALID_EQUATIONS: Array<{ equation: string; description: string }> = [
   { equation: 'x#2=3', description: 'carácter no permitido (#)' },
 ];
 
-/**
- * Ecuaciones sintácticamente correctas pero sin solución (reales): deben rechazarse con 400.
- */
+
 const EQUATIONS_NO_SOLUTION: Array<{ equation: string; reason: string }> = [
   { equation: '((pot2(x)+9)/(5))=1', reason: '(x²+9)/5=1 → x²=-4 sin solución real' },
   { equation: 'pot2(x)=-9', reason: 'x² no puede ser negativo' },
@@ -141,15 +137,15 @@ const EQUATIONS_NO_SOLUTION: Array<{ equation: string; reason: string }> = [
   { equation: 'pot2(x)+1=0', reason: 'x² = -1 sin solución real' },
   { equation: 'pot2(x)+5=3', reason: 'x² = -2 sin solución real' },
   { equation: 'pot2(x+1)=-4', reason: '(x+1)² no puede ser negativo' },
-  { equation: 'neg(pot2(x))=5', reason: 'equivale a x² = -5, sin solución real' },
-  { equation: 'raiz2(x)=-4', reason: 'raíz cuadrada no puede ser negativa' },
+  { equation: '-(pot2(x))=5', reason: 'equivale a x² = -5, sin solución real' },
+  { equation: 'sqrt(x)=-4', reason: 'raíz cuadrada no puede ser negativa' },
   { equation: 'sqrt(x)=-1', reason: 'raíz cuadrada no puede ser negativa' },
-  { equation: 'raiz2(x+1)=-5', reason: 'raíz cuadrada no puede ser negativa' },
-  { equation: 'raiz2(x+10)=-3', reason: 'raíz cuadrada no puede ser negativa' },
-  { equation: '2*raiz2(x)=-6', reason: 'raíz cuadrada no puede ser negativa' },
-  { equation: 'raiz2(2*x)=-2', reason: 'raíz cuadrada no puede ser negativa' },
-  { equation: 'raiz2(neg(x))=-1', reason: 'raíz cuadrada no puede ser negativa' },
-  { equation: 'raiz2(pot2(x)+1)=-1', reason: '√(x²+1) ≥ 1, no puede ser negativo' },
+  { equation: 'sqrt(x+1)=-5', reason: 'raíz cuadrada no puede ser negativa' },
+  { equation: 'sqrt(x+10)=-3', reason: 'raíz cuadrada no puede ser negativa' },
+  { equation: '2*sqrt(x)=-6', reason: 'raíz cuadrada no puede ser negativa' },
+  { equation: 'sqrt(2*x)=-2', reason: 'raíz cuadrada no puede ser negativa' },
+  { equation: 'sqrt(-(x))=-1', reason: 'raíz cuadrada no puede ser negativa' },
+  { equation: 'sqrt(pot2(x)+1)=-1', reason: '√(x²+1) ≥ 1, no puede ser negativo' },
   { equation: '0*x=1', reason: '0·x nunca es 1' },
   { equation: '0*x=5', reason: '0·x nunca es 5' },
   { equation: '1/x=0', reason: '1/x nunca es 0 en reales' },
@@ -186,7 +182,7 @@ describe('Equations API', () => {
           const response = await createEquation(app, token, equation);
           expect(response.status).toBe(201);
           expect(response.body).toMatchObject({
-            equation: equation.trim(),
+            equation: infixToLatex(equation.trim()),
             origin: 'CREATED',
             status: 'NOT_STARTED',
             isActive: true,
@@ -204,7 +200,7 @@ describe('Equations API', () => {
           const response = await createEquation(app, token, equation);
           expect(response.status).toBe(201);
           expect(response.body).toMatchObject({
-            equation: equation.trim(),
+            equation: infixToLatex(equation.trim()),
             origin: 'CREATED',
             status: 'NOT_STARTED',
             isActive: true,
