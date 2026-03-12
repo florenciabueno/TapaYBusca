@@ -5,7 +5,6 @@ import { useAuthStore } from '../../../stores';
 import { queryKeys } from '../../../shared/query-keys';
 import { useDismissAfterDelay } from '../../../shared/hooks/useDismissAfterDelay';
 import { useUploadableEquations } from './useUploadableEquations';
-import type { UploadableEquation } from '../types';
 
 const UPLOAD_SUCCESS = 'Ecuaciones subidas correctamente. Se han compartido con el resto de estudiantes.';
 const UPLOAD_SELECT_AT_LEAST_ONE = 'Selecciona al menos una ecuación para subir.';
