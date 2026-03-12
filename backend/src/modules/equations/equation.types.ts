@@ -20,7 +20,6 @@ export interface EquationResponse {
   isActive: boolean;
 }
 
-/** Forma que devuelve el repository para UserEquation con equation incluido */
 export interface UserEquationRow {
   id: string;
   origin: string;
@@ -34,7 +33,6 @@ export interface UserEquationRow {
   };
 }
 
-/** Forma que devuelve el repository para Equation (por defecto, sin UserEquation) */
 export interface DefaultEquationRow {
   id: string;
   createdAt: Date;
@@ -83,7 +81,6 @@ export interface DownloadEquationsResult {
   totalRequested: number;
 }
 
-/** Resultado de validación de sintaxis de ecuación (errors como lista de mensajes). */
 export interface EquationValidationResult {
   isValid: boolean;
   errors: string[];

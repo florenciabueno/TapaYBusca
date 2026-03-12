@@ -4,8 +4,8 @@ export const LEFT_PAREN = '(';
 export const RIGHT_PAREN = ')';
 export const DIVIDE = '/';
 export const MULTIPLY = '*';
-export const SQUARE_ROOT = 'raiz2';
-export const CUBE_ROOT = 'raiz3';
+export const SQUARE_ROOT = 'sqrt';
+export const CUBE_ROOT = 'cbrt';
 export const SQUARE_POWER = 'pot2';
 export const CUBE_POWER = 'pot3';
 export const POWER_HALF = 'pot1_2';
@@ -14,7 +14,7 @@ export const POWER_MINUS_ONE = 'pot_1';
 export const POWER_MINUS_TWO = 'pot_2';
 export const POWER_MINUS_THREE = 'pot_3';
 export const EQUALS = '=';
-export const NEGATE = 'neg';
+export const NEGATE = '~';
 
 export const VARIABLE = 'x';
 
@@ -35,7 +35,6 @@ export const TOKENIZE_ORDER: string[] = [
   LEFT_PAREN,
   RIGHT_PAREN,
   EQUALS,
-  NEGATE,
 ];
 
 export const PRECEDENCE: Record<string, number> = {

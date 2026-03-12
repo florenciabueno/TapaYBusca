@@ -15,21 +15,21 @@ function convertInfixPart(expr: string): string {
   while (changed) {
     changed = false;
 
-    const raiz3Match = out.match(/\braiz3\s*\(/i);
-    if (raiz3Match && raiz3Match.index !== undefined) {
-      const inner = takeBalancedParen(out, raiz3Match.index + raiz3Match[0].length - 1);
+    const cbrtMatch = out.match(/\bcbrt\s*\(/i);
+    if (cbrtMatch && cbrtMatch.index !== undefined) {
+      const inner = takeBalancedParen(out, cbrtMatch.index + cbrtMatch[0].length - 1);
       if (inner !== null) {
         const arg = convertInfixPart(inner);
         out =
-          out.slice(0, raiz3Match.index) +
+          out.slice(0, cbrtMatch.index) +
           `\\sqrt[3]{${arg}}` +
-          out.slice(raiz3Match.index + raiz3Match[0].length + inner.length + 1);
+          out.slice(cbrtMatch.index + cbrtMatch[0].length + inner.length + 1);
         changed = true;
         continue;
       }
     }
 
-    const sqrtMatch = out.match(/\b(?:sqrt|raiz2)\s*\(/i);
+    const sqrtMatch = out.match(/\bsqrt\s*\(/i);
     if (sqrtMatch && sqrtMatch.index !== undefined) {
       const openParen = sqrtMatch.index + sqrtMatch[0].length - 1;
       const inner = takeBalancedParen(out, openParen);
@@ -68,21 +68,6 @@ function convertInfixPart(expr: string): string {
         out =
           out.slice(0, pot3Match.index) +
           `{${arg}}^3` +
-          out.slice(openParen + 1 + inner.length + 1);
-        changed = true;
-        continue;
-      }
-    }
-
-    const negMatch = out.match(/\bneg\s*\(/i);
-    if (negMatch && negMatch.index !== undefined) {
-      const openParen = negMatch.index + negMatch[0].length - 1;
-      const inner = takeBalancedParen(out, openParen);
-      if (inner !== null) {
-        const arg = convertInfixPart(inner);
-        out =
-          out.slice(0, negMatch.index) +
-          `-(${arg})` +
           out.slice(openParen + 1 + inner.length + 1);
         changed = true;
         continue;
