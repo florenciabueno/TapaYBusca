@@ -2,7 +2,7 @@ import { useAuth } from '../../../../features/auth/hooks/useAuth';
 import { ROUTES } from '../../../../config/constants';
 import { usePromoBanner } from '../../../context/PromoBannerContext';
 import { COLORS, ACCENT_RGB, PURPLE_RGB } from '../../../../config/theme';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useState, useRef, useEffect } from 'react';
 import { EditProfileModal } from '../../../../features/users/components/EditProfileModal';
 import logoImage from '../../../../assets/logo.png';
@@ -114,7 +114,11 @@ export const Header = () => {
       }}
     >
       {!user && (
-        <div className="flex items-center gap-3">
+        <Link
+          to={ROUTES.DASHBOARD}
+          className="flex items-center gap-3 cursor-pointer hover:opacity-90 transition-opacity"
+          aria-label="Ir al inicio"
+        >
           <img
             src={logoImage}
             alt="Tapa y Busca"
@@ -125,7 +129,7 @@ export const Header = () => {
             <span style={{ color: COLORS.lightTeal }}>y </span>
             <span style={{ color: COLORS.violet }}>Busca</span>
           </h1>
-        </div>
+        </Link>
       )}
 
       <div className={user ? 'ml-auto flex items-center gap-3' : ''}>
