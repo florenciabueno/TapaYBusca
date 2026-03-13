@@ -80,7 +80,7 @@ export const useEquationList = () => {
   const equations = data?.data ?? [];
   const total = data?.total ?? 0;
   const totalPages = data?.totalPages ?? 1;
-  const currentPage = data?.page ?? 1;
+  const currentPage = Math.max(1, pageFromUrl);
   const errorMessage =
     error != null
       ? error instanceof Error
@@ -89,14 +89,14 @@ export const useEquationList = () => {
       : null;
 
   useEffect(() => {
-    if (totalPages > 0 && pageFromUrl > totalPages) {
+    if (data != null && totalPages > 0 && pageFromUrl > totalPages) {
       setSearchParams((prev) => {
         const next = new URLSearchParams(prev);
         next.set('page', String(totalPages));
         return next;
       });
     }
-  }, [totalPages, pageFromUrl, setSearchParams]);
+  }, [data, totalPages, pageFromUrl, setSearchParams]);
 
   function setOriginFilter(origins: EquationOrigin[]) {
     const next = new URLSearchParams(searchParams);
