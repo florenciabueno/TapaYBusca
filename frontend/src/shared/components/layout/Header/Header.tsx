@@ -1,5 +1,6 @@
 import { useAuth } from '../../../../features/auth/hooks/useAuth';
 import { ROUTES } from '../../../../config/constants';
+import { usePromoBanner } from '../../../context/PromoBannerContext';
 import { COLORS, ACCENT_RGB, PURPLE_RGB } from '../../../../config/theme';
 import { useNavigate } from 'react-router-dom';
 import { useState, useRef, useEffect } from 'react';
@@ -92,6 +93,13 @@ export const Header = () => {
     navigate(ROUTES.LOGIN);
   };
 
+  const handleRegister = () => {
+    navigate(ROUTES.REGISTER);
+  };
+
+  const promo = usePromoBanner();
+  const showRegisterButton = promo?.isPromoDismissed ?? false;
+
   const openEditProfile = () => {
     setIsDropdownOpen(false);
     setIsModalOpen(true);
@@ -182,14 +190,30 @@ export const Header = () => {
             )}
           </div>
         ) : (
-          <button
-            type="button"
-            onClick={handleLogin}
-            className="cursor-pointer px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:brightness-95 focus:outline-none focus:ring-2 focus:ring-orange-400/40 focus:ring-offset-2"
-            style={{ backgroundColor: COLORS.orange, color: COLORS.surface }}
-          >
-            Iniciar sesión
-          </button>
+          <div className="flex items-center gap-2">
+            {showRegisterButton && (
+              <button
+                type="button"
+                onClick={handleRegister}
+                className="cursor-pointer px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:brightness-95 focus:outline-none focus:ring-2 focus:ring-orange-400/40 focus:ring-offset-2 border"
+                style={{
+                  backgroundColor: COLORS.surface,
+                  color: COLORS.accentSecondary,
+                  borderColor: COLORS.accentSecondary,
+                }}
+              >
+                Crear cuenta
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={handleLogin}
+              className="cursor-pointer px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:brightness-95 focus:outline-none focus:ring-2 focus:ring-orange-400/40 focus:ring-offset-2"
+              style={{ backgroundColor: COLORS.orange, color: COLORS.surface }}
+            >
+              Iniciar sesión
+            </button>
+          </div>
         )}
       </div>
 
