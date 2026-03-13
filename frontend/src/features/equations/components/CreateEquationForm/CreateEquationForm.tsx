@@ -106,10 +106,11 @@ export const CreateEquationForm = () => {
 
   return (
     <EquationsLayout>
-      <FormPageCard
-        title="Crear nueva ecuación"
-        description="Construye tu ecuación en la forma f(x) = k o k = f(x), con una sola incógnita."
-      >
+      <div className="w-full flex-1 flex items-center justify-center">
+        <FormPageCard
+          title="Crear nueva ecuación"
+          description="Construye tu ecuación en la forma f(x) = k o k = f(x), con una sola incógnita."
+        >
         <form onSubmit={handleSubmit}>
             <div style={{ marginBottom: SPACING.lg }}>
               <Input
@@ -181,7 +182,8 @@ export const CreateEquationForm = () => {
               </Button>
             </div>
           </form>
-      </FormPageCard>
+        </FormPageCard>
+      </div>
     </EquationsLayout>
   );
 };
