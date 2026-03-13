@@ -27,7 +27,7 @@ const SYMBOLS: { label: string; insert: string }[] = [
 
 const ALLOWED_KEYS = new Set([
   '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-  'x', 'X', '=',
+  'x', 'X', '=' , '/', '(', ')', '+', '-', '*',
   'Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight', 'Home', 'End',
 ]);
 
