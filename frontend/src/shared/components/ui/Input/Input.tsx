@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, forwardRef } from 'react';
 import type { InputHTMLAttributes } from 'react';
 import { COLORS } from '../../../../config/theme';
 
@@ -10,16 +10,19 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   density?: 'md' | 'sm';
 }
 
-export const Input = ({
-  label,
-  error,
-  helperText,
-  labelColor = 'primary',
-  density = 'md',
-  className,
-  type,
-  ...props
-}: InputProps) => {
+export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
+  {
+    label,
+    error,
+    helperText,
+    labelColor = 'primary',
+    density = 'md',
+    className,
+    type,
+    ...props
+  },
+  ref
+) {
   const [showPassword, setShowPassword] = useState(false);
   const isPasswordType = type === 'password';
   const inputType = isPasswordType && showPassword ? 'text' : type;
@@ -45,6 +48,7 @@ export const Input = ({
       )}
       <div className="relative">
         <input
+          ref={ref}
           type={inputType}
           className={inputClasses}
           style={{
@@ -97,4 +101,4 @@ export const Input = ({
       )}
     </div>
   );
-};
+});
