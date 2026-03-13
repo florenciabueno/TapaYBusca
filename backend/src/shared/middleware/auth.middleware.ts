@@ -33,12 +33,12 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction):
 
     next();
   } catch (error) {
-    if (error instanceof jwt.JsonWebTokenError) {
-      res.status(401).json({ error: 'Token inválido' });
-      return;
-    }
     if (error instanceof jwt.TokenExpiredError) {
       res.status(401).json({ error: 'Token expirado' });
+      return;
+    }
+    if (error instanceof jwt.JsonWebTokenError) {
+      res.status(401).json({ error: 'Token inválido' });
       return;
     }
     res.status(500).json({ error: 'Error en autenticación' });

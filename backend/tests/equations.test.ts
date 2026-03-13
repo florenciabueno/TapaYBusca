@@ -1,31 +1,92 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import request from 'supertest';
 import type { Application } from 'express';
 import jwt from 'jsonwebtoken';
 import { config } from '../src/config/env.js';
 import { infixToLatex } from '../src/modules/equations/infix-to-latex.js';
+import { EquationOrigin, EquationStatus } from '../src/modules/equations/equation.types.js';
 
-vi.mock('../src/modules/equations/equation.repository.js', () => ({
-  EquationRepository: class MockEquationRepository {
-    async create(data: { expression: string; userId: string; latexExpression?: string }) {
-      const expression = (data.expression ?? '').trim();
-      return {
-        id: 'mock-equation-id',
-        origin: 'CREATED',
-        status: 'NOT_STARTED',
-        updatedAt: new Date(),
-        isActive: true,
-        equation: {
-          infixExpression: expression,
-          postfixExpression: expression,
-          latexExpression: data.latexExpression ?? null,
-        },
-      };
-    }
-  },
-}));
+vi.mock('../src/modules/equations/equation.repository.js', () => {
+  const createImpl = async (data: { expression: string; userId: string; latexExpression?: string }) => {
+    const expression = (data.expression ?? '').trim();
+    return {
+      id: 'mock-equation-id',
+      origin: 'CREATED',
+      status: 'NOT_STARTED',
+      updatedAt: new Date(),
+      isActive: true,
+      equation: {
+        infixExpression: expression,
+        postfixExpression: expression,
+        latexExpression: data.latexExpression ?? null,
+      },
+    };
+  };
+  const create = vi.fn().mockImplementation(createImpl);
+  const findAllForUser = vi.fn();
+  const countForUser = vi.fn();
+  const findById = vi.fn();
+  const update = vi.fn();
+  const softDelete = vi.fn();
+  const canUserModify = vi.fn();
+  const findDefaultEquations = vi.fn();
+  const countDefaultEquations = vi.fn();
+  const findCreatedForUser = vi.fn();
+  const getPublishedEquationIdsForUser = vi.fn();
+  const findUserEquationByIdAndUser = vi.fn();
+  const isEquationPublishedByUser = vi.fn();
+  const createPublishedEquation = vi.fn();
+  const findPublishedInDateRange = vi.fn();
+  const getEquationIdsOwnedByUser = vi.fn();
+  const addEquationsToUser = vi.fn();
+  const addDefaultEquationsToUser = vi.fn().mockResolvedValue(undefined);
+
+  return {
+    EquationRepository: class MockEquationRepository {
+      create = create;
+      findAllForUser = findAllForUser;
+      countForUser = countForUser;
+      findById = findById;
+      update = update;
+      softDelete = softDelete;
+      canUserModify = canUserModify;
+      findDefaultEquations = findDefaultEquations;
+      countDefaultEquations = countDefaultEquations;
+      findCreatedForUser = findCreatedForUser;
+      getPublishedEquationIdsForUser = getPublishedEquationIdsForUser;
+      findUserEquationByIdAndUser = findUserEquationByIdAndUser;
+      isEquationPublishedByUser = isEquationPublishedByUser;
+      createPublishedEquation = createPublishedEquation;
+      findPublishedInDateRange = findPublishedInDateRange;
+      getEquationIdsOwnedByUser = getEquationIdsOwnedByUser;
+      addEquationsToUser = addEquationsToUser;
+      addDefaultEquationsToUser = addDefaultEquationsToUser;
+    },
+    __equationRepoMocks: {
+      findAllForUser,
+      countForUser,
+      findById,
+      update,
+      softDelete,
+      canUserModify,
+      findDefaultEquations,
+      countDefaultEquations,
+      findCreatedForUser,
+      getPublishedEquationIdsForUser,
+      findUserEquationByIdAndUser,
+      isEquationPublishedByUser,
+      createPublishedEquation,
+      findPublishedInDateRange,
+      getEquationIdsOwnedByUser,
+      addEquationsToUser,
+    },
+  };
+});
 
 import app from '../src/app.js';
+// Mock adds __equationRepoMocks at runtime (not in real module types)
+const equationRepoModule = await import('../src/modules/equations/equation.repository.js');
+const repoMocks = (equationRepoModule as { __equationRepoMocks?: Record<string, ReturnType<typeof vi.fn>> }).__equationRepoMocks!;
 
 function createAuthToken(userId: string = 'test-user-id'): string {
   return jwt.sign(
@@ -40,6 +101,41 @@ async function createEquation(app: Application, token: string, equation: string)
     .post('/api/equations')
     .set('Authorization', `Bearer ${token}`)
     .send({ equation });
+}
+
+function authHeader(token: string) {
+  return { Authorization: `Bearer ${token}` };
+}
+
+function makeUserEquationRow(overrides: Partial<{
+  id: string;
+  equationId: string;
+  origin: string;
+  status: string;
+  updatedAt: Date;
+  isActive: boolean;
+  equation: { latexExpression?: string | null; infixExpression?: string | null; postfixExpression?: string | null };
+}> = {}) {
+  return {
+    id: 'ue-1',
+    origin: EquationOrigin.CREATED,
+    status: EquationStatus.NOT_STARTED,
+    updatedAt: new Date(),
+    isActive: true,
+    equation: { infixExpression: 'x+1=5', postfixExpression: 'x+1=5', latexExpression: 'x+1=5' },
+    ...overrides,
+  };
+}
+
+function makeDefaultEquationRow(overrides: Partial<{ id: string; createdAt: Date; latexExpression?: string | null }> = {}) {
+  return {
+    id: 'eq-default-1',
+    createdAt: new Date(),
+    latexExpression: 'x+5=12',
+    infixExpression: 'x+5=12',
+    postfixExpression: 'x+5=12',
+    ...overrides,
+  };
 }
 
 const DEFAULT_EQUATIONS_INFIX = [
@@ -230,6 +326,270 @@ describe('Equations API', () => {
           expect(response.body.error).toBeTruthy();
         });
       });
+    });
+  });
+
+  describe('GET /api/equations (getAllEquations)', () => {
+    beforeEach(() => {
+      repoMocks.findAllForUser.mockResolvedValue([]);
+      repoMocks.countForUser.mockResolvedValue(0);
+    });
+
+    it('returns 401 when Authorization is missing', async () => {
+      const response = await request(app).get('/api/equations');
+      expect(response.status).toBe(401);
+    });
+
+    it('returns 200 with paginated data', async () => {
+      const row = makeUserEquationRow({ id: 'ue-1', equation: { latexExpression: 'x=1', infixExpression: 'x=1', postfixExpression: 'x=1' } });
+      repoMocks.findAllForUser.mockResolvedValue([row]);
+      repoMocks.countForUser.mockResolvedValue(1);
+
+      const response = await request(app)
+        .get('/api/equations')
+        .set(authHeader(token));
+
+      expect(response.status).toBe(200);
+      expect(response.body).toMatchObject({
+        data: [{ id: 'ue-1', equation: 'x=1', origin: EquationOrigin.CREATED, status: EquationStatus.NOT_STARTED, isActive: true }],
+        total: 1,
+        page: 1,
+        limit: 9,
+        totalPages: 1,
+      });
+    });
+
+    it('accepts page and limit query params', async () => {
+      const response = await request(app)
+        .get('/api/equations?page=2&limit=5')
+        .set(authHeader(token));
+      expect(response.status).toBe(200);
+      expect(repoMocks.findAllForUser).toHaveBeenCalledWith('test-user-id', 2, 5, undefined, undefined, undefined, undefined);
+    });
+  });
+
+  describe('GET /api/equations/public (getPublicEquations)', () => {
+    it('returns 200 without auth', async () => {
+      repoMocks.findDefaultEquations.mockResolvedValue([]);
+      repoMocks.countDefaultEquations.mockResolvedValue(0);
+
+      const response = await request(app).get('/api/equations/public');
+      expect(response.status).toBe(200);
+      expect(response.body).toMatchObject({ data: [], total: 0, page: 1, limit: 9, totalPages: 1 });
+    });
+
+    it('returns default equations when statuses include NOT_STARTED', async () => {
+      const defaultRow = makeDefaultEquationRow({ id: 'def-1' });
+      repoMocks.findDefaultEquations.mockResolvedValue([defaultRow]);
+      repoMocks.countDefaultEquations.mockResolvedValue(1);
+
+      const response = await request(app).get('/api/equations/public?page=1&limit=9');
+      expect(response.status).toBe(200);
+      expect(response.body.data).toHaveLength(1);
+      expect(response.body.data[0]).toMatchObject({ id: 'def-1', origin: EquationOrigin.DEFAULT, status: EquationStatus.NOT_STARTED });
+    });
+  });
+
+  describe('GET /api/equations/for-upload (getEquationsForUpload)', () => {
+    it('returns 401 when Authorization is missing', async () => {
+      const response = await request(app).get('/api/equations/for-upload');
+      expect(response.status).toBe(401);
+    });
+
+    it('returns 200 with data and isPublished flags', async () => {
+      const row = makeUserEquationRow({ id: 'ue-1', equationId: 'eq-1', equation: { latexExpression: 'x=2', infixExpression: 'x=2', postfixExpression: 'x=2' } });
+      repoMocks.findCreatedForUser.mockResolvedValue([row]);
+      repoMocks.getPublishedEquationIdsForUser.mockResolvedValue(['eq-1']);
+
+      const response = await request(app)
+        .get('/api/equations/for-upload')
+        .set(authHeader(token));
+      expect(response.status).toBe(200);
+      expect(response.body.data).toBeDefined();
+      expect(Array.isArray(response.body.data)).toBe(true);
+    });
+  });
+
+  describe('GET /api/equations/:id (getEquationById)', () => {
+    it('returns 401 when Authorization is missing', async () => {
+      const response = await request(app).get('/api/equations/some-id');
+      expect(response.status).toBe(401);
+    });
+
+    it('returns 404 when equation not found', async () => {
+      repoMocks.findById.mockResolvedValue(null);
+      const response = await request(app)
+        .get('/api/equations/non-existent-id')
+        .set(authHeader(token));
+      expect(response.status).toBe(404);
+      expect(response.body).toHaveProperty('error', 'Ecuación no encontrada');
+    });
+
+    it('returns 200 with equation when found', async () => {
+      const row = makeUserEquationRow({ id: 'ue-1', equation: { latexExpression: 'x+1=5', infixExpression: 'x+1=5', postfixExpression: 'x+1=5' } });
+      repoMocks.findById.mockResolvedValue(row);
+      const response = await request(app)
+        .get('/api/equations/ue-1')
+        .set(authHeader(token));
+      expect(response.status).toBe(200);
+      expect(response.body).toMatchObject({
+        id: 'ue-1',
+        equation: 'x+1=5',
+        origin: EquationOrigin.CREATED,
+        status: EquationStatus.NOT_STARTED,
+        isActive: true,
+      });
+    });
+  });
+
+  describe('PUT /api/equations/:id (updateEquation)', () => {
+    it('returns 401 when Authorization is missing', async () => {
+      const response = await request(app).put('/api/equations/ue-1').send({ status: EquationStatus.IN_PROGRESS });
+      expect(response.status).toBe(401);
+    });
+
+    it('returns 403 when user cannot modify equation', async () => {
+      repoMocks.canUserModify.mockResolvedValue(false);
+      const response = await request(app)
+        .put('/api/equations/ue-1')
+        .set(authHeader(token))
+        .send({ status: EquationStatus.IN_PROGRESS });
+      expect(response.status).toBe(403);
+      expect(response.body.error).toContain('permisos');
+    });
+
+    it('returns 200 with updated equation when user can modify', async () => {
+      repoMocks.canUserModify.mockResolvedValue(true);
+      const updatedRow = makeUserEquationRow({ id: 'ue-1', status: EquationStatus.IN_PROGRESS });
+      repoMocks.update.mockResolvedValue(updatedRow);
+      const response = await request(app)
+        .put('/api/equations/ue-1')
+        .set(authHeader(token))
+        .send({ status: EquationStatus.IN_PROGRESS });
+      expect(response.status).toBe(200);
+      expect(response.body).toMatchObject({ id: 'ue-1', status: EquationStatus.IN_PROGRESS });
+    });
+  });
+
+  describe('DELETE /api/equations/:id (deleteEquation)', () => {
+    it('returns 401 when Authorization is missing', async () => {
+      const response = await request(app).delete('/api/equations/ue-1');
+      expect(response.status).toBe(401);
+    });
+
+    it('returns 403 when user cannot modify equation', async () => {
+      repoMocks.canUserModify.mockResolvedValue(false);
+      const response = await request(app)
+        .delete('/api/equations/ue-1')
+        .set(authHeader(token));
+      expect(response.status).toBe(403);
+      expect(response.body.error).toContain('permisos');
+    });
+
+    it('returns 204 when user can delete', async () => {
+      repoMocks.canUserModify.mockResolvedValue(true);
+      repoMocks.softDelete.mockResolvedValue(undefined);
+      const response = await request(app)
+        .delete('/api/equations/ue-1')
+        .set(authHeader(token));
+      expect(response.status).toBe(204);
+    });
+  });
+
+  describe('POST /api/equations/upload (uploadEquations)', () => {
+    it('returns 401 when Authorization is missing', async () => {
+      const response = await request(app).post('/api/equations/upload').send({ userEquationIds: ['ue-1'] });
+      expect(response.status).toBe(401);
+    });
+
+    it('returns 400 when one equation not found or not owned', async () => {
+      repoMocks.findUserEquationByIdAndUser.mockResolvedValue(null);
+      const response = await request(app)
+        .post('/api/equations/upload')
+        .set(authHeader(token))
+        .send({ userEquationIds: ['ue-1'] });
+      expect(response.status).toBe(400);
+      expect(response.body.error).toContain('no existen o no te pertenecen');
+    });
+
+    it('returns 400 when one equation already published', async () => {
+      const row = { id: 'ue-1', equationId: 'eq-1', equation: { infixExpression: 'x=1' } };
+      repoMocks.findUserEquationByIdAndUser.mockResolvedValue(row);
+      repoMocks.isEquationPublishedByUser.mockResolvedValue(true);
+      const response = await request(app)
+        .post('/api/equations/upload')
+        .set(authHeader(token))
+        .send({ userEquationIds: ['ue-1'] });
+      expect(response.status).toBe(400);
+      expect(response.body.error).toContain('ya fueron subidas');
+    });
+
+    it('returns 200 and creates published when valid', async () => {
+      const row = { id: 'ue-1', equationId: 'eq-1', equation: { infixExpression: 'x=1' } };
+      repoMocks.findUserEquationByIdAndUser.mockResolvedValue(row);
+      repoMocks.isEquationPublishedByUser.mockResolvedValue(false);
+      repoMocks.createPublishedEquation.mockResolvedValue(undefined);
+      const response = await request(app)
+        .post('/api/equations/upload')
+        .set(authHeader(token))
+        .send({ userEquationIds: ['ue-1'] });
+      expect(response.status).toBe(200);
+      expect(response.body).toMatchObject({ ok: true });
+    });
+  });
+
+  describe('POST /api/equations/download (downloadEquations)', () => {
+    it('returns 401 when Authorization is missing', async () => {
+      const response = await request(app).post('/api/equations/download').send({ quantity: 5 });
+      expect(response.status).toBe(401);
+    });
+
+    it('returns 400 when quantity is out of range', async () => {
+      const response = await request(app)
+        .post('/api/equations/download')
+        .set(authHeader(token))
+        .send({ quantity: 0 });
+      expect(response.status).toBe(400);
+      expect(response.body.error).toMatch(/Cantidad debe estar entre/);
+    });
+
+    it('returns 400 when fromDate is invalid', async () => {
+      const response = await request(app)
+        .post('/api/equations/download')
+        .set(authHeader(token))
+        .send({ quantity: 5, fromDate: 'invalid-date' });
+      expect(response.status).toBe(400);
+      expect(response.body.error).toContain('Fecha desde');
+    });
+
+    it('returns 400 when toDate is invalid', async () => {
+      const response = await request(app)
+        .post('/api/equations/download')
+        .set(authHeader(token))
+        .send({ quantity: 5, toDate: 'invalid-date' });
+      expect(response.status).toBe(400);
+      expect(response.body.error).toContain('Fecha hasta');
+    });
+
+    it('returns 400 when fromDate > toDate', async () => {
+      const response = await request(app)
+        .post('/api/equations/download')
+        .set(authHeader(token))
+        .send({ quantity: 5, fromDate: '2025-02-01', toDate: '2025-01-01' });
+      expect(response.status).toBe(400);
+      expect(response.body.error).toContain('posterior');
+    });
+
+    it('returns 200 with added count when valid', async () => {
+      repoMocks.findPublishedInDateRange.mockResolvedValue([{ equationId: 'eq-1' }, { equationId: 'eq-2' }]);
+      repoMocks.getEquationIdsOwnedByUser.mockResolvedValue([]);
+      repoMocks.addEquationsToUser.mockResolvedValue(2);
+      const response = await request(app)
+        .post('/api/equations/download')
+        .set(authHeader(token))
+        .send({ quantity: 5 });
+      expect(response.status).toBe(200);
+      expect(response.body).toMatchObject({ added: 2, totalRequested: 5 });
     });
   });
 });
