@@ -49,7 +49,7 @@ export const LoginForm = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="w-full space-y-3">
+    <form onSubmit={handleSubmit} className="w-full space-y-3" noValidate>
       {error && <ErrorMessage message={error} />}
       
       <Input
