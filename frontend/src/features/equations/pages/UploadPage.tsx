@@ -26,8 +26,9 @@ export const UploadPage = () => {
 
   return (
     <EquationsLayout>
-      <FormPageCard
-        title="Subir ecuación"
+      <div className="w-full flex-1 flex items-center justify-center">
+        <FormPageCard
+          title="Subir ecuación"
         description="Selecciona las ecuaciones creadas que quieras compartir con el resto de estudiantes. Cada ecuación solo puede subirse una vez."
       >
         {!isLoading && !error && uploadableEquations.length > 0 && (
@@ -85,7 +86,8 @@ export const UploadPage = () => {
             isSubmitting={isSubmitting}
           />
         )}
-      </FormPageCard>
+        </FormPageCard>
+      </div>
     </EquationsLayout>
   );
 };

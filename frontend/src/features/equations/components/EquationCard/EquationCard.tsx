@@ -27,27 +27,27 @@ export const EquationCard = ({
 
   return (
     <article
-      className="rounded-lg border bg-white p-4 transition-all duration-200 ease-out hover:-translate-y-2 hover:scale-[1.05] hover:shadow-xl"
+      className="flex h-[130px] flex-col rounded-lg border bg-white p-4 transition-all duration-200 ease-out hover:-translate-y-2 hover:scale-[1.05] hover:shadow-xl"
       style={{
         borderRadius: RADIUS.lg,
         borderColor: COLORS.brandDark,
         boxShadow: SHADOW.md,
       }}
     >
-      <div className="mb-2 min-h-[2rem]">
+      <div className="min-h-0 flex-1 overflow-y-auto mb-2">
         <MathExpression
           expression={equation.equation}
           className="text-base text-gray-800"
         />
       </div>
-      <div className="flex flex-wrap items-center gap-1.5 text-xs text-gray-500">
+      <div className="flex-shrink-0 flex flex-wrap items-center gap-1.5 text-xs text-gray-500">
         <span>{ORIGIN_LABELS[equation.origin]}</span>
         <span aria-hidden className="text-gray-300">·</span>
         <span>{equation.date}</span>
         <span aria-hidden className="text-gray-300">·</span>
         <span>{equation.steps} pasos</span>
       </div>
-      <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+      <div className="flex-shrink-0 mt-2 flex flex-wrap items-center justify-between gap-2">
         <span
           className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
           style={{ backgroundColor: statusStyle.bg, color: statusStyle.text }}

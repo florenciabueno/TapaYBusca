@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ROUTES } from '../../../../config/constants';
+import { usePromoBanner } from '../../../../shared/context/PromoBannerContext';
 import { COLORS, PURPLE_RGB, RADIUS } from '../../../../config/theme';
 
 const BENEFITS = [
@@ -26,10 +27,21 @@ function CheckIcon({ className }: { className?: string }) {
   );
 }
 
+function CloseIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+      <path stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M18 6L6 18M6 6l12 12" />
+    </svg>
+  );
+}
+
 export const SignUpPromoBanner = () => {
+  const promo = usePromoBanner();
+  if (promo?.isPromoDismissed) return null;
+
   return (
     <div
-      className="mb-6 rounded-xl border p-5 transition-all duration-200 hover:shadow-lg"
+      className="relative mb-6 rounded-xl border p-5 transition-all duration-200 hover:shadow-lg"
       style={{
         borderWidth: '1px 1px 1px 4px',
         borderTopWidth: '2px',
@@ -41,6 +53,15 @@ export const SignUpPromoBanner = () => {
         borderRadius: RADIUS.xl,
       }}
     >
+      <button
+        type="button"
+        onClick={() => promo?.dismissPromo()}
+        className="absolute top-3 right-3 p-1.5 rounded-lg transition-colors hover:bg-black/5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-400/40"
+        style={{ color: COLORS.gray[500] }}
+        aria-label="Cerrar"
+      >
+        <CloseIcon className="h-5 w-5" />
+      </button>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2
