@@ -20,6 +20,7 @@ function parseBoolean(value: string | undefined, fallback: boolean): boolean {
 
 export const config = {
   port: parseInt(process.env.PORT || '3001', 10),
+  apiBaseUrl: process.env.API_BASE_URL || null,
   nodeEnv: process.env.NODE_ENV || 'development',
   jwtSecret: process.env.JWT_SECRET || 'default-secret',
   jwtExpireIn: process.env.JWT_EXPIRE_IN || '24h',

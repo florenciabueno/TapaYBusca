@@ -46,10 +46,10 @@ const defaultEquations = [
 ];
 
 async function seedFinalEquations() {
-  console.log('🌱 Poblando base de datos con ecuaciones definitivas...\n');
+  console.log('🌱 Seeding database with default equations...\n');
 
   try {
-    console.log('📝 Creando 40 ecuaciones definitivas...');
+    console.log('📝 Creating 40 default equations...');
     const createdEquations: Array<{ id: string }> = [];
 
     for (let i = 0; i < defaultEquations.length; i++) {
@@ -67,13 +67,13 @@ async function seedFinalEquations() {
       console.log(`   ${(i + 1).toString().padStart(2, '0')}. ${eq.infija}`);
     }
 
-    console.log(`\n✅ ${createdEquations.length} ecuaciones creadas exitosamente\n`);
+    console.log(`\n✅ ${createdEquations.length} equations created successfully\n`);
 
-    console.log('👥 Asignando ecuaciones a usuarios...');
+    console.log('👥 Assigning equations to users...');
     const users = await prisma.user.findMany();
-    console.log(`📊 Encontrados ${users.length} usuarios\n`);
+    console.log(`📊 Found ${users.length} users\n`);
 
-    let totalAsignaciones = 0;
+    let totalAssignments = 0;
     for (const user of users) {
       for (const equation of createdEquations) {
         await prisma.userEquation.create({
@@ -85,22 +85,22 @@ async function seedFinalEquations() {
             isActive: true,
           },
         });
-        totalAsignaciones++;
+        totalAssignments++;
       }
-      console.log(`   ✅ ${createdEquations.length} ecuaciones asignadas a: ${user.email}`);
+      console.log(`   ✅ ${createdEquations.length} equations assigned to: ${user.email}`);
     }
 
     console.log('\n' + '='.repeat(60));
-    console.log('✅ SEED COMPLETADO EXITOSAMENTE');
+    console.log('✅ SEED COMPLETED SUCCESSFULLY');
     console.log('='.repeat(60));
-    console.log(`📊 Resumen:`);
-    console.log(`   - ${createdEquations.length} ecuaciones por defecto creadas`);
-    console.log(`   - ${users.length} usuarios en el sistema`);
-    console.log(`   - ${totalAsignaciones} asignaciones totales realizadas`);
+    console.log(`📊 Summary:`);
+    console.log(`   - ${createdEquations.length} default equations created`);
+    console.log(`   - ${users.length} users in the system`);
+    console.log(`   - ${totalAssignments} total assignments`);
     console.log('='.repeat(60));
 
   } catch (error) {
-    console.error('\n❌ Error al poblar ecuaciones:', error);
+    console.error('\n❌ Error seeding equations:', error);
     throw error;
   } finally {
     await prisma.$disconnect();
