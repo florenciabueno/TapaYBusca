@@ -69,6 +69,139 @@ export class EquationRepository {
     });
   }
 
+  async findByIdWithEquation(userEquationId: string) {
+    return prisma.userEquation.findUnique({
+      where: { id: userEquationId },
+      include: { equation: true },
+    });
+  }
+
+  async updateResolutionState(
+    userEquationId: string,
+    data: { status?: EquationStatus; currentResolutionId?: number; selectedBranch?: string }
+  ) {
+    return prisma.userEquation.update({
+      where: { id: userEquationId },
+      data: { ...data, updatedAt: new Date() },
+      include: { equation: true },
+    });
+  }
+
+  async createResolution(data: {
+    userEquationId: string;
+    resolutionSessionId: number;
+    subEquation: string;
+    subEquationInfix?: string | null;
+    proposedResult: string;
+    resultValue: string;
+    stepWithoutSolution: boolean;
+    isCorrect: boolean;
+    isVariable: boolean;
+    resolutionSide: number;
+  }) {
+    return prisma.resolution.create({
+      data: {
+        ...data,
+        subEquationInfix: data.subEquationInfix ?? undefined,
+      },
+    });
+  }
+
+  async findResolutionsByUserEquation(userEquationId: string, resolutionSessionId: number) {
+    return prisma.resolution.findMany({
+      where: { userEquationId, resolutionSessionId },
+      orderBy: { createdAt: 'asc' },
+    });
+  }
+
+  async getResolutionCounts(
+    pairs: Array<{ userEquationId: string; resolutionSessionId: number }>
+  ): Promise<Map<string, number>> {
+    if (pairs.length === 0) return new Map();
+    const ids = [...new Set(pairs.map((p) => p.userEquationId))];
+    const groups = await prisma.resolution.groupBy({
+      by: ['userEquationId', 'resolutionSessionId'],
+      _count: { id: true },
+      where: { userEquationId: { in: ids } },
+    });
+    const map = new Map<string, number>();
+    for (const g of groups) {
+      map.set(`${g.userEquationId}-${g.resolutionSessionId}`, g._count.id);
+    }
+    return map;
+  }
+
+  async getPreviousStep(
+    userEquationId: string,
+    resolutionSessionId: number,
+    bifurcoResolucion: boolean,
+    statusResolucion: number
+  ) {
+    const BIFURCO = 2;
+    const NO_BIFURCO = 1;
+    const where: { userEquationId: string; resolutionSessionId: number; isCorrect: boolean; isVariable?: boolean; resolutionSide?: number } = {
+      userEquationId,
+      resolutionSessionId,
+      isCorrect: true,
+    };
+    if (bifurcoResolucion) {
+      where.resolutionSide = BIFURCO;
+    } else {
+      if (statusResolucion === BIFURCO) {
+        const bifurcoStep = await prisma.resolution.findFirst({
+          where: { userEquationId, resolutionSessionId, isCorrect: true, resolutionSide: BIFURCO },
+          orderBy: { id: 'desc' },
+          select: { id: true },
+        });
+        if (!bifurcoStep) return null;
+        return prisma.resolution.findFirst({
+          where: {
+            userEquationId,
+            resolutionSessionId,
+            isCorrect: true,
+            isVariable: false,
+            resolutionSide: NO_BIFURCO,
+            id: { lt: bifurcoStep.id },
+          },
+          orderBy: { id: 'desc' },
+        });
+      }
+      where.isVariable = false;
+    }
+    return prisma.resolution.findFirst({
+      where,
+      orderBy: { id: 'desc' },
+    });
+  }
+
+  async getDistinctLoggedSolutions(userEquationId: string, resolutionSessionId: number): Promise<number[]> {
+    const rows = await prisma.resolution.findMany({
+      where: { userEquationId, resolutionSessionId, isVariable: true, isCorrect: true },
+      select: { resultValue: true },
+    });
+    const values = new Set<number>();
+    for (const row of rows) {
+      const parts = row.resultValue.split(';').filter(Boolean);
+      for (const p of parts) {
+        const n = Number(p.trim());
+        if (!Number.isNaN(n) && Number.isFinite(n)) values.add(n);
+      }
+    }
+    return [...values];
+  }
+
+  async countStepsWithoutSolution(userEquationId: string, resolutionSessionId: number): Promise<number> {
+    return prisma.resolution.count({
+      where: { userEquationId, resolutionSessionId, stepWithoutSolution: true },
+    });
+  }
+
+  async deleteResolutionsByUserEquation(userEquationId: string) {
+    return prisma.resolution.deleteMany({
+      where: { userEquationId },
+    });
+  }
+
   async create(data: CreateEquationDto) {
     return prisma.$transaction(async (tx) => {
       const equation = await this.createEquationRecord(tx, data);
@@ -289,6 +422,7 @@ export class EquationRepository {
         postfixExpression: expression,
         infixExpression: expression,
         latexExpression: data.latexExpression ?? null,
+        solutionValues: data.solutionValues ?? undefined,
         creatorId: data.userId,
         isDefault: false,
       },

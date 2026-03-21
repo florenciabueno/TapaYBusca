@@ -61,14 +61,29 @@ export class EquationService {
       this.equationRepository.countForUser(userId, origins, statuses, fromDate, toDate),
     ]);
     const sorted = this.sortByStatusAndUpdatedAt(userEquations);
-    const data = sorted.map((row) => this.toEquationResponse(row));
+    const countMap = await this.equationRepository.getResolutionCounts(
+      sorted.map((r) => ({
+        userEquationId: r.id,
+        resolutionSessionId: (r as { currentResolutionId?: number }).currentResolutionId ?? 0,
+      }))
+    );
+    const data = sorted.map((row) => {
+      const resolutionId = (row as { currentResolutionId?: number }).currentResolutionId ?? 0;
+      const steps = countMap.get(`${row.id}-${resolutionId}`) ?? STEPS_DEFAULT;
+      return this.toEquationResponse(row, steps);
+    });
     return this.buildPaginatedResponse(data, total, p, l);
   }
 
   async getEquationById(userEquationId: string): Promise<EquationResponse | null> {
     const userEquation = await this.equationRepository.findById(userEquationId);
     if (!userEquation) return null;
-    return this.toEquationResponse(userEquation);
+    const resolutionId = (userEquation as { currentResolutionId?: number }).currentResolutionId ?? 0;
+    const countMap = await this.equationRepository.getResolutionCounts([
+      { userEquationId: userEquation.id, resolutionSessionId: resolutionId },
+    ]);
+    const steps = countMap.get(`${userEquation.id}-${resolutionId}`) ?? STEPS_DEFAULT;
+    return this.toEquationResponse(userEquation, steps);
   }
 
   async createEquation(data: CreateEquationDto): Promise<EquationResponse> {
@@ -79,6 +94,7 @@ export class EquationService {
     const equationUser = await this.equationRepository.create({
       ...data,
       latexExpression,
+      solutionValues: solveResult.solutions ?? [],
     });
     return this.toEquationResponse(equationUser);
   }
@@ -187,13 +203,13 @@ export class EquationService {
     return { data, total, page, limit, totalPages };
   }
 
-  private toEquationResponse(row: UserEquationRow): EquationResponse {
+  private toEquationResponse(row: UserEquationRow, steps = STEPS_DEFAULT): EquationResponse {
     return {
       id: row.id,
       equation: this.getDisplayExpression(row.equation),
       origin: row.origin as EquationOrigin,
       status: row.status as EquationStatus,
-      steps: STEPS_DEFAULT,
+      steps,
       date: this.formatDate(row.updatedAt),
       isActive: row.isActive,
     };

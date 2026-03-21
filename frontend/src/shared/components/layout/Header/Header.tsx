@@ -1,7 +1,7 @@
 import { useAuth } from '../../../../features/auth/hooks/useAuth';
 import { ROUTES } from '../../../../config/constants';
 import { COLORS, ACCENT_RGB, PURPLE_RGB } from '../../../../config/theme';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { EditProfileModal } from '../../../../features/users/components/EditProfileModal';
 import logoImage from '../../../../assets/logo.png';
@@ -49,8 +49,8 @@ export const Header = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleLogout = () => {
-    navigate(ROUTES.DASHBOARD);
     logout();
+    navigate(ROUTES.DASHBOARD, { replace: true });
   };
 
   const handleLogin = () => {
@@ -70,7 +70,10 @@ export const Header = () => {
       }}
     >
       {!user && (
-        <div className="flex items-center gap-3">
+        <Link
+          to={ROUTES.DASHBOARD}
+          className="flex items-center gap-3 no-underline text-inherit"
+        >
           <img
             src={logoImage}
             alt="Tapa y Busca"
@@ -81,7 +84,7 @@ export const Header = () => {
             <span style={{ color: COLORS.lightTeal }}>y </span>
             <span style={{ color: COLORS.violet }}>Busca</span>
           </h1>
-        </div>
+        </Link>
       )}
 
       <div className={user ? 'ml-auto flex items-center gap-3' : ''}>

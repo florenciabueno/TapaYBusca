@@ -45,11 +45,26 @@ export interface CreateEquationDto {
   expression: string;
   userId: string;
   latexExpression?: string;
+  solutionValues?: number[];
+}
+
+export interface ResolveStepDto {
+  subEquationPostfix?: string[];
+  subEquationInfix?: string;
+  answer: string;
+  resolutionStepStatus: number;
+}
+
+export interface ResolveStepResponse {
+  code: string;
+  message?: string;
 }
 
 export interface UpdateEquationUserDto {
   status?: EquationStatus;
   isActive?: boolean;
+  currentResolutionId?: number;
+  selectedBranch?: string;
 }
 
 export interface PaginatedEquationsResponse {

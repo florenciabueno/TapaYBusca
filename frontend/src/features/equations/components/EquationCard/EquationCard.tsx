@@ -1,4 +1,6 @@
+import { Link } from 'react-router-dom';
 import { COLORS, RADIUS, SHADOW } from '../../../../config/theme';
+import { resolveEquationPath } from '../../../../config/constants';
 import { MathExpression } from '../../../../shared/components/ui/MathExpression';
 import type { Equation, EquationStatus } from '../../types/equation.types';
 import { ORIGIN_LABELS, STATUS_LABELS } from '../../types/equation.types';
@@ -26,8 +28,9 @@ export const EquationCard = ({
   const statusStyle = STATUS_STYLES[equation.status];
 
   return (
-    <article
-      className="rounded-lg border bg-white p-4 transition-all duration-200 ease-out hover:-translate-y-2 hover:scale-[1.05] hover:shadow-xl"
+    <Link
+      to={resolveEquationPath(equation.id)}
+      className="block rounded-lg border bg-white p-4 transition-all duration-200 ease-out hover:-translate-y-2 hover:scale-[1.05] hover:shadow-xl"
       style={{
         borderRadius: RADIUS.lg,
         borderColor: COLORS.brandDark,
@@ -54,11 +57,15 @@ export const EquationCard = ({
         >
           {STATUS_LABELS[equation.status]}
         </span>
-        <div className="flex gap-2">
+        <div className="flex gap-2" onClick={(e) => e.preventDefault()}>
           {canDelete && (
             <button
               type="button"
-              onClick={() => onDelete(equation.id)}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onDelete(equation.id);
+              }}
               className="rounded-md px-2 py-1 text-xs font-medium text-red-600 transition-colors hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500/30 focus:ring-offset-2"
             >
               Eliminar
@@ -66,6 +73,6 @@ export const EquationCard = ({
           )}
         </div>
       </div>
-    </article>
+    </Link>
   );
 };

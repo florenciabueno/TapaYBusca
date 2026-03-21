@@ -83,7 +83,11 @@ export const Sidebar = () => {
         backgroundColor: `rgba(${ACCENT_RGB}, 0.48)`,
       }}
     >
-      <div className="flex items-center gap-3 px-5 py-5">
+      <NavLink
+        to={ROUTES.DASHBOARD}
+        className="flex items-center gap-3 px-5 py-5 no-underline"
+        style={{ textDecoration: 'none' }}
+      >
         <img
           src={logoImage}
           alt="Tapa y Busca"
@@ -94,7 +98,7 @@ export const Sidebar = () => {
           <span style={{ color: COLORS.lightTeal }}>y </span>
           <span style={{ color: COLORS.violet }}>Busca</span>
         </span>
-      </div>
+      </NavLink>
 
       <nav className="flex flex-col gap-0.5 px-3 pt-2">
         {navItems.map(({ path, label, icon: Icon }) => (

@@ -183,4 +183,75 @@ export const equationService = {
       totalRequested: data.totalRequested ?? 0,
     };
   },
+
+  async resolveStep(
+    userEquationId: string,
+    payload: {
+      subEquationPostfix?: string[];
+      subEquationInfix?: string;
+      answer: string;
+      resolutionStepStatus: number;
+    },
+    token?: string | null
+  ): Promise<{ code: string; message?: string }> {
+    const response = await fetch(`${API_URL}/equations/${userEquationId}/resolve`, {
+      method: 'POST',
+      headers: getAuthHeaders(token),
+      credentials: 'include',
+      body: JSON.stringify(payload),
+    });
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      const message = typeof data?.error === 'string' ? data.error : 'Error al validar el paso';
+      throw new Error(message);
+    }
+
+    return { code: data.code ?? 'PI', message: data.message };
+  },
+
+  async getResolution(
+    userEquationId: string,
+    token?: string | null
+  ): Promise<{
+    userEquation: unknown;
+    steps: Array<{
+      subEquation: string;
+      proposedResult: string;
+      isCorrect: boolean;
+      subEquationLatex?: string;
+      resultLatex?: string;
+    }>;
+    solutionSet: number[];
+    currentResolutionId: number;
+  } | null> {
+    const response = await fetch(`${API_URL}/equations/${userEquationId}/resolution`, {
+      method: 'GET',
+      headers: getAuthHeaders(token),
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      if (response.status === 404) return null;
+      throw new Error('Error al obtener la resolución');
+    }
+
+    return response.json();
+  },
+
+  async resetResolution(userEquationId: string, token?: string | null): Promise<void> {
+    const response = await fetch(`${API_URL}/equations/${userEquationId}/reset-resolution`, {
+      method: 'POST',
+      headers: getAuthHeaders(token),
+      credentials: 'include',
+    });
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      const message = typeof data?.error === 'string' ? data.error : 'Error al reiniciar';
+      throw new Error(message);
+    }
+  },
 };

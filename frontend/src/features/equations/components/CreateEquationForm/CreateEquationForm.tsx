@@ -6,30 +6,16 @@ import { FormPageCard } from '../FormPageCard';
 import { FormMessage } from '../../../../shared/components/ui/FormMessage';
 import { Input } from '../../../../shared/components/ui/Input/Input';
 import { Button } from '../../../../shared/components/ui/Button/Button';
+import { MathSymbolsPad, DEFAULT_MATH_SYMBOLS } from '../MathSymbolsPad';
 import { equationService } from '../../services/equation.service';
 import { useAuthStore } from '../../../../stores';
 import { queryKeys } from '../../../../shared/query-keys';
-import { COLORS, SPACING } from '../../../../config/theme';
+import { SPACING } from '../../../../config/theme';
 import { ROUTES } from '../../../../config/constants';
-
-const SYMBOLS: { label: string; insert: string }[] = [
-  { label: '√', insert: 'sqrt()' },
-  { label: '³√', insert: 'cbrt()' },
-  { label: '^', insert: '^' },
-  { label: '÷', insert: '/' },
-  { label: '(', insert: '(' },
-  { label: ')', insert: ')' },
-  { label: '+', insert: '+' },
-  { label: '-', insert: '-' },
-  { label: '×', insert: '*' },
-  { label: '=', insert: '=' },
-];
-
-const ALLOWED_KEYS = new Set([
-  '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-  'x', 'X', '=',
-  'Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight', 'Home', 'End',
-]);
+import {
+  handleEquationInputKeyDown,
+  handleEquationInputPaste,
+} from '../../utils/equation-input-guards';
 
 export const CreateEquationForm = () => {
   const navigate = useNavigate();
@@ -85,25 +71,6 @@ export const CreateEquationForm = () => {
     createMutation.reset();
   }
 
-  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (ALLOWED_KEYS.has(e.key)) return;
-    if (e.ctrlKey || e.metaKey) {
-      if (e.key === 'a' || e.key === 'c' || e.key === 'v' || e.key === 'x') return;
-    }
-    e.preventDefault();
-  }
-
-  function handlePaste(e: React.ClipboardEvent<HTMLInputElement>) {
-    e.preventDefault();
-    const pasted = e.clipboardData.getData('text');
-    const sanitized = pasted.replace(/[^0-9x=]/gi, '');
-    if (!sanitized) return;
-    const input = e.target as HTMLInputElement;
-    const start = input.selectionStart ?? 0;
-    const end = input.selectionEnd ?? 0;
-    setValue((prev) => prev.slice(0, start) + sanitized + prev.slice(end));
-  }
-
   return (
     <EquationsLayout>
       <FormPageCard
@@ -120,8 +87,8 @@ export const CreateEquationForm = () => {
                   setValidationError(null);
                   createMutation.reset();
                 }}
-                onKeyDown={handleKeyDown}
-                onPaste={handlePaste}
+                onKeyDown={handleEquationInputKeyDown}
+                onPaste={(e) => handleEquationInputPaste(e, setValue)}
                 placeholder="Solo números y x; usa la botonera para el resto"
                 error={error}
                 helperText="Escribe números y x con el teclado. Usa los botones para operadores y funciones (√, +, =, etc.)."
@@ -135,31 +102,11 @@ export const CreateEquationForm = () => {
             )}
 
             <div style={{ marginBottom: SPACING.lg }}>
-              <label
-                className="block text-sm font-medium mb-2"
-                style={{ color: COLORS.accentSecondary }}
-              >
-                Símbolos matemáticos:
-              </label>
-              <div className="grid grid-cols-5 gap-2">
-                {SYMBOLS.map(({ label, insert }) => (
-                  <button
-                    key={label}
-                    type="button"
-                    onClick={() => handleSymbolClick(insert)}
-                    disabled={isLoading}
-                    className="py-3 rounded-xl font-medium transition-colors hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-60"
-                    style={{
-                      backgroundColor: COLORS.gray[100],
-                      color: COLORS.gray[800],
-                      border: `1px solid ${COLORS.gray[200]}`,
-                      ['--tw-ring-color' as string]: COLORS.accentSecondary,
-                    }}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
+              <MathSymbolsPad
+                symbols={DEFAULT_MATH_SYMBOLS}
+                onSymbolClick={handleSymbolClick}
+                disabled={isLoading}
+              />
             </div>
 
             <div className="flex flex-wrap gap-3">

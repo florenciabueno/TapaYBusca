@@ -1,14 +1,15 @@
 import { Request, Response } from 'express';
 import { EquationService } from './equation.service.js';
+import { ResolutionService } from './resolution.service.js';
 import {
   CreateEquationDto,
   UpdateEquationUserDto,
   DownloadEquationsDto,
+  ResolveStepDto,
   EquationOrigin,
   EquationStatus,
 } from './equation.types.js';
 
-// ——— Constantes ———
 const VALID_ORIGINS = new Set<string>(Object.values(EquationOrigin));
 const VALID_STATUSES = new Set<string>(Object.values(EquationStatus));
 
@@ -27,9 +28,15 @@ const ERROR_UPLOAD_EQUATIONS = 'Error al subir ecuaciones';
 const ERROR_DOWNLOAD_EQUATIONS = 'Error al descargar ecuaciones';
 const ERROR_DATE_RANGE = 'La fecha desde no puede ser posterior a la fecha hasta.';
 const PERMISSION_ERROR_KEYWORD = 'permisos';
+const ERROR_RESOLVE_STEP = 'Error al validar el paso';
+const ERROR_GET_RESOLUTION = 'Error al obtener la resolución';
+const ERROR_RESET_RESOLUTION = 'Error al reiniciar la resolución';
 
 export class EquationController {
-  constructor(private equationService: EquationService) {}
+  constructor(
+    private equationService: EquationService,
+    private resolutionService: ResolutionService
+  ) {}
 
   getPublicEquations = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -182,7 +189,76 @@ export class EquationController {
     }
   };
 
-  // ——— Private: parsing query/body ———
+  resolveStep = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { id: userEquationId } = req.params;
+      const userId = req.userId!;
+      const payload = this.parseResolveStepBody(req.body);
+      const result = await this.resolutionService.resolveStep(userEquationId, userId, payload);
+      res.status(200).json(result);
+    } catch (error: unknown) {
+      res.status(400).json({
+        error: this.getErrorMessage(error, ERROR_RESOLVE_STEP),
+      });
+    }
+  };
+
+  getResolution = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { id: userEquationId } = req.params;
+      const userId = req.userId!;
+      const data = await this.resolutionService.getResolution(userEquationId, userId);
+      if (!data) {
+        res.status(404).json({ error: ERROR_EQUATION_NOT_FOUND });
+        return;
+      }
+      res.status(200).json(data);
+    } catch (error: unknown) {
+      res.status(500).json({
+        error: this.getErrorMessage(error, ERROR_GET_RESOLUTION),
+      });
+    }
+  };
+
+  resetResolution = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { id: userEquationId } = req.params;
+      const userId = req.userId!;
+      const ok = await this.resolutionService.resetResolution(userEquationId, userId);
+      if (!ok) {
+        res.status(403).json({ error: 'No tienes permisos para reiniciar esta ecuación' });
+        return;
+      }
+      res.status(200).json({ ok: true });
+    } catch (error: unknown) {
+      res.status(500).json({
+        error: this.getErrorMessage(error, ERROR_RESET_RESOLUTION),
+      });
+    }
+  };
+
+  private parseResolveStepBody(body: unknown): ResolveStepDto {
+    const b = body && typeof body === 'object' ? (body as Record<string, unknown>) : {};
+    const subEquationPostfix = Array.isArray(b.subEquationPostfix)
+      ? (b.subEquationPostfix as string[])
+      : undefined;
+    const subEquationInfix = typeof b.subEquationInfix === 'string'
+      ? b.subEquationInfix
+      : undefined;
+    const answer = typeof b.answer === 'string'
+      ? b.answer
+      : '';
+    const resolutionStepStatus =
+      typeof b.resolutionStepStatus === 'number'
+        ? b.resolutionStepStatus
+        : undefined;
+    return {
+      subEquationPostfix,
+      subEquationInfix,
+      answer,
+      resolutionStepStatus: resolutionStepStatus ?? 1,
+    };
+  }
 
   private parsePageAndLimit(query: Request['query']): { page: number; limit: number } {
     const page = Math.max(DEFAULT_PAGE, parseInt(String(query.page), 10) || DEFAULT_PAGE);
