@@ -1,87 +1,66 @@
 import { useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import type { UseMutationResult, UseQueryResult } from '@tanstack/react-query';
 import { EQUATIONS_PAGE_SIZE } from '../../../config/constants';
 import { queryKeys } from '../../../shared/query-keys';
 import { equationService } from '../services/equation.service';
 import { useAuthStore } from '../../../stores';
+import type { Equation, EquationListStatusFilter, EquationOrigin, PaginatedResponse } from '../types';
 import {
-  EQUATION_LIST_STATUS_DELETED,
-  type EquationListStatusFilter,
-  type EquationOrigin,
-} from '../types';
+  EQUATION_LIST_FROM_DATE_PARAM,
+  EQUATION_LIST_ORIGINS_PARAM,
+  EQUATION_LIST_PAGE_PARAM,
+  EQUATION_LIST_STATUSES_PARAM,
+  EQUATION_LIST_TO_DATE_PARAM,
+  applyEquationListFilterPatch,
+  parseEquationListStatusesFromUrl,
+  parseOriginsFromEquationListUrl,
+  withEquationListPageParam,
+} from '../utils/equationListSearchParams';
+import { useStripDeletedEquationFilterWhenLoggedOut } from './useStripDeletedEquationFilterWhenLoggedOut';
 
-const ORIGINS_PARAM = 'origins';
-const STATUSES_PARAM = 'statuses';
-const FROM_DATE_PARAM = 'fromDate';
-const TO_DATE_PARAM = 'toDate';
-const VALID_ORIGINS: EquationOrigin[] = ['DEFAULT', 'CREATED', 'DOWNLOADED'];
-const VALID_LIST_STATUS_FILTERS: EquationListStatusFilter[] = [
-  'NOT_STARTED',
-  'IN_PROGRESS',
-  'SOLVED',
-  EQUATION_LIST_STATUS_DELETED,
-];
+export type UseEquationListReturn = {
+  equations: Equation[];
+  isLoading: boolean;
+  error: string | null;
+  deleteError: string | null;
+  currentPage: number;
+  total: number;
+  totalPages: number;
+  goToPage: (page: number) => void;
+  fetchEquations: UseQueryResult<PaginatedResponse<Equation>, Error>['refetch'];
+  deleteEquation: UseMutationResult<void, Error, string, unknown>['mutateAsync'];
+  clearError: () => void;
+  selectedOrigins: EquationOrigin[] | undefined;
+  setOriginFilter: (origins: EquationOrigin[]) => void;
+  selectedStatuses: EquationListStatusFilter[] | undefined;
+  setStatusFilter: (statuses: EquationListStatusFilter[]) => void;
+  fromDate: string | undefined;
+  toDate: string | undefined;
+  setDateFilter: (from?: string, to?: string) => void;
+};
 
-function parseOriginsFromUrl(searchParams: URLSearchParams): EquationOrigin[] | undefined {
-  const raw = searchParams.get(ORIGINS_PARAM);
-  if (!raw || raw.trim() === '') return undefined;
-  const parsed = raw
-    .split(',')
-    .map((s) => s.trim())
-    .filter((v): v is EquationOrigin => VALID_ORIGINS.includes(v as EquationOrigin));
-  return parsed.length === 0 ? undefined : parsed;
-}
-
-function parseEquationListStatusesFromUrl(
-  searchParams: URLSearchParams,
-  allowDeleted: boolean
-): EquationListStatusFilter[] | undefined {
-  const raw = searchParams.get(STATUSES_PARAM);
-  if (!raw || raw.trim() === '') return undefined;
-  const parsed = raw
-    .split(',')
-    .map((s) => s.trim())
-    .filter((v): v is EquationListStatusFilter =>
-      VALID_LIST_STATUS_FILTERS.includes(v as EquationListStatusFilter)
-    );
-  if (!allowDeleted) {
-    const without = parsed.filter((s) => s !== EQUATION_LIST_STATUS_DELETED);
-    return without.length === 0 ? undefined : without;
-  }
-  return parsed.length === 0 ? undefined : parsed;
-}
-
-export const useEquationList = () => {
+export const useEquationList = (): UseEquationListReturn => {
   const [searchParams, setSearchParams] = useSearchParams();
   const queryClient = useQueryClient();
   const token = useAuthStore((state) => state.token);
+  const hasToken = !!token;
 
-  const pageFromUrl = Number(searchParams.get('page') || 1);
-  const selectedOrigins = useMemo(() => parseOriginsFromUrl(searchParams), [searchParams]);
+  const pageFromUrl = Number(searchParams.get(EQUATION_LIST_PAGE_PARAM) || 1);
+  const selectedOrigins = useMemo(
+    () => parseOriginsFromEquationListUrl(searchParams),
+    [searchParams]
+  );
   const selectedStatuses = useMemo(
-    () => parseEquationListStatusesFromUrl(searchParams, !!token),
-    [searchParams, token]
+    () => parseEquationListStatusesFromUrl(searchParams, hasToken),
+    [searchParams, hasToken]
   );
 
-  useEffect(() => {
-    if (token) return;
-    setSearchParams((prev) => {
-      const raw = prev.get(STATUSES_PARAM);
-      if (!raw?.includes(EQUATION_LIST_STATUS_DELETED)) return prev;
-      const cleaned = raw
-        .split(',')
-        .map((s) => s.trim())
-        .filter((s) => s.length > 0 && s !== EQUATION_LIST_STATUS_DELETED);
-      const next = new URLSearchParams(prev);
-      if (cleaned.length === 0) next.delete(STATUSES_PARAM);
-      else next.set(STATUSES_PARAM, cleaned.join(','));
-      next.set('page', '1');
-      return next;
-    });
-  }, [token, setSearchParams]);
-  const fromDate = searchParams.get(FROM_DATE_PARAM) || undefined;
-  const toDate = searchParams.get(TO_DATE_PARAM) || undefined;
+  useStripDeletedEquationFilterWhenLoggedOut(hasToken, setSearchParams);
+
+  const fromDate = searchParams.get(EQUATION_LIST_FROM_DATE_PARAM) || undefined;
+  const toDate = searchParams.get(EQUATION_LIST_TO_DATE_PARAM) || undefined;
 
   const listFilters = useMemo(
     () => ({
@@ -90,9 +69,9 @@ export const useEquationList = () => {
       statuses: selectedStatuses,
       fromDate: fromDate || undefined,
       toDate: toDate || undefined,
-      hasToken: !!token,
+      hasToken,
     }),
-    [pageFromUrl, selectedOrigins, selectedStatuses, fromDate, toDate, token]
+    [pageFromUrl, selectedOrigins, selectedStatuses, fromDate, toDate, hasToken]
   );
 
   const {
@@ -128,52 +107,41 @@ export const useEquationList = () => {
 
   useEffect(() => {
     if (data != null && totalPages > 0 && pageFromUrl > totalPages) {
-      setSearchParams((prev) => {
-        const next = new URLSearchParams(prev);
-        next.set('page', String(totalPages));
-        return next;
-      });
+      setSearchParams((prev) => withEquationListPageParam(prev, totalPages));
     }
   }, [data, totalPages, pageFromUrl, setSearchParams]);
 
   function setOriginFilter(origins: EquationOrigin[]) {
-    const next = new URLSearchParams(searchParams);
-    if (origins.length === 0) {
-      next.delete(ORIGINS_PARAM);
-    } else {
-      next.set(ORIGINS_PARAM, origins.join(','));
-    }
-    next.set('page', '1');
-    setSearchParams(next);
+    setSearchParams(
+      applyEquationListFilterPatch(searchParams, (next) => {
+        if (origins.length === 0) next.delete(EQUATION_LIST_ORIGINS_PARAM);
+        else next.set(EQUATION_LIST_ORIGINS_PARAM, origins.join(','));
+      })
+    );
   }
 
   function setStatusFilter(statuses: EquationListStatusFilter[]) {
-    const next = new URLSearchParams(searchParams);
-    if (statuses.length === 0) {
-      next.delete(STATUSES_PARAM);
-    } else {
-      next.set(STATUSES_PARAM, statuses.join(','));
-    }
-    next.set('page', '1');
-    setSearchParams(next);
+    setSearchParams(
+      applyEquationListFilterPatch(searchParams, (next) => {
+        if (statuses.length === 0) next.delete(EQUATION_LIST_STATUSES_PARAM);
+        else next.set(EQUATION_LIST_STATUSES_PARAM, statuses.join(','));
+      })
+    );
   }
 
   function setDateFilter(from?: string, to?: string) {
-    const next = new URLSearchParams(searchParams);
-    if (from) next.set(FROM_DATE_PARAM, from);
-    else next.delete(FROM_DATE_PARAM);
-    if (to) next.set(TO_DATE_PARAM, to);
-    else next.delete(TO_DATE_PARAM);
-    next.set('page', '1');
-    setSearchParams(next);
+    setSearchParams(
+      applyEquationListFilterPatch(searchParams, (next) => {
+        if (from) next.set(EQUATION_LIST_FROM_DATE_PARAM, from);
+        else next.delete(EQUATION_LIST_FROM_DATE_PARAM);
+        if (to) next.set(EQUATION_LIST_TO_DATE_PARAM, to);
+        else next.delete(EQUATION_LIST_TO_DATE_PARAM);
+      })
+    );
   }
 
   function goToPage(page: number) {
-    setSearchParams((prev) => {
-      const next = new URLSearchParams(prev);
-      next.set('page', String(page));
-      return next;
-    });
+    setSearchParams((prev) => withEquationListPageParam(prev, page));
   }
 
   const deleteMutation = useMutation({
@@ -181,11 +149,7 @@ export const useEquationList = () => {
     onSuccess: () => {
       const nextPage = equations.length === 1 && currentPage > 1 ? currentPage - 1 : currentPage;
       if (nextPage !== currentPage) {
-        setSearchParams((prev) => {
-          const next = new URLSearchParams(prev);
-          next.set('page', String(nextPage));
-          return next;
-        });
+        setSearchParams((prev) => withEquationListPageParam(prev, nextPage));
       }
       queryClient.invalidateQueries({ queryKey: queryKeys.equations.lists() });
     },
