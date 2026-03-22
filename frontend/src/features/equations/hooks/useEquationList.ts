@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { UseMutationResult, UseQueryResult } from '@tanstack/react-query';
 import { EQUATIONS_PAGE_SIZE } from '../../../config/constants';
 import { queryKeys } from '../../../shared/query-keys';
+import { getErrorMessage } from '../../../shared/utils/getErrorMessage';
 import { equationService } from '../services/equation.service';
 import { useAuthStore } from '../../../stores';
 import type { Equation, EquationListStatusFilter, EquationOrigin, PaginatedResponse } from '../types';
@@ -47,14 +48,18 @@ export const useEquationList = (): UseEquationListReturn => {
   const token = useAuthStore((state) => state.token);
   const hasToken = !!token;
 
-  const pageFromUrl = Number(searchParams.get(EQUATION_LIST_PAGE_PARAM) || 1);
+  const searchParamsString = searchParams.toString();
+  const rawPage = Number(searchParams.get(EQUATION_LIST_PAGE_PARAM));
+  const pageFromUrl = Number.isNaN(rawPage) || rawPage < 1 ? 1 : rawPage;
+
   const selectedOrigins = useMemo(
-    () => parseOriginsFromEquationListUrl(searchParams),
-    [searchParams]
+    () => parseOriginsFromEquationListUrl(new URLSearchParams(searchParamsString)),
+    [searchParamsString]
   );
   const selectedStatuses = useMemo(
-    () => parseEquationListStatusesFromUrl(searchParams, hasToken),
-    [searchParams, hasToken]
+    () =>
+      parseEquationListStatusesFromUrl(new URLSearchParams(searchParamsString), hasToken),
+    [searchParamsString, hasToken]
   );
 
   useStripDeletedEquationFilterWhenLoggedOut(hasToken, setSearchParams);
@@ -62,16 +67,13 @@ export const useEquationList = (): UseEquationListReturn => {
   const fromDate = searchParams.get(EQUATION_LIST_FROM_DATE_PARAM) || undefined;
   const toDate = searchParams.get(EQUATION_LIST_TO_DATE_PARAM) || undefined;
 
-  const listFilters = useMemo(
-    () => ({
-      page: pageFromUrl,
-      origins: selectedOrigins,
-      statuses: selectedStatuses,
-      fromDate: fromDate || undefined,
-      toDate: toDate || undefined,
-      hasToken,
-    }),
-    [pageFromUrl, selectedOrigins, selectedStatuses, fromDate, toDate, hasToken]
+  const equationListQueryKey = queryKeys.equations.list(
+    pageFromUrl,
+    selectedOrigins,
+    selectedStatuses,
+    fromDate,
+    toDate,
+    hasToken
   );
 
   const {
@@ -80,30 +82,23 @@ export const useEquationList = (): UseEquationListReturn => {
     error,
     refetch,
   } = useQuery({
-    queryKey: queryKeys.equations.list(listFilters),
+    queryKey: equationListQueryKey,
     queryFn: () =>
       equationService.getAllEquations(
         token,
-        listFilters.page,
+        pageFromUrl,
         EQUATIONS_PAGE_SIZE,
-        listFilters.origins,
-        listFilters.statuses,
-        listFilters.fromDate,
-        listFilters.toDate
+        selectedOrigins,
+        selectedStatuses,
+        fromDate,
+        toDate
       ),
-    enabled: true,
   });
 
   const equations = data?.data ?? [];
   const total = data?.total ?? 0;
   const totalPages = data?.totalPages ?? 1;
-  const currentPage = Math.max(1, pageFromUrl);
-  const errorMessage =
-    error != null
-      ? error instanceof Error
-        ? error.message
-        : 'Error al cargar las ecuaciones'
-      : null;
+  const errorMessage = getErrorMessage(error, 'Error al cargar las ecuaciones');
 
   useEffect(() => {
     if (data != null && totalPages > 0 && pageFromUrl > totalPages) {
@@ -112,8 +107,8 @@ export const useEquationList = (): UseEquationListReturn => {
   }, [data, totalPages, pageFromUrl, setSearchParams]);
 
   function setOriginFilter(origins: EquationOrigin[]) {
-    setSearchParams(
-      applyEquationListFilterPatch(searchParams, (next) => {
+    setSearchParams((prev) =>
+      applyEquationListFilterPatch(prev, (next) => {
         if (origins.length === 0) next.delete(EQUATION_LIST_ORIGINS_PARAM);
         else next.set(EQUATION_LIST_ORIGINS_PARAM, origins.join(','));
       })
@@ -121,8 +116,8 @@ export const useEquationList = (): UseEquationListReturn => {
   }
 
   function setStatusFilter(statuses: EquationListStatusFilter[]) {
-    setSearchParams(
-      applyEquationListFilterPatch(searchParams, (next) => {
+    setSearchParams((prev) =>
+      applyEquationListFilterPatch(prev, (next) => {
         if (statuses.length === 0) next.delete(EQUATION_LIST_STATUSES_PARAM);
         else next.set(EQUATION_LIST_STATUSES_PARAM, statuses.join(','));
       })
@@ -130,8 +125,8 @@ export const useEquationList = (): UseEquationListReturn => {
   }
 
   function setDateFilter(from?: string, to?: string) {
-    setSearchParams(
-      applyEquationListFilterPatch(searchParams, (next) => {
+    setSearchParams((prev) =>
+      applyEquationListFilterPatch(prev, (next) => {
         if (from) next.set(EQUATION_LIST_FROM_DATE_PARAM, from);
         else next.delete(EQUATION_LIST_FROM_DATE_PARAM);
         if (to) next.set(EQUATION_LIST_TO_DATE_PARAM, to);
@@ -147,33 +142,36 @@ export const useEquationList = (): UseEquationListReturn => {
   const deleteMutation = useMutation({
     mutationFn: (id: string) => equationService.deleteEquation(id, token),
     onSuccess: () => {
-      const nextPage = equations.length === 1 && currentPage > 1 ? currentPage - 1 : currentPage;
-      if (nextPage !== currentPage) {
+      const nextPage = equations.length === 1 && pageFromUrl > 1 ? pageFromUrl - 1 : pageFromUrl;
+      if (nextPage !== pageFromUrl) {
         setSearchParams((prev) => withEquationListPageParam(prev, nextPage));
       }
       queryClient.invalidateQueries({ queryKey: queryKeys.equations.lists() });
     },
   });
 
-  const deleteError =
-    deleteMutation.error != null
-      ? deleteMutation.error instanceof Error
-        ? deleteMutation.error.message
-        : 'Error al eliminar la ecuación'
-      : null;
+  const deleteError = getErrorMessage(
+    deleteMutation.error,
+    'Error al eliminar la ecuación'
+  );
+
+  function clearError() {
+    deleteMutation.reset();
+    void queryClient.invalidateQueries({ queryKey: equationListQueryKey, exact: true });
+  }
 
   return {
     equations,
     isLoading,
     error: errorMessage,
     deleteError,
-    currentPage,
+    currentPage: pageFromUrl,
     total,
     totalPages,
     goToPage,
     fetchEquations: refetch,
     deleteEquation: deleteMutation.mutateAsync,
-    clearError: () => {},
+    clearError,
     selectedOrigins,
     setOriginFilter,
     selectedStatuses,
