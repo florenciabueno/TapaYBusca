@@ -6,6 +6,7 @@ import { Pagination } from '../../../../shared/components/ui/Pagination';
 import { ConfirmModal } from '../../../../shared/components/ui/ConfirmModal';
 import { useEquationList } from '../../hooks/useEquationList';
 import { useAuthStore } from '../../../../stores';
+import { EQUATION_LIST_STATUS_DELETED } from '../../types/equation.types';
 import { canDeleteEquation } from '../../utils/equationPermissions';
 import { EquationCard } from '../EquationCard';
 
@@ -13,6 +14,9 @@ const MESSAGES = {
   LOADING: 'Cargando ecuaciones...',
   EMPTY_TITLE: 'No hay ecuaciones',
   EMPTY_DESCRIPTION: 'Crea tu primera ecuación para comenzar a resolver paso a paso.',
+  EMPTY_DELETED_TITLE: 'No hay ecuaciones eliminadas',
+  EMPTY_DELETED_DESCRIPTION:
+    'Cuando elimines una ecuación, podrás verla aquí seleccionando este filtro.',
   EMPTY_DOWNLOADED_TITLE: 'No hay ecuaciones descargadas',
   EMPTY_DOWNLOADED_DESCRIPTION: 'Descarga ecuaciones para agregarlas a tu listado.',
   DELETE_CONFIRM_TITLE: 'Eliminar ecuación',
@@ -33,6 +37,7 @@ export const EquationsCardList = () => {
     goToPage,
     deleteEquation,
     selectedOrigins,
+    selectedStatuses,
   } = useEquationList();
   const user = useAuthStore((state) => state.user);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
@@ -80,6 +85,8 @@ export const EquationsCardList = () => {
   if (equations.length === 0 && total === 0) {
     const isOnlyDownloadedFilter =
       selectedOrigins?.length === 1 && selectedOrigins[0] === 'DOWNLOADED';
+    const isOnlyDeletedFilter =
+      selectedStatuses?.length === 1 && selectedStatuses[0] === EQUATION_LIST_STATUS_DELETED;
 
     return (
       <div
@@ -101,18 +108,28 @@ export const EquationsCardList = () => {
           )}
         </div>
         <p className="mb-1 text-sm font-medium text-gray-700">
-          {isOnlyDownloadedFilter ? MESSAGES.EMPTY_DOWNLOADED_TITLE : MESSAGES.EMPTY_TITLE}
+          {isOnlyDownloadedFilter
+            ? MESSAGES.EMPTY_DOWNLOADED_TITLE
+            : isOnlyDeletedFilter
+              ? MESSAGES.EMPTY_DELETED_TITLE
+              : MESSAGES.EMPTY_TITLE}
         </p>
         <p className="mb-4 text-xs text-gray-500">
-          {isOnlyDownloadedFilter ? MESSAGES.EMPTY_DOWNLOADED_DESCRIPTION : MESSAGES.EMPTY_DESCRIPTION}
+          {isOnlyDownloadedFilter
+            ? MESSAGES.EMPTY_DOWNLOADED_DESCRIPTION
+            : isOnlyDeletedFilter
+              ? MESSAGES.EMPTY_DELETED_DESCRIPTION
+              : MESSAGES.EMPTY_DESCRIPTION}
         </p>
-        <Link
-          to={isOnlyDownloadedFilter ? ROUTES.DOWNLOAD : ROUTES.CREATE_EQUATION}
-          className="inline-flex rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-blue-400/40 focus:ring-offset-2"
-          style={{ backgroundColor: COLORS.orange }}
-        >
-          {isOnlyDownloadedFilter ? 'Descargar ecuaciones' : 'Crear ecuación'}
-        </Link>
+        {!isOnlyDeletedFilter && (
+          <Link
+            to={isOnlyDownloadedFilter ? ROUTES.DOWNLOAD : ROUTES.CREATE_EQUATION}
+            className="inline-flex rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-blue-400/40 focus:ring-offset-2"
+            style={{ backgroundColor: COLORS.orange }}
+          >
+            {isOnlyDownloadedFilter ? 'Descargar ecuaciones' : 'Crear ecuación'}
+          </Link>
+        )}
       </div>
     );
   }

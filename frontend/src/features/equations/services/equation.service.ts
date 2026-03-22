@@ -1,8 +1,8 @@
 import { API_URL } from '../../../config/constants';
 import type {
   Equation,
+  EquationListStatusFilter,
   EquationOrigin,
-  EquationStatus,
   PaginatedResponse,
   UploadableEquation,
   DownloadEquationsParams,
@@ -14,7 +14,15 @@ const getAuthHeaders = (token?: string | null) => ({
   ...(token && { Authorization: `Bearer ${token}` }),
 });
 
-function mapItem(eq: { id: string; equation: string; origin: string; status: string; steps: number; date: string }): Equation {
+function mapItem(eq: {
+  id: string;
+  equation: string;
+  origin: string;
+  status: string;
+  steps: number;
+  date: string;
+  isActive?: boolean;
+}): Equation {
   return {
     id: eq.id,
     equation: eq.equation,
@@ -22,6 +30,7 @@ function mapItem(eq: { id: string; equation: string; origin: string; status: str
     status: eq.status as Equation['status'],
     steps: eq.steps,
     date: eq.date,
+    ...(eq.isActive !== undefined ? { isActive: eq.isActive } : {}),
   };
 }
 
@@ -31,7 +40,7 @@ export const equationService = {
     page: number,
     limit: number,
     origins?: EquationOrigin[],
-    statuses?: EquationStatus[],
+    statuses?: EquationListStatusFilter[],
     fromDate?: string,
     toDate?: string
   ): Promise<PaginatedResponse<Equation>> {

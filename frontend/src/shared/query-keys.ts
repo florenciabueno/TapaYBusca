@@ -1,9 +1,9 @@
-import type { EquationOrigin, EquationStatus } from '../features/equations/types';
+import type { EquationListStatusFilter, EquationOrigin } from '../features/equations/types';
 
 export interface EquationsListFilters {
   page: number;
   origins?: EquationOrigin[];
-  statuses?: EquationStatus[];
+  statuses?: EquationListStatusFilter[];
   fromDate?: string;
   toDate?: string;
   hasToken: boolean;

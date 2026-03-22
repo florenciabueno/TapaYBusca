@@ -1,6 +1,9 @@
 export type EquationStatus = 'NOT_STARTED' | 'IN_PROGRESS' | 'SOLVED';
 export type EquationOrigin = 'DEFAULT' | 'CREATED' | 'DOWNLOADED';
 
+export const EQUATION_LIST_STATUS_DELETED = 'DELETED' as const;
+export type EquationListStatusFilter = EquationStatus | typeof EQUATION_LIST_STATUS_DELETED;
+
 export interface Equation {
   id: string;
   equation: string;
@@ -8,6 +11,7 @@ export interface Equation {
   status: EquationStatus;
   steps: number;
   date: string;
+  isActive?: boolean;
 }
 
 export interface UploadableEquation {
@@ -51,4 +55,9 @@ export const STATUS_LABELS: Record<EquationStatus, string> = {
   NOT_STARTED: 'Sin comenzar',
   IN_PROGRESS: 'En proceso',
   SOLVED: 'Resuelta',
+};
+
+export const EQUATION_LIST_STATUS_FILTER_LABELS: Record<EquationListStatusFilter, string> = {
+  ...STATUS_LABELS,
+  [EQUATION_LIST_STATUS_DELETED]: 'Eliminadas',
 };

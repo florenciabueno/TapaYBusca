@@ -1,18 +1,30 @@
 import { COLORS } from '../../../../config/theme';
-import type { EquationStatus } from '../../types/equation.types';
-import { STATUS_LABELS } from '../../types/equation.types';
+import {
+  EQUATION_LIST_STATUS_DELETED,
+  EQUATION_LIST_STATUS_FILTER_LABELS,
+  type EquationListStatusFilter,
+  type EquationStatus,
+} from '../../types/equation.types';
 
-const STATUSES: EquationStatus[] = ['NOT_STARTED', 'IN_PROGRESS', 'SOLVED'];
+const WORKFLOW_STATUSES: EquationStatus[] = ['NOT_STARTED', 'IN_PROGRESS', 'SOLVED'];
 
 export interface StatusFilterProps {
-  selectedStatuses: EquationStatus[] | undefined;
-  onChange: (statuses: EquationStatus[]) => void;
+  selectedStatuses: EquationListStatusFilter[] | undefined;
+  onChange: (statuses: EquationListStatusFilter[]) => void;
+  showDeletedFilter?: boolean;
 }
 
-export const StatusFilter = ({ selectedStatuses, onChange }: StatusFilterProps) => {
+export const StatusFilter = ({
+  selectedStatuses,
+  onChange,
+  showDeletedFilter = false,
+}: StatusFilterProps) => {
   const selectedSet = new Set(selectedStatuses ?? []);
+  const statusOptions: EquationListStatusFilter[] = showDeletedFilter
+    ? [...WORKFLOW_STATUSES, EQUATION_LIST_STATUS_DELETED]
+    : WORKFLOW_STATUSES;
 
-  function toggle(status: EquationStatus) {
+  function toggle(status: EquationListStatusFilter) {
     const next = selectedSet.has(status)
       ? (selectedStatuses ?? []).filter((s) => s !== status)
       : [...(selectedStatuses ?? []), status];
@@ -24,7 +36,7 @@ export const StatusFilter = ({ selectedStatuses, onChange }: StatusFilterProps) 
       <span className="text-sm font-medium" style={{ color: COLORS.gray[600] }}>
         Estado:
       </span>
-      {STATUSES.map((status) => {
+      {statusOptions.map((status) => {
         const isSelected = selectedSet.has(status);
         return (
           <button
@@ -39,7 +51,7 @@ export const StatusFilter = ({ selectedStatuses, onChange }: StatusFilterProps) 
             }}
             aria-pressed={isSelected}
           >
-            {STATUS_LABELS[status]}
+            {EQUATION_LIST_STATUS_FILTER_LABELS[status]}
           </button>
         );
       })}

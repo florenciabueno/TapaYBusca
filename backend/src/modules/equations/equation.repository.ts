@@ -27,14 +27,16 @@ export class EquationRepository {
     origins?: EquationOrigin[],
     statuses?: EquationStatus[],
     fromDate?: Date,
-    toDate?: Date
+    toDate?: Date,
+    deletedOnly = false
   ) {
     const where = this.buildUserEquationListWhere(
       userId,
       origins,
       statuses,
       fromDate,
-      toDate
+      toDate,
+      deletedOnly
     );
     return prisma.userEquation.findMany({
       where,
@@ -50,14 +52,16 @@ export class EquationRepository {
     origins?: EquationOrigin[],
     statuses?: EquationStatus[],
     fromDate?: Date,
-    toDate?: Date
+    toDate?: Date,
+    deletedOnly = false
   ): Promise<number> {
     const where = this.buildUserEquationListWhere(
       userId,
       origins,
       statuses,
       fromDate,
-      toDate
+      toDate,
+      deletedOnly
     );
     return prisma.userEquation.count({ where });
   }
@@ -240,9 +244,10 @@ export class EquationRepository {
     origins?: EquationOrigin[],
     statuses?: EquationStatus[],
     fromDate?: Date,
-    toDate?: Date
+    toDate?: Date,
+    deletedOnly = false
   ): UserEquationListWhere {
-    const where: UserEquationListWhere = { userId, isActive: true };
+    const where: UserEquationListWhere = { userId, isActive: !deletedOnly };
     if (origins && origins.length > 0) where.origin = { in: origins };
     if (statuses && statuses.length > 0) where.status = { in: statuses };
     if (fromDate !== undefined || toDate !== undefined) {

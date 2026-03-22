@@ -5,14 +5,23 @@ import { EQUATIONS_PAGE_SIZE } from '../../../config/constants';
 import { queryKeys } from '../../../shared/query-keys';
 import { equationService } from '../services/equation.service';
 import { useAuthStore } from '../../../stores';
-import type { EquationOrigin, EquationStatus } from '../types';
+import {
+  EQUATION_LIST_STATUS_DELETED,
+  type EquationListStatusFilter,
+  type EquationOrigin,
+} from '../types';
 
 const ORIGINS_PARAM = 'origins';
 const STATUSES_PARAM = 'statuses';
 const FROM_DATE_PARAM = 'fromDate';
 const TO_DATE_PARAM = 'toDate';
 const VALID_ORIGINS: EquationOrigin[] = ['DEFAULT', 'CREATED', 'DOWNLOADED'];
-const VALID_STATUSES: EquationStatus[] = ['NOT_STARTED', 'IN_PROGRESS', 'SOLVED'];
+const VALID_LIST_STATUS_FILTERS: EquationListStatusFilter[] = [
+  'NOT_STARTED',
+  'IN_PROGRESS',
+  'SOLVED',
+  EQUATION_LIST_STATUS_DELETED,
+];
 
 function parseOriginsFromUrl(searchParams: URLSearchParams): EquationOrigin[] | undefined {
   const raw = searchParams.get(ORIGINS_PARAM);
@@ -24,13 +33,22 @@ function parseOriginsFromUrl(searchParams: URLSearchParams): EquationOrigin[] | 
   return parsed.length === 0 ? undefined : parsed;
 }
 
-function parseStatusesFromUrl(searchParams: URLSearchParams): EquationStatus[] | undefined {
+function parseEquationListStatusesFromUrl(
+  searchParams: URLSearchParams,
+  allowDeleted: boolean
+): EquationListStatusFilter[] | undefined {
   const raw = searchParams.get(STATUSES_PARAM);
   if (!raw || raw.trim() === '') return undefined;
   const parsed = raw
     .split(',')
     .map((s) => s.trim())
-    .filter((v): v is EquationStatus => VALID_STATUSES.includes(v as EquationStatus));
+    .filter((v): v is EquationListStatusFilter =>
+      VALID_LIST_STATUS_FILTERS.includes(v as EquationListStatusFilter)
+    );
+  if (!allowDeleted) {
+    const without = parsed.filter((s) => s !== EQUATION_LIST_STATUS_DELETED);
+    return without.length === 0 ? undefined : without;
+  }
   return parsed.length === 0 ? undefined : parsed;
 }
 
@@ -41,7 +59,27 @@ export const useEquationList = () => {
 
   const pageFromUrl = Number(searchParams.get('page') || 1);
   const selectedOrigins = useMemo(() => parseOriginsFromUrl(searchParams), [searchParams]);
-  const selectedStatuses = useMemo(() => parseStatusesFromUrl(searchParams), [searchParams]);
+  const selectedStatuses = useMemo(
+    () => parseEquationListStatusesFromUrl(searchParams, !!token),
+    [searchParams, token]
+  );
+
+  useEffect(() => {
+    if (token) return;
+    setSearchParams((prev) => {
+      const raw = prev.get(STATUSES_PARAM);
+      if (!raw?.includes(EQUATION_LIST_STATUS_DELETED)) return prev;
+      const cleaned = raw
+        .split(',')
+        .map((s) => s.trim())
+        .filter((s) => s.length > 0 && s !== EQUATION_LIST_STATUS_DELETED);
+      const next = new URLSearchParams(prev);
+      if (cleaned.length === 0) next.delete(STATUSES_PARAM);
+      else next.set(STATUSES_PARAM, cleaned.join(','));
+      next.set('page', '1');
+      return next;
+    });
+  }, [token, setSearchParams]);
   const fromDate = searchParams.get(FROM_DATE_PARAM) || undefined;
   const toDate = searchParams.get(TO_DATE_PARAM) || undefined;
 
@@ -109,7 +147,7 @@ export const useEquationList = () => {
     setSearchParams(next);
   }
 
-  function setStatusFilter(statuses: EquationStatus[]) {
+  function setStatusFilter(statuses: EquationListStatusFilter[]) {
     const next = new URLSearchParams(searchParams);
     if (statuses.length === 0) {
       next.delete(STATUSES_PARAM);
