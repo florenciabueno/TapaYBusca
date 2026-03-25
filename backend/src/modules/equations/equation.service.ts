@@ -53,12 +53,29 @@ export class EquationService {
     origins?: EquationOrigin[],
     statuses?: EquationStatus[],
     fromDate?: Date,
-    toDate?: Date
+    toDate?: Date,
+    deletedOnly = false
   ): Promise<PaginatedEquationsResponse> {
     const { page: p, limit: l } = this.sanitizePagination(page, limit);
     const [userEquations, total] = await Promise.all([
-      this.equationRepository.findAllForUser(userId, p, l, origins, statuses, fromDate, toDate),
-      this.equationRepository.countForUser(userId, origins, statuses, fromDate, toDate),
+      this.equationRepository.findAllForUser(
+        userId,
+        p,
+        l,
+        origins,
+        statuses,
+        fromDate,
+        toDate,
+        deletedOnly
+      ),
+      this.equationRepository.countForUser(
+        userId,
+        origins,
+        statuses,
+        fromDate,
+        toDate,
+        deletedOnly
+      ),
     ]);
     const sorted = this.sortByStatusAndUpdatedAt(userEquations);
     const countMap = await this.equationRepository.getResolutionCounts(

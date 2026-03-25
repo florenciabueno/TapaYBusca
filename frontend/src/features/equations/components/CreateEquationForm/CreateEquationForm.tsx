@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { EquationsLayout } from '../EquationsLayout';
@@ -24,6 +24,9 @@ export const CreateEquationForm = () => {
   const [value, setValue] = useState('');
   const [success, setSuccess] = useState<string | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const selectionRef = useRef({ start: 0, end: 0 });
+  const cursorAfterInsertRef = useRef<number | null>(null);
 
   const createMutation = useMutation({
     mutationFn: (equation: string) => equationService.createEquation(equation, token),
@@ -36,6 +39,15 @@ export const CreateEquationForm = () => {
     },
   });
 
+  useEffect(() => {
+    const pos = cursorAfterInsertRef.current;
+    if (pos !== null && inputRef.current) {
+      cursorAfterInsertRef.current = null;
+      inputRef.current.focus();
+      inputRef.current.setSelectionRange(pos, pos);
+    }
+  }, [value]);
+
   const error =
     validationError ||
     (createMutation.error
@@ -46,7 +58,15 @@ export const CreateEquationForm = () => {
   const isLoading = createMutation.isPending;
 
   function handleSymbolClick(insert: string) {
-    setValue((prev) => prev + insert);
+    const { start } = selectionRef.current;
+    setValue((prev) => {
+      const next = prev.slice(0, start) + insert + prev.slice(selectionRef.current.end);
+      const isFunctionWithParens = insert.endsWith('()');
+      cursorAfterInsertRef.current = isFunctionWithParens
+        ? start + insert.length - 1
+        : start + insert.length;
+      return next;
+    });
     setValidationError(null);
     createMutation.reset();
   }
@@ -73,22 +93,34 @@ export const CreateEquationForm = () => {
 
   return (
     <EquationsLayout>
-      <FormPageCard
-        title="Crear nueva ecuación"
-        description="Construye tu ecuación en la forma f(x) = k o k = f(x), con una sola incógnita."
-      >
+      <div className="w-full flex-1 flex items-center justify-center">
+        <FormPageCard
+          title="Crear nueva ecuación"
+          description="Construye tu ecuación en la forma f(x) = k o k = f(x), con una sola incógnita."
+        >
         <form onSubmit={handleSubmit}>
             <div style={{ marginBottom: SPACING.lg }}>
               <Input
+                ref={inputRef}
                 label="Tu ecuación:"
                 value={value}
                 onChange={(e) => {
-                  setValue(e.target.value);
+                  const el = e.target;
+                  selectionRef.current = { start: el.selectionStart ?? 0, end: el.selectionEnd ?? 0 };
+                  setValue(el.value);
                   setValidationError(null);
                   createMutation.reset();
                 }}
                 onKeyDown={handleEquationInputKeyDown}
                 onPaste={(e) => handleEquationInputPaste(e, setValue)}
+                onBlur={(e) => {
+                  const el = e.target;
+                  selectionRef.current = { start: el.selectionStart ?? 0, end: el.selectionEnd ?? 0 };
+                }}
+                onSelect={(e) => {
+                  const el = e.target as HTMLInputElement;
+                  selectionRef.current = { start: el.selectionStart ?? 0, end: el.selectionEnd ?? 0 };
+                }}
                 placeholder="Solo números y x; usa la botonera para el resto"
                 error={error}
                 helperText="Escribe números y x con el teclado. Usa los botones para operadores y funciones (√, +, =, etc.)."
@@ -128,7 +160,8 @@ export const CreateEquationForm = () => {
               </Button>
             </div>
           </form>
-      </FormPageCard>
+        </FormPageCard>
+      </div>
     </EquationsLayout>
   );
 };

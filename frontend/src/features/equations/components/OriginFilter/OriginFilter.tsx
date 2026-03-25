@@ -31,7 +31,7 @@ export const OriginFilter = ({ selectedOrigins, onChange }: OriginFilterProps) =
             key={origin}
             type="button"
             onClick={() => toggle(origin)}
-            className="cursor-pointer rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2"
+            className="cursor-pointer rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors"
             style={{
               backgroundColor: isSelected ? COLORS.accentSecondary : 'transparent',
               borderColor: isSelected ? COLORS.accentSecondary : COLORS.gray[300],

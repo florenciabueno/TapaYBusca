@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 import { ROUTES } from '../../../../config/constants';
 import { COLORS, ACCENT_RGB, PURPLE_RGB } from '../../../../config/theme';
 import logoImage from '../../../../assets/logo.png';
@@ -83,10 +83,10 @@ export const Sidebar = () => {
         backgroundColor: `rgba(${ACCENT_RGB}, 0.48)`,
       }}
     >
-      <NavLink
+      <Link
         to={ROUTES.DASHBOARD}
-        className="flex items-center gap-3 px-5 py-5 no-underline"
-        style={{ textDecoration: 'none' }}
+        className="flex items-center gap-3 px-5 py-5 cursor-pointer hover:opacity-90 transition-opacity"
+        aria-label="Ir al inicio"
       >
         <img
           src={logoImage}
@@ -98,7 +98,7 @@ export const Sidebar = () => {
           <span style={{ color: COLORS.lightTeal }}>y </span>
           <span style={{ color: COLORS.violet }}>Busca</span>
         </span>
-      </NavLink>
+      </Link>
 
       <nav className="flex flex-col gap-0.5 px-3 pt-2">
         {navItems.map(({ path, label, icon: Icon }) => (

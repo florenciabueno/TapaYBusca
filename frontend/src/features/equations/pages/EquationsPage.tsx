@@ -36,7 +36,11 @@ export const EquationsPage = () => {
           {user && (
             <OriginFilter selectedOrigins={selectedOrigins} onChange={setOriginFilter} />
           )}
-          <StatusFilter selectedStatuses={selectedStatuses} onChange={setStatusFilter} />
+          <StatusFilter
+            selectedStatuses={selectedStatuses}
+            onChange={setStatusFilter}
+            showDeletedFilter={!!user}
+          />
           <DateFilter fromDate={fromDate} toDate={toDate} onChange={setDateFilter} />
         </div>
 

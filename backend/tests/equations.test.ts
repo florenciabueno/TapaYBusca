@@ -364,7 +364,73 @@ describe('Equations API', () => {
         .get('/api/equations?page=2&limit=5')
         .set(authHeader(token));
       expect(response.status).toBe(200);
-      expect(repoMocks.findAllForUser).toHaveBeenCalledWith('test-user-id', 2, 5, undefined, undefined, undefined, undefined);
+      expect(repoMocks.findAllForUser).toHaveBeenCalledWith(
+        'test-user-id',
+        2,
+        5,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        false
+      );
+    });
+
+    it('passes deletedOnly when statuses include DELETED', async () => {
+      const row = makeUserEquationRow({
+        id: 'ue-del',
+        isActive: false,
+        status: EquationStatus.SOLVED,
+        equation: { latexExpression: 'x=2', infixExpression: 'x=2', postfixExpression: 'x=2' },
+      });
+      repoMocks.findAllForUser.mockResolvedValue([row]);
+      repoMocks.countForUser.mockResolvedValue(1);
+
+      const response = await request(app)
+        .get('/api/equations?statuses=DELETED')
+        .set(authHeader(token));
+
+      expect(response.status).toBe(200);
+      expect(repoMocks.findAllForUser).toHaveBeenCalledWith(
+        'test-user-id',
+        1,
+        9,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        true
+      );
+      expect(repoMocks.countForUser).toHaveBeenCalledWith(
+        'test-user-id',
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        true
+      );
+      expect(response.body.data[0]).toMatchObject({
+        id: 'ue-del',
+        status: EquationStatus.SOLVED,
+        isActive: false,
+      });
+    });
+
+    it('combines DELETED with workflow status filters', async () => {
+      await request(app)
+        .get('/api/equations?statuses=DELETED,SOLVED')
+        .set(authHeader(token));
+
+      expect(repoMocks.findAllForUser).toHaveBeenCalledWith(
+        'test-user-id',
+        1,
+        9,
+        undefined,
+        [EquationStatus.SOLVED],
+        undefined,
+        undefined,
+        true
+      );
     });
   });
 
@@ -387,6 +453,17 @@ describe('Equations API', () => {
       expect(response.status).toBe(200);
       expect(response.body.data).toHaveLength(1);
       expect(response.body.data[0]).toMatchObject({ id: 'def-1', origin: EquationOrigin.DEFAULT, status: EquationStatus.NOT_STARTED });
+    });
+
+    it('ignores DELETED in statuses and still returns default equations', async () => {
+      const defaultRow = makeDefaultEquationRow({ id: 'def-1' });
+      repoMocks.findDefaultEquations.mockResolvedValue([defaultRow]);
+      repoMocks.countDefaultEquations.mockResolvedValue(1);
+
+      const response = await request(app).get('/api/equations/public?statuses=DELETED');
+      expect(response.status).toBe(200);
+      expect(response.body.data).toHaveLength(1);
+      expect(repoMocks.findDefaultEquations).toHaveBeenCalled();
     });
   });
 

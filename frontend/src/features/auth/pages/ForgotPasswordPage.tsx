@@ -13,6 +13,7 @@ export const ForgotPasswordPage = () => {
           linkTo={ROUTES.LOGIN}
           linkLabel="Inicia sesión"
           variant="inline"
+          linkColor={COLORS.orange}
         />
       }
     >

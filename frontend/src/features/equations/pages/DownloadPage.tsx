@@ -22,8 +22,9 @@ export const DownloadPage = () => {
 
   return (
     <EquationsLayout>
-      <FormPageCard
-        title="Descargar ecuaciones"
+      <div className="w-full flex-1 flex items-center justify-center">
+        <FormPageCard
+          title="Descargar ecuaciones"
         description='Añade a "Mis ecuaciones" ecuaciones compartidas por otros estudiantes. Indica cuántas quieres y, si lo deseas, un intervalo de fechas (por fecha de publicación).'
       >
         <form onSubmit={handleSubmit}>
@@ -74,7 +75,8 @@ export const DownloadPage = () => {
             Descargar ecuaciones
           </Button>
         </form>
-      </FormPageCard>
+        </FormPageCard>
+      </div>
     </EquationsLayout>
   );
 };

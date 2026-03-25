@@ -12,6 +12,7 @@ import {
 
 const VALID_ORIGINS = new Set<string>(Object.values(EquationOrigin));
 const VALID_STATUSES = new Set<string>(Object.values(EquationStatus));
+const LIST_STATUS_DELETED = 'DELETED';
 
 const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 9;
@@ -67,7 +68,7 @@ export class EquationController {
       const userId = req.userId!;
       const { page, limit } = this.parsePageAndLimit(req.query);
       const origins = this.parseOriginsQuery(req.query);
-      const statuses = this.parseStatusesQuery(req.query);
+      const { workflowStatuses, deletedOnly } = this.parseUserListStatusesQuery(req.query);
       const dateFilters = this.parseDateFilters(req.query);
       if ('error' in dateFilters) {
         res.status(400).json({ error: dateFilters.error });
@@ -78,9 +79,10 @@ export class EquationController {
         page,
         limit,
         origins,
-        statuses,
+        workflowStatuses,
         dateFilters.fromDate,
-        dateFilters.toDate
+        dateFilters.toDate,
+        deletedOnly
       );
       res.status(200).json(result);
     } catch (error: unknown) {
@@ -289,6 +291,29 @@ export class EquationController {
       .flatMap((v) => v.split(',').map((s) => s.trim()))
       .filter((v) => VALID_STATUSES.has(v));
     return parsed.length === 0 ? undefined : (parsed as EquationStatus[]);
+  }
+
+  private parseUserListStatusesQuery(query: Request['query']): {
+    workflowStatuses?: EquationStatus[];
+    deletedOnly: boolean;
+  } {
+    const raw = query.statuses;
+    if (raw === undefined || raw === '') {
+      return { workflowStatuses: undefined, deletedOnly: false };
+    }
+    const values = Array.isArray(raw) ? raw : [raw];
+    const tokens = values
+      .filter((v): v is string => typeof v === 'string')
+      .flatMap((v) => v.split(',').map((s) => s.trim()))
+      .filter((v) => v.length > 0);
+    const deletedOnly = tokens.includes(LIST_STATUS_DELETED);
+    const workflow = tokens.filter(
+      (v): v is EquationStatus => v !== LIST_STATUS_DELETED && VALID_STATUSES.has(v)
+    );
+    return {
+      workflowStatuses: workflow.length === 0 ? undefined : workflow,
+      deletedOnly,
+    };
   }
 
   private parseOptionalDate(value: unknown): Date | undefined {
