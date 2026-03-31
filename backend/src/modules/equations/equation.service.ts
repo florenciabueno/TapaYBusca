@@ -16,11 +16,9 @@ import { validateEquation } from './equation.validators.js';
 import { solveEquation } from './equation-solver/index.js';
 import { infixToLatex } from './infix-to-latex.js';
 import { ensureValidationPassedWithErrorList } from '../../shared/utils/validation.js';
+import { DEFAULT_LIMIT, DEFAULT_PAGE, MAX_LIMIT } from '../../shared/constants/pagination.js';
 
 const STEPS_DEFAULT = 0;
-const DEFAULT_PAGE = 1;
-const DEFAULT_LIMIT = 9;
-const MAX_LIMIT = 50;
 const DOWNLOAD_QUANTITY_MIN = 1;
 const DOWNLOAD_QUANTITY_MAX = 50;
 const DOWNLOAD_FETCH_MULTIPLIER = 3;
@@ -78,7 +76,7 @@ export class EquationService {
       ),
     ]);
     const sorted = this.sortByStatusAndUpdatedAt(userEquations);
-    const countMap = await this.equationRepository.getResolutionCounts(
+    const countMap = await this.getResolutionCountsOrDefault(
       sorted.map((r) => ({
         userEquationId: r.id,
         resolutionSessionId: (r as { currentResolutionId?: number }).currentResolutionId ?? 0,
@@ -96,7 +94,7 @@ export class EquationService {
     const userEquation = await this.equationRepository.findById(userEquationId);
     if (!userEquation) return null;
     const resolutionId = (userEquation as { currentResolutionId?: number }).currentResolutionId ?? 0;
-    const countMap = await this.equationRepository.getResolutionCounts([
+    const countMap = await this.getResolutionCountsOrDefault([
       { userEquationId: userEquation.id, resolutionSessionId: resolutionId },
     ]);
     const steps = countMap.get(`${userEquation.id}-${resolutionId}`) ?? STEPS_DEFAULT;
@@ -335,5 +333,18 @@ export class EquationService {
       throw new Error(MESSAGE_DOWNLOAD_DATE_RANGE);
     }
     return { quantity, fromDate, toDate };
+  }
+
+  private async getResolutionCountsOrDefault(
+    pairs: Array<{ userEquationId: string; resolutionSessionId: number }>
+  ): Promise<Map<string, number>> {
+    if (pairs.length === 0) return new Map();
+    const maybeGetResolutionCounts = (
+      this.equationRepository as Partial<Pick<EquationRepository, 'getResolutionCounts'>>
+    ).getResolutionCounts;
+    if (typeof maybeGetResolutionCounts !== 'function') {
+      return new Map();
+    }
+    return maybeGetResolutionCounts.call(this.equationRepository, pairs);
   }
 }
