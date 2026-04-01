@@ -64,7 +64,7 @@ export class EquationController {
       const userId = req.userId!;
       const { page, limit } = parsePageAndLimit(req.query);
       const origins = parseOriginsQuery(req.query);
-      const { workflowStatuses, deletedOnly } = parseUserListStatusesQuery(req.query);
+      const { workflowStatuses, includeDeleted } = parseUserListStatusesQuery(req.query);
       const dateFilters = parseDateFilters(req.query);
       if ('error' in dateFilters) {
         res.status(400).json({ error: dateFilters.error });
@@ -79,7 +79,7 @@ export class EquationController {
         workflowStatuses,
         dateFilters.fromDate,
         dateFilters.toDate,
-        deletedOnly
+        includeDeleted
       );
       res.status(200).json(result);
     } catch (error: unknown) {

@@ -51,17 +51,17 @@ export function parseStatusesQuery(query: QueryParams): EquationStatus[] | undef
 
 export function parseUserListStatusesQuery(query: QueryParams): {
   workflowStatuses?: EquationStatus[];
-  deletedOnly: boolean;
+  includeDeleted: boolean;
 } {
   const tokens = parseCsvQuery(query.statuses);
-  const deletedOnly = tokens.includes(LIST_STATUS_DELETED);
+  const includeDeleted = tokens.includes(LIST_STATUS_DELETED);
   const workflowStatuses = tokens.filter(
     (value): value is EquationStatus => value !== LIST_STATUS_DELETED && VALID_STATUSES.has(value)
   );
 
   return {
     workflowStatuses: workflowStatuses.length === 0 ? undefined : workflowStatuses,
-    deletedOnly,
+    includeDeleted,
   };
 }
 

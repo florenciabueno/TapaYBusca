@@ -1,3 +1,4 @@
+import type { Prisma } from '@prisma/client';
 import { prisma } from '../../config/database.js';
 import {
   CreateEquationDto,
@@ -8,13 +9,11 @@ import {
 
 type TxClient = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
 
-type UserEquationListWhere = {
-  userId: string;
-  isActive: boolean;
-  origin?: { in: EquationOrigin[] };
-  status?: { in: EquationStatus[] };
-  updatedAt?: { gte?: Date; lte?: Date };
-};
+const LIST_STATUS_ORDER = [
+  EquationStatus.IN_PROGRESS,
+  EquationStatus.NOT_STARTED,
+  EquationStatus.SOLVED,
+] as const;
 
 const USER_EQUATION_INCLUDE_EQUATION = { equation: true } as const;
 const DEFAULT_EQUATION_WHERE = { isDefault: true } as const;
@@ -28,7 +27,7 @@ export class EquationRepository {
     statuses?: EquationStatus[],
     fromDate?: Date,
     toDate?: Date,
-    deletedOnly = false
+    includeDeleted = false
   ) {
     const where = this.buildUserEquationListWhere(
       userId,
@@ -36,15 +35,15 @@ export class EquationRepository {
       statuses,
       fromDate,
       toDate,
-      deletedOnly
+      includeDeleted
     );
-    return prisma.userEquation.findMany({
+    const all = await prisma.userEquation.findMany({
       where,
       include: USER_EQUATION_INCLUDE_EQUATION,
-      orderBy: [{ status: 'asc' }, { updatedAt: 'desc' }],
-      skip: (page - 1) * limit,
-      take: limit,
     });
+    const sorted = this.sortUserEquationsForList(all);
+    const start = (page - 1) * limit;
+    return sorted.slice(start, start + limit);
   }
 
   async countForUser(
@@ -53,7 +52,7 @@ export class EquationRepository {
     statuses?: EquationStatus[],
     fromDate?: Date,
     toDate?: Date,
-    deletedOnly = false
+    includeDeleted = false
   ): Promise<number> {
     const where = this.buildUserEquationListWhere(
       userId,
@@ -61,7 +60,7 @@ export class EquationRepository {
       statuses,
       fromDate,
       toDate,
-      deletedOnly
+      includeDeleted
     );
     return prisma.userEquation.count({ where });
   }
@@ -372,23 +371,61 @@ export class EquationRepository {
     return d;
   }
 
+  private sortUserEquationsForList<T extends { status: string; updatedAt: Date }>(
+    rows: T[]
+  ): T[] {
+    const rank = (s: string) => {
+      const i = (LIST_STATUS_ORDER as readonly string[]).indexOf(s);
+      return i === -1 ? LIST_STATUS_ORDER.length : i;
+    };
+    return [...rows].sort((a, b) => {
+      const dr = rank(a.status) - rank(b.status);
+      if (dr !== 0) return dr;
+      return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+    });
+  }
+
   private buildUserEquationListWhere(
     userId: string,
     origins?: EquationOrigin[],
     statuses?: EquationStatus[],
     fromDate?: Date,
     toDate?: Date,
-    deletedOnly = false
-  ): UserEquationListWhere {
-    const where: UserEquationListWhere = { userId, isActive: !deletedOnly };
-    if (origins && origins.length > 0) where.origin = { in: origins };
-    if (statuses && statuses.length > 0) where.status = { in: statuses };
-    if (fromDate !== undefined || toDate !== undefined) {
-      where.updatedAt = {};
-      if (fromDate !== undefined) where.updatedAt.gte = fromDate;
-      if (toDate !== undefined) where.updatedAt.lte = this.endOfDay(toDate);
+    includeDeleted = false
+  ): Prisma.UserEquationWhereInput {
+    const hasWorkflowFilter = statuses !== undefined && statuses.length > 0;
+    const dateClause: Prisma.UserEquationWhereInput =
+      fromDate !== undefined || toDate !== undefined
+        ? {
+            updatedAt: {
+              ...(fromDate !== undefined ? { gte: fromDate } : {}),
+              ...(toDate !== undefined ? { lte: this.endOfDay(toDate) } : {}),
+            },
+          }
+        : {};
+
+    const originClause: Prisma.UserEquationWhereInput =
+      origins && origins.length > 0 ? { origin: { in: origins } } : {};
+
+    const base: Prisma.UserEquationWhereInput = {
+      userId,
+      ...originClause,
+      ...dateClause,
+    };
+
+    if (includeDeleted && hasWorkflowFilter) {
+      return {
+        ...base,
+        OR: [{ isActive: true, status: { in: statuses } }, { isActive: false }],
+      };
     }
-    return where;
+    if (includeDeleted && !hasWorkflowFilter) {
+      return { ...base, isActive: false };
+    }
+    if (!includeDeleted && hasWorkflowFilter) {
+      return { ...base, isActive: true, status: { in: statuses } };
+    }
+    return { ...base, isActive: true };
   }
 
   private buildDefaultEquationWhere(

@@ -24,12 +24,6 @@ const DOWNLOAD_QUANTITY_MAX = 50;
 const DOWNLOAD_FETCH_MULTIPLIER = 3;
 const DOWNLOAD_FETCH_MAX = 200;
 
-const STATUS_ORDER: EquationStatus[] = [
-  EquationStatus.IN_PROGRESS,
-  EquationStatus.NOT_STARTED,
-  EquationStatus.SOLVED,
-];
-
 const MESSAGE_EQUATION_VALIDATION_PREFIX = '';
 const MESSAGE_EQUATION_NO_SOLUTION = 'La ecuación no tiene solución.';
 const MESSAGE_NO_PERMISSION_MODIFY = 'No tienes permisos para modificar esta ecuación';
@@ -52,7 +46,7 @@ export class EquationService {
     statuses?: EquationStatus[],
     fromDate?: Date,
     toDate?: Date,
-    deletedOnly = false
+    includeDeleted = false
   ): Promise<PaginatedEquationsResponse> {
     const { page: p, limit: l } = this.sanitizePagination(page, limit);
     const [userEquations, total] = await Promise.all([
@@ -64,7 +58,7 @@ export class EquationService {
         statuses,
         fromDate,
         toDate,
-        deletedOnly
+        includeDeleted
       ),
       this.equationRepository.countForUser(
         userId,
@@ -72,17 +66,16 @@ export class EquationService {
         statuses,
         fromDate,
         toDate,
-        deletedOnly
+        includeDeleted
       ),
     ]);
-    const sorted = this.sortByStatusAndUpdatedAt(userEquations);
     const countMap = await this.getResolutionCountsOrDefault(
-      sorted.map((r) => ({
+      userEquations.map((r) => ({
         userEquationId: r.id,
         resolutionSessionId: (r as { currentResolutionId?: number }).currentResolutionId ?? 0,
       }))
     );
-    const data = sorted.map((row) => {
+    const data = userEquations.map((row) => {
       const resolutionId = (row as { currentResolutionId?: number }).currentResolutionId ?? 0;
       const steps = countMap.get(`${row.id}-${resolutionId}`) ?? STEPS_DEFAULT;
       return this.toEquationResponse(row, steps);
@@ -192,20 +185,6 @@ export class EquationService {
     const p = Math.max(1, Math.floor(page));
     const l = Math.min(MAX_LIMIT, Math.max(1, Math.floor(limit)));
     return { page: p, limit: l };
-  }
-
-  private statusOrderIndex(status: string): number {
-    const i = STATUS_ORDER.indexOf(status as EquationStatus);
-    return i === -1 ? STATUS_ORDER.length : i;
-  }
-
-  private sortByStatusAndUpdatedAt(rows: UserEquationRow[]): UserEquationRow[] {
-    return [...rows].sort((a, b) => {
-      const statusA = this.statusOrderIndex(a.status);
-      const statusB = this.statusOrderIndex(b.status);
-      if (statusA !== statusB) return statusA - statusB;
-      return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
-    });
   }
 
   private buildPaginatedResponse(

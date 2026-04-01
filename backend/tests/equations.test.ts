@@ -376,7 +376,7 @@ describe('Equations API', () => {
       );
     });
 
-    it('passes deletedOnly when statuses include DELETED', async () => {
+    it('passes includeDeleted when statuses include DELETED', async () => {
       const row = makeUserEquationRow({
         id: 'ue-del',
         isActive: false,
