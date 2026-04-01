@@ -16,12 +16,8 @@ interface ResolveEquationContentProps {
   message: string | null;
   finished: boolean;
   finishedCode: string | null;
-  onBack: () => void;
   onSubEquationChange: Dispatch<SetStateAction<string>>;
   onAnswerChange: Dispatch<SetStateAction<string>>;
-  onSubEquationFocus: () => void;
-  onAnswerFocus: () => void;
-  onSymbolClick: (insert: string) => void;
   onValidate: () => void;
   onEmptySet: () => void;
   onReset: () => void;
@@ -37,12 +33,8 @@ export const ResolveEquationContent = ({
   message,
   finished,
   finishedCode,
-  onBack,
   onSubEquationChange,
   onAnswerChange,
-  onSubEquationFocus,
-  onAnswerFocus,
-  onSymbolClick,
   onValidate,
   onEmptySet,
   onReset,
@@ -56,7 +48,7 @@ export const ResolveEquationContent = ({
       maxWidth={hasSteps ? 'full' : 'wide'}
     >
       <div className="grid grid-cols-1 lg:grid-cols-[2fr_3fr] gap-6 lg:gap-8">
-        <ResolveEquationEquationPanel equationExpression={equationExpression} onBack={onBack} />
+        <ResolveEquationEquationPanel equationExpression={equationExpression} />
         <div className="flex flex-col min-h-0">
           {finished ? (
             <ResolveEquationResultPanel
@@ -72,9 +64,6 @@ export const ResolveEquationContent = ({
               message={message}
               onSubEquationChange={onSubEquationChange}
               onAnswerChange={onAnswerChange}
-              onSubEquationFocus={onSubEquationFocus}
-              onAnswerFocus={onAnswerFocus}
-              onSymbolClick={onSymbolClick}
               onValidate={onValidate}
               onEmptySet={onEmptySet}
               onReset={onReset}
@@ -88,9 +77,9 @@ export const ResolveEquationContent = ({
   return (
     <div className="w-full min-h-[calc(100vh-7rem)] flex flex-col items-center justify-center">
       {hasSteps ? (
-        <div className="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(280px,24rem)] gap-6 items-start">
-          <div className="min-w-0">{resolveCard}</div>
-          <div className="min-w-0 lg:sticky lg:top-6 self-start">
+        <div className="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(280px,24rem)] gap-6 items-stretch">
+          <div className="min-w-0 min-h-0">{resolveCard}</div>
+          <div className="flex min-h-0 min-w-0 flex-col lg:h-full">
             <ResolveEquationStepsCard steps={steps} />
           </div>
         </div>

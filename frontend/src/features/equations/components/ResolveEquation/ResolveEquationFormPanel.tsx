@@ -3,10 +3,7 @@ import { COLORS, SPACING } from '../../../../config/theme';
 import { Input } from '../../../../shared/components/ui/Input/Input';
 import { Button } from '../../../../shared/components/ui/Button/Button';
 import { MathSymbolsPad, DEFAULT_MATH_SYMBOLS } from '../MathSymbolsPad';
-import {
-  handleEquationInputKeyDown,
-  handleEquationInputPaste,
-} from '../../utils/equation-input-guards';
+import { useResolveEquationFormInputs } from '../../hooks/useResolveEquationFormInputs';
 
 interface ResolveEquationFormPanelProps {
   subEquationInfix: string;
@@ -15,9 +12,6 @@ interface ResolveEquationFormPanelProps {
   message: string | null;
   onSubEquationChange: Dispatch<SetStateAction<string>>;
   onAnswerChange: Dispatch<SetStateAction<string>>;
-  onSubEquationFocus: () => void;
-  onAnswerFocus: () => void;
-  onSymbolClick: (insert: string) => void;
   onValidate: () => void;
   onEmptySet: () => void;
   onReset: () => void;
@@ -30,13 +24,23 @@ export const ResolveEquationFormPanel = ({
   message,
   onSubEquationChange,
   onAnswerChange,
-  onSubEquationFocus,
-  onAnswerFocus,
-  onSymbolClick,
   onValidate,
   onEmptySet,
   onReset,
 }: ResolveEquationFormPanelProps) => {
+  const {
+    subInputRef,
+    answerInputRef,
+    handlePadSymbol,
+    subEquationInputHandlers,
+    answerInputHandlers,
+  } = useResolveEquationFormInputs(
+    subEquationInfix,
+    answer,
+    onSubEquationChange,
+    onAnswerChange
+  );
+
   return (
     <>
       <label className="block text-sm font-medium mb-2" style={{ color: COLORS.accentSecondary }}>
@@ -45,12 +49,10 @@ export const ResolveEquationFormPanel = ({
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mb-4">
         <div className="flex-1 min-w-0">
           <Input
+            ref={subInputRef}
             label=""
             value={subEquationInfix}
-            onChange={(e) => onSubEquationChange(e.target.value)}
-            onKeyDown={handleEquationInputKeyDown}
-            onPaste={(e) => handleEquationInputPaste(e, onSubEquationChange)}
-            onFocus={onSubEquationFocus}
+            {...subEquationInputHandlers}
             placeholder="ej. x, 2*x, x+5"
             disabled={submitting}
             autoComplete="off"
@@ -65,12 +67,10 @@ export const ResolveEquationFormPanel = ({
         </span>
         <div className="flex-1 min-w-0">
           <Input
+            ref={answerInputRef}
             label=""
             value={answer}
-            onChange={(e) => onAnswerChange(e.target.value)}
-            onKeyDown={handleEquationInputKeyDown}
-            onPaste={(e) => handleEquationInputPaste(e, onAnswerChange)}
-            onFocus={onAnswerFocus}
+            {...answerInputHandlers}
             placeholder="ej. 3, 1/2, 0,5"
             disabled={submitting}
             autoComplete="off"
@@ -85,7 +85,7 @@ export const ResolveEquationFormPanel = ({
       <div style={{ marginBottom: SPACING.lg }}>
         <MathSymbolsPad
           symbols={DEFAULT_MATH_SYMBOLS}
-          onSymbolClick={onSymbolClick}
+          onSymbolClick={handlePadSymbol}
           disabled={submitting}
         />
       </div>

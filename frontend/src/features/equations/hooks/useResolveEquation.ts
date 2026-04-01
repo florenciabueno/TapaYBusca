@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '../../../shared/query-keys';
 import { useAuthStore } from '../../../stores';
@@ -63,8 +63,6 @@ export const useResolveEquation = (id?: string) => {
   const [message, setMessage] = useState<string | null>(null);
   const [finished, setFinished] = useState(false);
   const [finishedCode, setFinishedCode] = useState<string | null>(null);
-  const activeInputRef = useRef<'subEquation' | 'answer'>('subEquation');
-
   const loadResolution = async (userEquationId: string, authToken?: string | null) => {
     const resolution = authToken
       ? await equationService.getResolution(userEquationId, authToken)
@@ -96,14 +94,6 @@ export const useResolveEquation = (id?: string) => {
       .catch((e) => setError(e instanceof Error ? e.message : 'Error al cargar'))
       .finally(() => setLoading(false));
   }, [id, token]);
-
-  const handleSymbolClick = (insert: string) => {
-    if (activeInputRef.current === 'subEquation') {
-      setSubEquationInfix((prev) => prev + insert);
-    } else {
-      setAnswer((prev) => prev + insert);
-    }
-  };
 
   const handleValidate = async () => {
     if (!id || !token) return;
@@ -207,10 +197,6 @@ export const useResolveEquation = (id?: string) => {
     finishedCode,
     setSubEquationInfix,
     setAnswer,
-    setActiveInput: (value: 'subEquation' | 'answer') => {
-      activeInputRef.current = value;
-    },
-    handleSymbolClick,
     handleValidate,
     handleEmptySet,
     handleReset,

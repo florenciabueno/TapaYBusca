@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useLayoutEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { EquationsLayout } from '../EquationsLayout';
@@ -16,6 +16,7 @@ import {
   handleEquationInputKeyDown,
   handleEquationInputPaste,
 } from '../../utils/equation-input-guards';
+import { insertMathSymbolAtSelection } from '../../utils/equation-symbol-insert';
 
 export const CreateEquationForm = () => {
   const navigate = useNavigate();
@@ -39,12 +40,13 @@ export const CreateEquationForm = () => {
     },
   });
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const pos = cursorAfterInsertRef.current;
     if (pos !== null && inputRef.current) {
       cursorAfterInsertRef.current = null;
-      inputRef.current.focus();
-      inputRef.current.setSelectionRange(pos, pos);
+      const el = inputRef.current;
+      el.focus();
+      el.setSelectionRange(pos, pos);
     }
   }, [value]);
 
@@ -58,14 +60,12 @@ export const CreateEquationForm = () => {
   const isLoading = createMutation.isPending;
 
   function handleSymbolClick(insert: string) {
-    const { start } = selectionRef.current;
+    const { start, end } = selectionRef.current;
     setValue((prev) => {
-      const next = prev.slice(0, start) + insert + prev.slice(selectionRef.current.end);
-      const isFunctionWithParens = insert.endsWith('()');
-      cursorAfterInsertRef.current = isFunctionWithParens
-        ? start + insert.length - 1
-        : start + insert.length;
-      return next;
+      const { nextValue, cursorPos } = insertMathSymbolAtSelection(prev, start, end, insert);
+      cursorAfterInsertRef.current = cursorPos;
+      selectionRef.current = { start: cursorPos, end: cursorPos };
+      return nextValue;
     });
     setValidationError(null);
     createMutation.reset();
@@ -118,6 +118,10 @@ export const CreateEquationForm = () => {
                   selectionRef.current = { start: el.selectionStart ?? 0, end: el.selectionEnd ?? 0 };
                 }}
                 onSelect={(e) => {
+                  const el = e.target as HTMLInputElement;
+                  selectionRef.current = { start: el.selectionStart ?? 0, end: el.selectionEnd ?? 0 };
+                }}
+                onClick={(e) => {
                   const el = e.target as HTMLInputElement;
                   selectionRef.current = { start: el.selectionStart ?? 0, end: el.selectionEnd ?? 0 };
                 }}

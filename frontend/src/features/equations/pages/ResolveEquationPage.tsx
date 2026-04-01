@@ -25,8 +25,6 @@ export const ResolveEquationPage = () => {
     finishedCode,
     setSubEquationInfix,
     setAnswer,
-    setActiveInput,
-    handleSymbolClick,
     handleValidate,
     handleEmptySet,
     handleReset,
@@ -80,12 +78,8 @@ export const ResolveEquationPage = () => {
         message={message}
         finished={finished}
         finishedCode={finishedCode}
-        onBack={() => navigate(ROUTES.DASHBOARD)}
         onSubEquationChange={setSubEquationInfix}
         onAnswerChange={setAnswer}
-        onSubEquationFocus={() => setActiveInput('subEquation')}
-        onAnswerFocus={() => setActiveInput('answer')}
-        onSymbolClick={handleSymbolClick}
         onValidate={handleValidate}
         onEmptySet={handleEmptySet}
         onReset={handleReset}
