@@ -1,9 +1,10 @@
 import type { Dispatch, SetStateAction } from 'react';
 import { FormPageCard } from '../FormPageCard';
 import type { ResolutionStep } from '../../hooks/useResolveEquation';
-import { ResolveEquationLeftPanel } from './ResolveEquationLeftPanel';
+import { ResolveEquationEquationPanel } from './ResolveEquationEquationPanel';
 import { ResolveEquationResultPanel } from './ResolveEquationResultPanel';
 import { ResolveEquationFormPanel } from './ResolveEquationFormPanel';
+import { ResolveEquationStepsCard } from './ResolveEquationStepsCard';
 
 interface ResolveEquationContentProps {
   equationExpression: string;
@@ -46,46 +47,56 @@ export const ResolveEquationContent = ({
   onEmptySet,
   onReset,
 }: ResolveEquationContentProps) => {
+  const hasSteps = steps.length > 0;
+
+  const resolveCard = (
+    <FormPageCard
+      title="Resolver ecuación"
+      description="Completa los pasos para hallar el conjunto solución. Usa la botonera para ingresar símbolos."
+      maxWidth={hasSteps ? 'full' : 'wide'}
+    >
+      <div className="grid grid-cols-1 lg:grid-cols-[2fr_3fr] gap-6 lg:gap-8">
+        <ResolveEquationEquationPanel equationExpression={equationExpression} onBack={onBack} />
+        <div className="flex flex-col min-h-0">
+          {finished ? (
+            <ResolveEquationResultPanel
+              finishedCode={finishedCode}
+              solutionSet={solutionSet}
+              onReset={onReset}
+            />
+          ) : (
+            <ResolveEquationFormPanel
+              subEquationInfix={subEquationInfix}
+              answer={answer}
+              submitting={submitting}
+              message={message}
+              onSubEquationChange={onSubEquationChange}
+              onAnswerChange={onAnswerChange}
+              onSubEquationFocus={onSubEquationFocus}
+              onAnswerFocus={onAnswerFocus}
+              onSymbolClick={onSymbolClick}
+              onValidate={onValidate}
+              onEmptySet={onEmptySet}
+              onReset={onReset}
+            />
+          )}
+        </div>
+      </div>
+    </FormPageCard>
+  );
+
   return (
     <div className="w-full min-h-[calc(100vh-7rem)] flex flex-col items-center justify-center">
-      <FormPageCard
-        title="Resolver ecuación"
-        description="Completa los pasos para hallar el conjunto solución. Usa la botonera para ingresar símbolos."
-        maxWidth="wide"
-      >
-        <div className="grid grid-cols-1 lg:grid-cols-[2fr_3fr] gap-6 lg:gap-8">
-          <ResolveEquationLeftPanel
-            equationExpression={equationExpression}
-            steps={steps}
-            onBack={onBack}
-          />
-
-          <div className="flex flex-col min-h-0">
-            {finished ? (
-              <ResolveEquationResultPanel
-                finishedCode={finishedCode}
-                solutionSet={solutionSet}
-                onReset={onReset}
-              />
-            ) : (
-              <ResolveEquationFormPanel
-                subEquationInfix={subEquationInfix}
-                answer={answer}
-                submitting={submitting}
-                message={message}
-                onSubEquationChange={onSubEquationChange}
-                onAnswerChange={onAnswerChange}
-                onSubEquationFocus={onSubEquationFocus}
-                onAnswerFocus={onAnswerFocus}
-                onSymbolClick={onSymbolClick}
-                onValidate={onValidate}
-                onEmptySet={onEmptySet}
-                onReset={onReset}
-              />
-            )}
+      {hasSteps ? (
+        <div className="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(280px,24rem)] gap-6 items-start">
+          <div className="min-w-0">{resolveCard}</div>
+          <div className="min-w-0 lg:sticky lg:top-6 self-start">
+            <ResolveEquationStepsCard steps={steps} />
           </div>
         </div>
-      </FormPageCard>
+      ) : (
+        <div className="w-full max-w-5xl mx-auto">{resolveCard}</div>
+      )}
     </div>
   );
 };

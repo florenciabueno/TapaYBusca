@@ -81,7 +81,7 @@ export const EquationCard = ({
                 e.stopPropagation();
                 onDelete(equation.id);
               }}
-              className="rounded-md px-2 py-1 text-xs font-medium text-red-600 transition-colors hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500/30 focus:ring-offset-2"
+              className="cursor-pointer rounded-md px-2 py-1 text-xs font-medium text-red-600 transition-colors hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500/30 focus:ring-offset-2"
             >
               Eliminar
             </button>

@@ -5,14 +5,16 @@ export interface FormPageCardProps {
   title: string;
   description?: string;
   children: ReactNode;
-  /** Use 'wide' for resolve page to fit two-column layout (equation + steps | form). */
-  maxWidth?: 'default' | 'wide';
+  maxWidth?: 'default' | 'wide' | 'full';
 }
 
 export const FormPageCard = ({ title, description, children, maxWidth = 'default' }: FormPageCardProps) => {
-  const maxWidthClass = maxWidth === 'wide' ? 'max-w-5xl' : 'max-w-3xl';
+  const outerClass =
+    maxWidth === 'full'
+      ? 'w-full max-w-none'
+      : `${maxWidth === 'wide' ? 'max-w-5xl' : 'max-w-3xl'} mx-auto`;
   return (
-    <div className={`${maxWidthClass} mx-auto`}>
+    <div className={outerClass}>
       <div
         className="p-8 rounded-2xl"
         style={{

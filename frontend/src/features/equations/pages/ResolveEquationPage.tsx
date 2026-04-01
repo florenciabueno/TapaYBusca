@@ -1,14 +1,14 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { ROUTES } from '../../../config/constants';
-import { COLORS, SHADOW } from '../../../config/theme';
+import { COLORS } from '../../../config/theme';
 import { EquationsLayout } from '../components/EquationsLayout';
+import { EquationsMessageCard } from '../components/EquationsMessageCard';
 import { ResolveEquationContent } from '../components/ResolveEquation';
 import { useResolveEquation } from '../hooks/useResolveEquation';
 
 export const ResolveEquationPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const goBack = () => navigate(ROUTES.DASHBOARD);
 
   const {
     token,
@@ -47,19 +47,11 @@ export const ResolveEquationPage = () => {
   if (error || !equation) {
     return (
       <EquationsLayout>
-        <div className="w-full">
-          <div className="rounded-lg border border-red-200 bg-red-50 p-4">
-            <p className="text-sm text-red-700">{error ?? 'Ecuación no encontrada'}</p>
-            <button
-              type="button"
-              onClick={goBack}
-              className="mt-2 text-sm font-medium underline"
-              style={{ color: COLORS.brandDark }}
-            >
-              Volver al listado
-            </button>
-          </div>
-        </div>
+        <EquationsMessageCard
+          variant="error"
+          message={error ?? 'Ecuación no encontrada'}
+          onBack={() => navigate(ROUTES.DASHBOARD)}
+        />
       </EquationsLayout>
     );
   }
@@ -67,19 +59,11 @@ export const ResolveEquationPage = () => {
   if (!token) {
     return (
       <EquationsLayout>
-        <div className="w-full">
-          <div className="rounded-lg border p-4" style={{ borderColor: COLORS.brandDark, boxShadow: SHADOW.sm }}>
-            <p className="text-sm text-gray-700">Inicia sesión para resolver y guardar tu progreso.</p>
-            <button
-              type="button"
-              onClick={goBack}
-              className="mt-2 text-sm font-medium underline"
-              style={{ color: COLORS.brandDark }}
-            >
-              Volver al listado
-            </button>
-          </div>
-        </div>
+        <EquationsMessageCard
+          variant="info"
+          message="Inicia sesión para resolver y guardar tu progreso."
+          onBack={() => navigate(ROUTES.DASHBOARD)}
+        />
       </EquationsLayout>
     );
   }
@@ -96,7 +80,7 @@ export const ResolveEquationPage = () => {
         message={message}
         finished={finished}
         finishedCode={finishedCode}
-        onBack={goBack}
+        onBack={() => navigate(ROUTES.DASHBOARD)}
         onSubEquationChange={setSubEquationInfix}
         onAnswerChange={setAnswer}
         onSubEquationFocus={() => setActiveInput('subEquation')}
