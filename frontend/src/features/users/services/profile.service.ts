@@ -1,6 +1,7 @@
 import { API_URL } from '../../../config/constants';
 import type { Profile, UpdateProfileData } from '../types';
 import { useAuthStore } from '../../../stores';
+import { apiFetch } from '../../../shared/utils/apiFetch';
 
 const getAuthHeaders = () => {
   const token = useAuthStore.getState().token;
@@ -12,7 +13,7 @@ const getAuthHeaders = () => {
 
 export const profileService = {
   async getProfile(): Promise<Profile> {
-    const response = await fetch(`${API_URL}/user/profile`, {
+    const response = await apiFetch(`${API_URL}/user/profile`, {
       method: 'GET',
       headers: getAuthHeaders(),
       credentials: 'include',
@@ -26,7 +27,7 @@ export const profileService = {
   },
 
   async updateProfile(data: UpdateProfileData): Promise<Profile> {
-    const response = await fetch(`${API_URL}/user/profile`, {
+    const response = await apiFetch(`${API_URL}/user/profile`, {
       method: 'PUT',
       headers: getAuthHeaders(),
       body: JSON.stringify(data),

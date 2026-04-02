@@ -111,13 +111,13 @@ export const useResolveEquation = (id?: string) => {
       );
       await loadResolution(id, token);
       setMessage(getUserMessage(result.code));
+      void queryClient.invalidateQueries({ queryKey: queryKeys.equations.lists() });
       if (
         result.code === RESOLUTION_CODES.RESOLUTION_FINISHED ||
         result.code === RESOLUTION_CODES.NO_SOLUTION
       ) {
         setFinished(true);
         setFinishedCode(result.code);
-        queryClient.invalidateQueries({ queryKey: queryKeys.equations.lists() });
       }
       if (result.code === RESOLUTION_CODES.RESULT_CORRECT) {
         setSubEquationInfix('x');
@@ -149,10 +149,10 @@ export const useResolveEquation = (id?: string) => {
       );
       await loadResolution(id, token);
       setMessage(getUserMessage(result.code));
+      void queryClient.invalidateQueries({ queryKey: queryKeys.equations.lists() });
       if (result.code === RESOLUTION_CODES.RESOLUTION_FINISHED) {
         setFinished(true);
         setFinishedCode(result.code);
-        queryClient.invalidateQueries({ queryKey: queryKeys.equations.lists() });
       }
       setSubEquationInfix('');
       setAnswer('');

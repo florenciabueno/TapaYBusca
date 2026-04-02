@@ -242,7 +242,8 @@ export class EquationService {
     latexExpression?: string | null;
     infixExpression?: string | null;
     postfixExpression?: string | null;
-  }): string {
+  } | null | undefined): string {
+    if (equation == null) return '';
     const latex = equation.latexExpression?.trim();
     if (latex) return latex;
     const raw = equation.infixExpression || equation.postfixExpression || '';

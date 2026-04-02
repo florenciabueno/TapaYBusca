@@ -66,6 +66,8 @@ export const ResolveEquationPage = () => {
     );
   }
 
+  const isDeletedEquation = equation.isActive === false;
+
   return (
     <EquationsLayout>
       <ResolveEquationContent
@@ -78,6 +80,7 @@ export const ResolveEquationPage = () => {
         message={message}
         finished={finished}
         finishedCode={finishedCode}
+        isReadOnly={isDeletedEquation}
         onSubEquationChange={setSubEquationInfix}
         onAnswerChange={setAnswer}
         onValidate={handleValidate}

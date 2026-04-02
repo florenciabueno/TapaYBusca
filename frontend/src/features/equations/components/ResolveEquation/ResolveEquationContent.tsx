@@ -1,4 +1,5 @@
 import type { Dispatch, SetStateAction } from 'react';
+import { COLORS, RADIUS, SHADOW } from '../../../../config/theme';
 import { FormPageCard } from '../FormPageCard';
 import type { ResolutionStep } from '../../hooks/useResolveEquation';
 import { ResolveEquationEquationPanel } from './ResolveEquationEquationPanel';
@@ -16,6 +17,8 @@ interface ResolveEquationContentProps {
   message: string | null;
   finished: boolean;
   finishedCode: string | null;
+  /** Eliminada (soft delete): solo historial de pasos, sin formulario de resolución. */
+  isReadOnly?: boolean;
   onSubEquationChange: Dispatch<SetStateAction<string>>;
   onAnswerChange: Dispatch<SetStateAction<string>>;
   onValidate: () => void;
@@ -33,6 +36,7 @@ export const ResolveEquationContent = ({
   message,
   finished,
   finishedCode,
+  isReadOnly = false,
   onSubEquationChange,
   onAnswerChange,
   onValidate,
@@ -40,6 +44,43 @@ export const ResolveEquationContent = ({
   onReset,
 }: ResolveEquationContentProps) => {
   const hasSteps = steps.length > 0;
+
+  if (isReadOnly) {
+    return (
+      <div className="w-full min-h-[calc(100vh-7rem)] flex flex-col items-center justify-center">
+        <div className="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(280px,24rem)] gap-6 items-stretch">
+          <div className="min-w-0 min-h-0">
+            <FormPageCard
+              title="Ecuación eliminada"
+              description="Ya no puedes seguir resolviéndola. Solo puedes ver el historial de los pasos realizados."
+              maxWidth="full"
+            >
+              <ResolveEquationEquationPanel equationExpression={equationExpression} />
+            </FormPageCard>
+          </div>
+          <div className="flex min-h-0 min-w-0 flex-col lg:h-full">
+            {hasSteps ? (
+              <ResolveEquationStepsCard steps={steps} />
+            ) : (
+              <div
+                className="flex w-full flex-col rounded-2xl p-6 lg:h-full lg:justify-center"
+                style={{
+                  backgroundColor: COLORS.surface,
+                  borderRadius: RADIUS.xl,
+                  boxShadow: SHADOW.lg,
+                  border: `1px solid ${COLORS.gray[200]}`,
+                }}
+              >
+                <p className="text-sm" style={{ color: COLORS.gray[600] }}>
+                  No hay pasos guardados para esta ecuación.
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const resolveCard = (
     <FormPageCard
