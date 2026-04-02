@@ -173,7 +173,7 @@ export const Header = () => {
                 <button
                   type="button"
                   onClick={openEditProfile}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm transition-colors hover:bg-gray-100 focus:outline-none focus:bg-gray-100"
+                  className="w-full cursor-pointer flex items-center gap-2 px-3 py-2 text-left text-sm transition-colors hover:bg-gray-100 focus:outline-none focus:bg-gray-100"
                   style={{ color: COLORS.brandDark }}
                   role="menuitem"
                 >
@@ -183,7 +183,7 @@ export const Header = () => {
                 <button
                   type="button"
                   onClick={handleLogout}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm transition-colors hover:bg-gray-100 focus:outline-none focus:bg-gray-100"
+                  className="w-full cursor-pointer flex items-center gap-2 px-3 py-2 text-left text-sm transition-colors hover:bg-gray-100 focus:outline-none focus:bg-gray-100"
                   style={{ color: COLORS.gray[600] }}
                   role="menuitem"
                 >
