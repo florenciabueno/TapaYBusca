@@ -28,6 +28,7 @@ vi.mock('../src/modules/equations/equation.repository.js', () => {
   const findById = vi.fn();
   const update = vi.fn();
   const softDelete = vi.fn();
+  const hardDeleteNotStartedUserEquation = vi.fn();
   const canUserModify = vi.fn();
   const findDefaultEquations = vi.fn();
   const countDefaultEquations = vi.fn();
@@ -49,6 +50,7 @@ vi.mock('../src/modules/equations/equation.repository.js', () => {
       findById = findById;
       update = update;
       softDelete = softDelete;
+      hardDeleteNotStartedUserEquation = hardDeleteNotStartedUserEquation;
       canUserModify = canUserModify;
       findDefaultEquations = findDefaultEquations;
       countDefaultEquations = countDefaultEquations;
@@ -68,6 +70,7 @@ vi.mock('../src/modules/equations/equation.repository.js', () => {
       findById,
       update,
       softDelete,
+      hardDeleteNotStartedUserEquation,
       canUserModify,
       findDefaultEquations,
       countDefaultEquations,
@@ -549,6 +552,12 @@ describe('Equations API', () => {
   });
 
   describe('DELETE /api/equations/:id (deleteEquation)', () => {
+    beforeEach(() => {
+      repoMocks.findById.mockReset();
+      repoMocks.softDelete.mockReset();
+      repoMocks.hardDeleteNotStartedUserEquation.mockReset();
+    });
+
     it('returns 401 when Authorization is missing', async () => {
       const response = await request(app).delete('/api/equations/ue-1');
       expect(response.status).toBe(401);
@@ -563,13 +572,28 @@ describe('Equations API', () => {
       expect(response.body.error).toContain('permisos');
     });
 
-    it('returns 204 when user can delete', async () => {
+    it('returns 204 and hard-deletes when status is NOT_STARTED', async () => {
       repoMocks.canUserModify.mockResolvedValue(true);
+      repoMocks.findById.mockResolvedValue(makeUserEquationRow({ status: EquationStatus.NOT_STARTED }));
+      repoMocks.hardDeleteNotStartedUserEquation.mockResolvedValue(undefined);
+      const response = await request(app)
+        .delete('/api/equations/ue-1')
+        .set(authHeader(token));
+      expect(response.status).toBe(204);
+      expect(repoMocks.hardDeleteNotStartedUserEquation).toHaveBeenCalledWith('ue-1');
+      expect(repoMocks.softDelete).not.toHaveBeenCalled();
+    });
+
+    it('returns 204 and soft-deletes when status is not NOT_STARTED', async () => {
+      repoMocks.canUserModify.mockResolvedValue(true);
+      repoMocks.findById.mockResolvedValue(makeUserEquationRow({ status: EquationStatus.IN_PROGRESS }));
       repoMocks.softDelete.mockResolvedValue(undefined);
       const response = await request(app)
         .delete('/api/equations/ue-1')
         .set(authHeader(token));
       expect(response.status).toBe(204);
+      expect(repoMocks.softDelete).toHaveBeenCalledWith('ue-1');
+      expect(repoMocks.hardDeleteNotStartedUserEquation).not.toHaveBeenCalled();
     });
   });
 

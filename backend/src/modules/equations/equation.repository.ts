@@ -227,6 +227,24 @@ export class EquationRepository {
     });
   }
 
+  async hardDeleteNotStartedUserEquation(userEquationId: string): Promise<void> {
+    await prisma.$transaction(async (tx) => {
+      const row = await tx.userEquation.findUnique({
+        where: { id: userEquationId },
+        select: {
+          equationId: true,
+          equation: { select: { isDefault: true } },
+        },
+      });
+      if (!row) return;
+      await tx.userEquation.delete({ where: { id: userEquationId } });
+      const remaining = await tx.userEquation.count({ where: { equationId: row.equationId } });
+      if (remaining === 0 && !row.equation.isDefault) {
+        await tx.equation.delete({ where: { id: row.equationId } });
+      }
+    });
+  }
+
   async canUserModify(userEquationId: string, userId: string): Promise<boolean> {
     const row = await prisma.userEquation.findUnique({
       where: { id: userEquationId },

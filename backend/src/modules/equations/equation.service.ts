@@ -119,6 +119,12 @@ export class EquationService {
 
   async deleteEquation(equationUserId: string, userId: string): Promise<void> {
     await this.ensureCanDeleteEquation(equationUserId, userId);
+    const row = await this.equationRepository.findById(equationUserId);
+    if (!row) throw new Error(MESSAGE_NO_PERMISSION_DELETE);
+    if (row.status === EquationStatus.NOT_STARTED) {
+      await this.equationRepository.hardDeleteNotStartedUserEquation(equationUserId);
+      return;
+    }
     await this.equationRepository.softDelete(equationUserId);
   }
 
