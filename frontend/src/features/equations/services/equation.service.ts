@@ -204,7 +204,6 @@ export const equationService = {
   async resolveStep(
     userEquationId: string,
     payload: {
-      subEquationPostfix?: string[];
       subEquationInfix?: string;
       answer: string;
       resolutionStepStatus: number;

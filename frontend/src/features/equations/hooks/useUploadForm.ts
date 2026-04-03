@@ -12,7 +12,7 @@ const SUCCESS_MESSAGE_DURATION_MS = 4000;
 
 export type UploadTab = 'can-upload' | 'already-uploaded';
 
-export function useUploadForm() {
+export const useUploadForm = () => {
   const queryClient = useQueryClient();
   const token = useAuthStore((state) => state.token);
   const { uploadableEquations, isLoading, error } = useUploadableEquations();
@@ -86,4 +86,4 @@ export function useUploadForm() {
     handleToggle,
     handleSubmit,
   };
-}
+};

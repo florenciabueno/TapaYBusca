@@ -59,7 +59,7 @@ export const CreateEquationForm = () => {
       : null);
   const isLoading = createMutation.isPending;
 
-  function handleSymbolClick(insert: string) {
+  const handleSymbolClick = (insert: string) => {
     const { start, end } = selectionRef.current;
     setValue((prev) => {
       const { nextValue, cursorPos } = insertMathSymbolAtSelection(prev, start, end, insert);
@@ -69,9 +69,9 @@ export const CreateEquationForm = () => {
     });
     setValidationError(null);
     createMutation.reset();
-  }
+  };
 
-  function handleSubmit(e: React.FormEvent) {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     createMutation.reset();
     setSuccess(null);
@@ -82,14 +82,14 @@ export const CreateEquationForm = () => {
       return;
     }
     createMutation.mutate(trimmed);
-  }
+  };
 
-  function handleClear() {
+  const handleClear = () => {
     setValue('');
     setValidationError(null);
     setSuccess(null);
     createMutation.reset();
-  }
+  };
 
   return (
     <EquationsLayout>

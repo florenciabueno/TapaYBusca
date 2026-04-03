@@ -10,16 +10,16 @@ type ActiveField = 'sub' | 'answer';
 
 type PendingCaret = { field: ActiveField; pos: number };
 
-function readSelection(el: HTMLInputElement) {
+const readSelection = (el: HTMLInputElement) => {
   return { start: el.selectionStart ?? 0, end: el.selectionEnd ?? 0 };
-}
+};
 
-export function useResolveEquationFormInputs(
+export const useResolveEquationFormInputs = (
   subEquationInfix: string,
   answer: string,
   onSubEquationChange: Dispatch<SetStateAction<string>>,
   onAnswerChange: Dispatch<SetStateAction<string>>
-) {
+) => {
   const subInputRef = useRef<HTMLInputElement>(null);
   const answerInputRef = useRef<HTMLInputElement>(null);
   const subSelectionRef = useRef({ start: 0, end: 0 });
@@ -119,4 +119,4 @@ export function useResolveEquationFormInputs(
     subEquationInputHandlers,
     answerInputHandlers,
   };
-}
+};

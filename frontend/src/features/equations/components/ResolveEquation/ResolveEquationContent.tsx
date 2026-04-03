@@ -1,6 +1,6 @@
 import type { Dispatch, SetStateAction } from 'react';
 import { FormPageCard } from '../FormPageCard';
-import type { ResolutionStep } from '../../hooks/useResolveEquation';
+import type { ResolutionStep } from '../../types';
 import { ResolveEquationEquationPanel } from './ResolveEquationEquationPanel';
 import { ResolveEquationResultPanel } from './ResolveEquationResultPanel';
 import { ResolveEquationFormPanel } from './ResolveEquationFormPanel';

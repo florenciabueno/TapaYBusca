@@ -38,22 +38,15 @@ export class ResolutionService {
     userEquationId: string,
     userId: string,
     payload: {
-      subEquationPostfix?: string[];
       subEquationInfix?: string;
       answer: string;
       resolutionStepStatus: number;
     }
   ): Promise<{ code: string; message?: string }> {
-    let subEquationPostfix = payload.subEquationPostfix;
-    if (
-      !subEquationPostfix?.length &&
-      typeof payload.subEquationInfix === 'string' &&
-      payload.subEquationInfix.trim()
-    ) {
-      const tokens = tokenizeInfix(payload.subEquationInfix.trim());
-      const postfix = infixToPostfix(tokens);
-      subEquationPostfix = postfix ?? [];
-    }
+    const subEquationInfix = payload.subEquationInfix?.trim();
+    const subEquationPostfix = subEquationInfix
+      ? (infixToPostfix(tokenizeInfix(subEquationInfix)) ?? [])
+      : [];
     if (!subEquationPostfix?.length) {
       return { code: RESOLUTION_CODES.SYNTAX_INCORRECT, message: 'Subequation is required' };
     }

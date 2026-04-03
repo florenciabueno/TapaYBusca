@@ -12,12 +12,12 @@ export interface OriginFilterProps {
 export const OriginFilter = ({ selectedOrigins, onChange }: OriginFilterProps) => {
   const selectedSet = new Set(selectedOrigins ?? []);
 
-  function toggle(origin: EquationOrigin) {
+  const toggle = (origin: EquationOrigin) => {
     const next = selectedSet.has(origin)
       ? (selectedOrigins ?? []).filter((o) => o !== origin)
       : [...(selectedOrigins ?? []), origin];
     onChange(next);
-  }
+  };
 
   return (
     <div className="flex flex-wrap items-center gap-2">

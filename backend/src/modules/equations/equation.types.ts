@@ -49,7 +49,6 @@ export interface CreateEquationDto {
 }
 
 export interface ResolveStepDto {
-  subEquationPostfix?: string[];
   subEquationInfix?: string;
   answer: string;
   resolutionStepStatus: number;

@@ -3,14 +3,7 @@ import { ROUTES } from '../../../../config/constants';
 import { COLORS, ACCENT_RGB, PURPLE_RGB } from '../../../../config/theme';
 import logoImage from '../../../../assets/logo.png';
 
-const navItems = [
-  { path: ROUTES.DASHBOARD, label: 'Inicio', icon: HomeIcon },
-  { path: ROUTES.CREATE_EQUATION, label: 'Crear ecuación', icon: CalculatorIcon },
-  { path: ROUTES.UPLOAD, label: 'Subir', icon: UploadIcon },
-  { path: ROUTES.DOWNLOAD, label: 'Descargar', icon: DownloadIcon },
-];
-
-function HomeIcon({ className }: { className?: string }) {
+const HomeIcon = ({ className }: { className?: string }) => {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path
@@ -23,9 +16,9 @@ function HomeIcon({ className }: { className?: string }) {
       <path d="M9 22V12H15V22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
-}
+};
 
-function CalculatorIcon({ className }: { className?: string }) {
+const CalculatorIcon = ({ className }: { className?: string }) => {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
       <rect x="4" y="2" width="16" height="20" rx="2" stroke="currentColor" strokeWidth="2" />
@@ -41,9 +34,9 @@ function CalculatorIcon({ className }: { className?: string }) {
       <path d="M16 18H16.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
     </svg>
   );
-}
+};
 
-function UploadIcon({ className }: { className?: string }) {
+const UploadIcon = ({ className }: { className?: string }) => {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path
@@ -57,9 +50,9 @@ function UploadIcon({ className }: { className?: string }) {
       <path d="M12 3V15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
-}
+};
 
-function DownloadIcon({ className }: { className?: string }) {
+const DownloadIcon = ({ className }: { className?: string }) => {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path
@@ -73,7 +66,14 @@ function DownloadIcon({ className }: { className?: string }) {
       <path d="M12 15V3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
-}
+};
+
+const navItems = [
+  { path: ROUTES.DASHBOARD, label: 'Inicio', icon: HomeIcon },
+  { path: ROUTES.CREATE_EQUATION, label: 'Crear ecuación', icon: CalculatorIcon },
+  { path: ROUTES.UPLOAD, label: 'Subir', icon: UploadIcon },
+  { path: ROUTES.DOWNLOAD, label: 'Descargar', icon: DownloadIcon },
+];
 
 export const Sidebar = () => {
   return (

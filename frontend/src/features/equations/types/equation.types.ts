@@ -14,6 +14,14 @@ export interface Equation {
   isActive?: boolean;
 }
 
+export interface ResolutionStep {
+  subEquation: string;
+  proposedResult: string;
+  isCorrect: boolean;
+  subEquationLatex?: string;
+  resultLatex?: string;
+}
+
 export interface UploadableEquation {
   id: string;
   equation: string;

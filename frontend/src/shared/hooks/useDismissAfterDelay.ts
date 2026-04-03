@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 
-export function useDismissAfterDelay<T>(initial: T, delayMs: number): [T, (value: T) => void] {
+export const useDismissAfterDelay = <T,>(
+  initial: T,
+  delayMs: number
+): [T, (value: T) => void] => {
   const [value, setValue] = useState<T>(initial);
 
   useEffect(() => {
@@ -10,4 +13,4 @@ export function useDismissAfterDelay<T>(initial: T, delayMs: number): [T, (value
   }, [value, delayMs, initial]);
 
   return [value, setValue];
-}
+};

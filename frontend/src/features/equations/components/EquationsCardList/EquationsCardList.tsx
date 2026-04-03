@@ -42,19 +42,19 @@ export const EquationsCardList = () => {
   const user = useAuthStore((state) => state.user);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
-  function handleDeleteClick(id: string) {
+  const handleDeleteClick = (id: string) => {
     setPendingDeleteId(id);
-  }
+  };
 
-  function handleConfirmDelete() {
+  const handleConfirmDelete = () => {
     if (pendingDeleteId) {
       deleteEquation(pendingDeleteId).finally(() => setPendingDeleteId(null));
     }
-  }
+  };
 
-  function handleCancelDelete() {
+  const handleCancelDelete = () => {
     setPendingDeleteId(null);
-  }
+  };
 
   if (isLoading) {
     return (

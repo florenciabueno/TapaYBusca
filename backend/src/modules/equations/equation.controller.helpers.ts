@@ -96,16 +96,12 @@ export function parseDownloadBody(body: unknown): DownloadEquationsDto {
 
 export function parseResolveStepBody(body: unknown): ResolveStepDto {
   const b = body && typeof body === 'object' ? (body as Record<string, unknown>) : {};
-  const subEquationPostfix = Array.isArray(b.subEquationPostfix)
-    ? (b.subEquationPostfix as string[])
-    : undefined;
   const subEquationInfix = typeof b.subEquationInfix === 'string' ? b.subEquationInfix : undefined;
   const answer = typeof b.answer === 'string' ? b.answer : '';
   const resolutionStepStatus =
     typeof b.resolutionStepStatus === 'number' ? b.resolutionStepStatus : undefined;
 
   return {
-    subEquationPostfix,
     subEquationInfix,
     answer,
     resolutionStepStatus: resolutionStepStatus ?? 1,

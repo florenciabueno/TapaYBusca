@@ -3,7 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '../../../shared/query-keys';
 import { useAuthStore } from '../../../stores';
 import { equationService } from '../services/equation.service';
-import type { Equation } from '../types';
+import type { Equation, ResolutionStep } from '../types';
 
 const NO_BRANCH_STEP = 1;
 
@@ -35,18 +35,10 @@ const CODE_MESSAGES: Record<string, string> = {
   [RESOLUTION_CODES.STEP_REPEATED]: 'Ya ingresaste este paso.',
 };
 
-export interface ResolutionStep {
-  subEquation: string;
-  proposedResult: string;
-  isCorrect: boolean;
-  subEquationLatex?: string;
-  resultLatex?: string;
-}
-
-function getUserMessage(code: string): string | null {
+const getUserMessage = (code: string): string | null => {
   const msg = CODE_MESSAGES[code];
   return msg != null && msg !== '' ? msg : null;
-}
+};
 
 export const useResolveEquation = (id?: string) => {
   const queryClient = useQueryClient();
@@ -63,6 +55,39 @@ export const useResolveEquation = (id?: string) => {
   const [message, setMessage] = useState<string | null>(null);
   const [finished, setFinished] = useState(false);
   const [finishedCode, setFinishedCode] = useState<string | null>(null);
+
+  const submitResolution = async ({
+    answerValue,
+    resolutionStepStatus,
+    onResult,
+  }: {
+    answerValue: string;
+    resolutionStepStatus: number;
+    onResult: (code: string) => void;
+  }) => {
+    if (!id || !token) return;
+    setSubmitting(true);
+    setMessage(null);
+    try {
+      const result = await equationService.resolveStep(
+        id,
+        {
+          subEquationInfix: subEquationInfix.trim() || undefined,
+          answer: answerValue,
+          resolutionStepStatus,
+        },
+        token
+      );
+      await loadResolution(id, token);
+      setMessage(getUserMessage(result.code));
+      void queryClient.invalidateQueries({ queryKey: queryKeys.equations.lists() });
+      onResult(result.code);
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : 'Error al validar');
+    } finally {
+      setSubmitting(false);
+    }
+  };
   const loadResolution = async (userEquationId: string, authToken?: string | null) => {
     const resolution = authToken
       ? await equationService.getResolution(userEquationId, authToken)
@@ -96,71 +121,41 @@ export const useResolveEquation = (id?: string) => {
   }, [id, token]);
 
   const handleValidate = async () => {
-    if (!id || !token) return;
-    setSubmitting(true);
-    setMessage(null);
-    try {
-      const result = await equationService.resolveStep(
-        id,
-        {
-          subEquationInfix: subEquationInfix.trim() || undefined,
-          answer: answer.trim(),
-          resolutionStepStatus: stepStatus,
-        },
-        token
-      );
-      await loadResolution(id, token);
-      setMessage(getUserMessage(result.code));
-      void queryClient.invalidateQueries({ queryKey: queryKeys.equations.lists() });
-      if (
-        result.code === RESOLUTION_CODES.RESOLUTION_FINISHED ||
-        result.code === RESOLUTION_CODES.NO_SOLUTION
-      ) {
-        setFinished(true);
-        setFinishedCode(result.code);
-      }
-      if (result.code === RESOLUTION_CODES.RESULT_CORRECT) {
-        setSubEquationInfix('x');
-        setAnswer('');
-      } else {
-        setSubEquationInfix('');
-        setAnswer('');
-      }
-    } catch (e) {
-      setMessage(e instanceof Error ? e.message : 'Error al validar');
-    } finally {
-      setSubmitting(false);
-    }
+    await submitResolution({
+      answerValue: answer.trim(),
+      resolutionStepStatus: stepStatus,
+      onResult: (code) => {
+        if (
+          code === RESOLUTION_CODES.RESOLUTION_FINISHED ||
+          code === RESOLUTION_CODES.NO_SOLUTION
+        ) {
+          setFinished(true);
+          setFinishedCode(code);
+        }
+        if (code === RESOLUTION_CODES.RESULT_CORRECT) {
+          setSubEquationInfix('x');
+          setAnswer('');
+        } else {
+          setSubEquationInfix('');
+          setAnswer('');
+        }
+      },
+    });
   };
 
   const handleEmptySet = async () => {
-    if (!id || !token) return;
-    setSubmitting(true);
-    setMessage(null);
-    try {
-      const result = await equationService.resolveStep(
-        id,
-        {
-          subEquationInfix: subEquationInfix.trim() || undefined,
-          answer: '{}',
-          resolutionStepStatus: NO_BRANCH_STEP,
-        },
-        token
-      );
-      await loadResolution(id, token);
-      setMessage(getUserMessage(result.code));
-      void queryClient.invalidateQueries({ queryKey: queryKeys.equations.lists() });
-      if (result.code === RESOLUTION_CODES.RESOLUTION_FINISHED) {
-        setFinished(true);
-        setFinishedCode(result.code);
-      }
-      setSubEquationInfix('');
-      setAnswer('');
-    } catch (e) {
-      setMessage(e instanceof Error ? e.message : 'Error al validar');
-    } finally {
-      setSubmitting(false);
-    }
+    await submitResolution({
+      answerValue: '{}',
+      resolutionStepStatus: NO_BRANCH_STEP,
+      onResult: (code) => {
+        if (code === RESOLUTION_CODES.RESOLUTION_FINISHED) {
+          setFinished(true);
+          setFinishedCode(code);
+        }
+        setSubEquationInfix('');
+        setAnswer('');
+      },
+    });
   };
 
   const handleReset = async () => {

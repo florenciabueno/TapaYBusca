@@ -9,7 +9,7 @@ const BENEFITS = [
   'Llevar el registro de tu progreso',
 ] as const;
 
-function SparklesIcon({ className }: { className?: string }) {
+const SparklesIcon = ({ className }: { className?: string }) => {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
       <path stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M12 3l1.545 4.635L18 9.27l-4.455 1.635L12 15.54l-1.545-4.635L6 9.27l4.455-1.635L12 3z" />
@@ -17,23 +17,23 @@ function SparklesIcon({ className }: { className?: string }) {
       <path stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" d="M19 5l-.5 1.5-1-.5.5-1 1 .5z" />
     </svg>
   );
-}
+};
 
-function CheckIcon({ className }: { className?: string }) {
+const CheckIcon = ({ className }: { className?: string }) => {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
       <path stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" d="M5 12l5 5L19 7" />
     </svg>
   );
-}
+};
 
-function CloseIcon({ className }: { className?: string }) {
+const CloseIcon = ({ className }: { className?: string }) => {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
       <path stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M18 6L6 18M6 6l12 12" />
     </svg>
   );
-}
+};
 
 export const SignUpPromoBanner = () => {
   const promo = usePromoBanner();

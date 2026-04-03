@@ -57,7 +57,7 @@ export const ResolveEquationResultPanel = ({
   );
 };
 
-function formatSolutionValueLatex(value: number): string {
+const formatSolutionValueLatex = (value: number): string => {
   const roundedInt = Math.round(value);
   if (Math.abs(value - roundedInt) <= 1e-9) return String(roundedInt);
 
@@ -75,4 +75,4 @@ function formatSolutionValueLatex(value: number): string {
   }
 
   return String(Number(value.toFixed(6)));
-}
+};

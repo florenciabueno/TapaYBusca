@@ -1,5 +1,6 @@
 export type {
   Equation,
+  ResolutionStep,
   EquationStatus,
   EquationOrigin,
   EquationListStatusFilter,

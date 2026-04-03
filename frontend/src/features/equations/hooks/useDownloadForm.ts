@@ -9,7 +9,7 @@ export const QUANTITY_MIN = 1;
 export const QUANTITY_MAX = 50;
 const SUCCESS_MESSAGE_DURATION_MS = 5000;
 
-export function useDownloadForm() {
+export const useDownloadForm = () => {
   const queryClient = useQueryClient();
   const token = useAuthStore((state) => state.token);
   const [quantity, setQuantity] = useState<string>(String(QUANTITY_MIN));
@@ -44,7 +44,7 @@ export function useDownloadForm() {
         : 'Error al descargar ecuaciones'
       : null);
 
-  function handleSubmit(e: React.FormEvent) {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     downloadMutation.reset();
     setSuccess(null);
@@ -59,7 +59,7 @@ export function useDownloadForm() {
       fromDate: fromDate.trim() || undefined,
       toDate: toDate.trim() || undefined,
     });
-  }
+  };
 
   return {
     quantity,
@@ -73,4 +73,4 @@ export function useDownloadForm() {
     isSubmitting,
     handleSubmit,
   };
-}
+};

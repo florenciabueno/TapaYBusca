@@ -7,23 +7,23 @@ export interface DateFilterProps {
 }
 
 export const DateFilter = ({ fromDate, toDate, onChange }: DateFilterProps) => {
-  function handleFromChange(e: React.ChangeEvent<HTMLInputElement>) {
+  const handleFromChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value || undefined;
     onChange(value, toDate);
-  }
+  };
 
-  function handleToChange(e: React.ChangeEvent<HTMLInputElement>) {
+  const handleToChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value || undefined;
     onChange(fromDate, value);
-  }
+  };
 
-  function clearFrom() {
+  const clearFrom = () => {
     onChange(undefined, toDate);
-  }
+  };
 
-  function clearTo() {
+  const clearTo = () => {
     onChange(fromDate, undefined);
-  }
+  };
 
   return (
     <div className="flex flex-wrap items-center gap-3">

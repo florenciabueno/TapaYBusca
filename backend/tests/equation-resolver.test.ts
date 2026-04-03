@@ -209,7 +209,8 @@ describe('Equation resolver API', () => {
     });
 
     it('returns PR when the step is repeated', async () => {
-      const subEquationPostfix = toPostfixTokens('x+5');
+      const subEquationInfix = 'x+5';
+      const subEquationPostfix = toPostfixTokens(subEquationInfix);
       repoMocks.findResolutionsByUserEquation.mockResolvedValue([
         { subEquation: subEquationPostfix.join(''), proposedResult: '7' },
       ]);
@@ -218,7 +219,7 @@ describe('Equation resolver API', () => {
         .post('/api/equations/ue-1/resolve')
         .set(authHeader(token))
         .send({
-          subEquationPostfix,
+          subEquationInfix,
           answer: '7',
           resolutionStepStatus: RESOLUTION_STEP_NO_BRANCH,
         });

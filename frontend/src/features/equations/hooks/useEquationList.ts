@@ -106,25 +106,25 @@ export const useEquationList = (): UseEquationListReturn => {
     }
   }, [data, totalPages, pageFromUrl, setSearchParams]);
 
-  function setOriginFilter(origins: EquationOrigin[]) {
+  const setOriginFilter = (origins: EquationOrigin[]) => {
     setSearchParams((prev) =>
       applyEquationListFilterPatch(prev, (next) => {
         if (origins.length === 0) next.delete(EQUATION_LIST_ORIGINS_PARAM);
         else next.set(EQUATION_LIST_ORIGINS_PARAM, origins.join(','));
       })
     );
-  }
+  };
 
-  function setStatusFilter(statuses: EquationListStatusFilter[]) {
+  const setStatusFilter = (statuses: EquationListStatusFilter[]) => {
     setSearchParams((prev) =>
       applyEquationListFilterPatch(prev, (next) => {
         if (statuses.length === 0) next.delete(EQUATION_LIST_STATUSES_PARAM);
         else next.set(EQUATION_LIST_STATUSES_PARAM, statuses.join(','));
       })
     );
-  }
+  };
 
-  function setDateFilter(from?: string, to?: string) {
+  const setDateFilter = (from?: string, to?: string) => {
     setSearchParams((prev) =>
       applyEquationListFilterPatch(prev, (next) => {
         if (from) next.set(EQUATION_LIST_FROM_DATE_PARAM, from);
@@ -133,11 +133,11 @@ export const useEquationList = (): UseEquationListReturn => {
         else next.delete(EQUATION_LIST_TO_DATE_PARAM);
       })
     );
-  }
+  };
 
-  function goToPage(page: number) {
+  const goToPage = (page: number) => {
     setSearchParams((prev) => withEquationListPageParam(prev, page));
-  }
+  };
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => equationService.deleteEquation(id, token),
@@ -155,10 +155,10 @@ export const useEquationList = (): UseEquationListReturn => {
     'Error al eliminar la ecuación'
   );
 
-  function clearError() {
+  const clearError = () => {
     deleteMutation.reset();
     void queryClient.invalidateQueries({ queryKey: equationListQueryKey, exact: true });
-  }
+  };
 
   return {
     equations,

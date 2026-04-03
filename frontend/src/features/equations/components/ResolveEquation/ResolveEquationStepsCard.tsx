@@ -1,6 +1,6 @@
 import { COLORS, RADIUS, SHADOW } from '../../../../config/theme';
 import { MathExpression } from '../../../../shared/components/ui/MathExpression';
-import type { ResolutionStep } from '../../hooks/useResolveEquation';
+import type { ResolutionStep } from '../../types';
 
 interface ResolveEquationStepsCardProps {
   steps: ResolutionStep[];
