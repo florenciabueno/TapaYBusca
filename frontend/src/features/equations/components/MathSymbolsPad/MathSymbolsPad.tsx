@@ -1,4 +1,4 @@
-import { COLORS } from '../../../../config/theme';
+import { COLORS, SPACING } from '../../../../config/theme';
 import { DEFAULT_MATH_SYMBOLS } from './math-symbols';
 
 interface MathSymbolsPadProps {
@@ -13,7 +13,7 @@ export const MathSymbolsPad = ({
   symbols = DEFAULT_MATH_SYMBOLS,
 }: MathSymbolsPadProps) => {
   return (
-    <div>
+    <div style={{ marginBottom: SPACING.lg }}>
       <label className="block text-sm font-medium mb-2" style={{ color: COLORS.accentSecondary }}>
         Símbolos matemáticos:
       </label>

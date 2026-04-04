@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { useCallback, useEffect, useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '../../../shared/query-keys';
 import { useAuthStore } from '../../../stores';
 import { equationService } from '../services/equation.service';
@@ -43,137 +43,154 @@ const getUserMessage = (code: string): string | null => {
 export const useResolveEquation = (id?: string) => {
   const queryClient = useQueryClient();
   const token = useAuthStore((s) => s.token);
-  const [equation, setEquation] = useState<Equation | null>(null);
-  const [steps, setSteps] = useState<ResolutionStep[]>([]);
-  const [solutionSet, setSolutionSet] = useState<number[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+
   const [subEquationInfix, setSubEquationInfix] = useState('');
   const [answer, setAnswer] = useState('');
   const [stepStatus, setStepStatus] = useState(NO_BRANCH_STEP);
-  const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [finished, setFinished] = useState(false);
   const [finishedCode, setFinishedCode] = useState<string | null>(null);
 
-  const submitResolution = async ({
-    answerValue,
-    resolutionStepStatus,
-    onResult,
-  }: {
-    answerValue: string;
-    resolutionStepStatus: number;
-    onResult: (code: string) => void;
-  }) => {
-    if (!id || !token) return;
-    setSubmitting(true);
-    setMessage(null);
-    try {
-      const result = await equationService.resolveStep(
-        id,
-        {
-          subEquationInfix: subEquationInfix.trim() || undefined,
-          answer: answerValue,
-          resolutionStepStatus,
-        },
-        token
-      );
-      await loadResolution(id, token);
-      setMessage(getUserMessage(result.code));
-      void queryClient.invalidateQueries({ queryKey: queryKeys.equations.lists() });
-      onResult(result.code);
-    } catch (e) {
-      setMessage(e instanceof Error ? e.message : 'Error al validar');
-    } finally {
-      setSubmitting(false);
-    }
-  };
-  const loadResolution = async (userEquationId: string, authToken?: string | null) => {
-    const resolution = authToken
-      ? await equationService.getResolution(userEquationId, authToken)
-      : null;
-    if (!resolution) return null;
-    setSteps(resolution.steps ?? []);
-    setSolutionSet(resolution.solutionSet ?? []);
-    return resolution;
-  };
+  const equationQuery = useQuery({
+    queryKey: queryKeys.equations.detail(id ?? ''),
+    queryFn: () => equationService.getEquationById(id!, token),
+    enabled: Boolean(id && token),
+  });
+
+  const resolutionQuery = useQuery({
+    queryKey: queryKeys.equations.resolution(id ?? ''),
+    queryFn: () => equationService.getResolution(id!, token),
+    enabled: Boolean(id && token),
+  });
+
+  const equation: Equation | null = equationQuery.data ?? null;
+  const steps: ResolutionStep[] = resolutionQuery.data?.steps ?? [];
+  const solutionSet: number[] = resolutionQuery.data?.solutionSet ?? [];
 
   useEffect(() => {
+    setSubEquationInfix('');
+    setAnswer('');
+    setStepStatus(NO_BRANCH_STEP);
+    setMessage(null);
+    setFinished(false);
+    setFinishedCode(null);
+  }, [id]);
+
+  useEffect(() => {
+    if (!equation || equation.status !== 'SOLVED') return;
+    setFinished(true);
+    const emptySolution = solutionSet.length === 0;
+    setFinishedCode(
+      emptySolution ? RESOLUTION_CODES.NO_SOLUTION : RESOLUTION_CODES.RESOLUTION_FINISHED
+    );
+  }, [equation?.id, equation?.status, solutionSet.length]);
+
+  const invalidateEquationQueries = useCallback(async () => {
     if (!id) return;
-    setLoading(true);
-    setError(null);
-    Promise.all([
-      equationService.getEquationById(id, token),
-      loadResolution(id, token),
-    ])
-      .then(([eq, resolution]) => {
-        setEquation(eq);
-        if (eq.status === 'SOLVED') {
-          setFinished(true);
-          const emptySolution = (resolution?.solutionSet?.length ?? 0) === 0;
-          setFinishedCode(
-            emptySolution ? RESOLUTION_CODES.NO_SOLUTION : RESOLUTION_CODES.RESOLUTION_FINISHED
-          );
-        }
-      })
-      .catch((e) => setError(e instanceof Error ? e.message : 'Error al cargar'))
-      .finally(() => setLoading(false));
-  }, [id, token]);
+    await queryClient.invalidateQueries({ queryKey: queryKeys.equations.detail(id) });
+    await queryClient.invalidateQueries({ queryKey: queryKeys.equations.resolution(id) });
+    queryClient.invalidateQueries({ queryKey: queryKeys.equations.lists() });
+  }, [id, queryClient]);
+
+  const clearResolutionFormState = useCallback(() => {
+    setFinished(false);
+    setFinishedCode(null);
+    setMessage(null);
+    setSubEquationInfix('');
+    setAnswer('');
+    setStepStatus(NO_BRANCH_STEP);
+  }, []);
+
+  const resolveStepMutation = useMutation({
+    mutationFn: (payload: {
+      subEquationInfix: string | undefined;
+      answer: string;
+      resolutionStepStatus: number;
+    }) => equationService.resolveStep(id!, payload, token),
+    onSuccess: async (result) => {
+      setMessage(getUserMessage(result.code));
+      await invalidateEquationQueries();
+    },
+  });
+
+  const resetResolutionMutation = useMutation({
+    mutationFn: () => equationService.resetResolution(id!, token),
+    onSuccess: async () => {
+      clearResolutionFormState();
+      await invalidateEquationQueries();
+    },
+    onError: (e: unknown) => {
+      setMessage(e instanceof Error ? e.message : 'Error al reiniciar');
+    },
+  });
+
+  const submitting = resolveStepMutation.isPending || resetResolutionMutation.isPending;
+  const queriesEnabled = Boolean(id && token);
+  const loading =
+    queriesEnabled && (equationQuery.isLoading || resolutionQuery.isLoading);
+  const error =
+    equationQuery.error instanceof Error
+      ? equationQuery.error.message
+      : resolutionQuery.error instanceof Error
+        ? resolutionQuery.error.message
+        : null;
+
+  const applyResolveResult = (code: string) => {
+    if (code === RESOLUTION_CODES.RESOLUTION_FINISHED || code === RESOLUTION_CODES.NO_SOLUTION) {
+      setFinished(true);
+      setFinishedCode(code);
+    }
+    if (code === RESOLUTION_CODES.RESULT_CORRECT) {
+      setSubEquationInfix('x');
+      setAnswer('');
+    } else {
+      setSubEquationInfix('');
+      setAnswer('');
+    }
+  };
 
   const handleValidate = async () => {
-    await submitResolution({
-      answerValue: answer.trim(),
-      resolutionStepStatus: stepStatus,
-      onResult: (code) => {
-        if (
-          code === RESOLUTION_CODES.RESOLUTION_FINISHED ||
-          code === RESOLUTION_CODES.NO_SOLUTION
-        ) {
-          setFinished(true);
-          setFinishedCode(code);
-        }
-        if (code === RESOLUTION_CODES.RESULT_CORRECT) {
-          setSubEquationInfix('x');
-          setAnswer('');
-        } else {
-          setSubEquationInfix('');
-          setAnswer('');
-        }
-      },
-    });
+    if (!id || !token) return;
+    setMessage(null);
+    try {
+      const result = await resolveStepMutation.mutateAsync({
+        subEquationInfix: subEquationInfix.trim() || undefined,
+        answer: answer.trim(),
+        resolutionStepStatus: stepStatus,
+      });
+      applyResolveResult(result.code);
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : 'Error al validar');
+    }
   };
 
   const handleEmptySet = async () => {
-    await submitResolution({
-      answerValue: '{}',
-      resolutionStepStatus: NO_BRANCH_STEP,
-      onResult: (code) => {
-        if (code === RESOLUTION_CODES.RESOLUTION_FINISHED) {
-          setFinished(true);
-          setFinishedCode(code);
-        }
-        setSubEquationInfix('');
-        setAnswer('');
-      },
-    });
+    if (!id || !token) return;
+    setMessage(null);
+    try {
+      const result = await resolveStepMutation.mutateAsync({
+        subEquationInfix: subEquationInfix.trim() || undefined,
+        answer: '{}',
+        resolutionStepStatus: NO_BRANCH_STEP,
+      });
+      if (result.code === RESOLUTION_CODES.RESOLUTION_FINISHED) {
+        setFinished(true);
+        setFinishedCode(result.code);
+      }
+      setSubEquationInfix('');
+      setAnswer('');
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : 'Error al validar');
+    }
   };
 
   const handleReset = async () => {
     if (!id || !token) return;
+    setMessage(null);
     try {
-      await equationService.resetResolution(id, token);
-      setSteps([]);
-      setSolutionSet([]);
-      setFinished(false);
-      setFinishedCode(null);
-      setMessage(null);
-      setSubEquationInfix('');
-      setAnswer('');
-      setStepStatus(NO_BRANCH_STEP);
-      await loadResolution(id, token);
-      queryClient.invalidateQueries({ queryKey: queryKeys.equations.lists() });
-    } catch (e) {
-      setMessage(e instanceof Error ? e.message : 'Error al reiniciar');
+      await resetResolutionMutation.mutateAsync();
+    } catch {
+      /* message set in onError */
     }
   };
 

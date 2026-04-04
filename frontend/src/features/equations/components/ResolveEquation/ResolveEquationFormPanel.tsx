@@ -1,5 +1,6 @@
 import type { Dispatch, SetStateAction } from 'react';
 import { COLORS, SPACING } from '../../../../config/theme';
+import { FormMessage } from '../../../../shared/components/ui/FormMessage';
 import { Input } from '../../../../shared/components/ui/Input/Input';
 import { Button } from '../../../../shared/components/ui/Button/Button';
 import { MathSymbolsPad, DEFAULT_MATH_SYMBOLS } from '../MathSymbolsPad';
@@ -43,10 +44,16 @@ export const ResolveEquationFormPanel = ({
 
   return (
     <>
-      <div style={{ marginBottom: SPACING.lg }}>
-        <label className="block text-sm font-medium mb-2" style={{ color: COLORS.accentSecondary }}>
+      <fieldset
+        style={{ marginBottom: SPACING.lg }}
+        className="min-w-0 border-0 p-0 m-0"
+      >
+        <legend
+          className="block text-sm font-medium mb-2 px-0"
+          style={{ color: COLORS.accentSecondary }}
+        >
           Subecuación = Tu respuesta
-        </label>
+        </legend>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
           <div className="flex-1 min-w-0">
             <Input
@@ -63,6 +70,7 @@ export const ResolveEquationFormPanel = ({
           <span
             className="text-xl font-bold self-center hidden sm:inline"
             style={{ color: COLORS.accentSecondary }}
+            aria-hidden
           >
             =
           </span>
@@ -79,18 +87,18 @@ export const ResolveEquationFormPanel = ({
             />
           </div>
         </div>
-        <p className="mt-1 text-xs" style={{ color: COLORS.gray[500] }}>
+        <p
+          className="mt-1 text-xs"
+          style={{ color: COLORS.gray[500] }}
+        >
           Teclado: números, x, =, * + - / y paréntesis
         </p>
-      </div>
-      <div style={{ marginBottom: SPACING.lg }}>
-        <MathSymbolsPad
-          symbols={DEFAULT_MATH_SYMBOLS}
-          onSymbolClick={handlePadSymbol}
-          disabled={submitting}
-        />
-      </div>
-
+      </fieldset>
+      <MathSymbolsPad
+        symbols={DEFAULT_MATH_SYMBOLS}
+        onSymbolClick={handlePadSymbol}
+        disabled={submitting}
+      />
       <div className="flex flex-wrap gap-3">
         <Button type="button" variant="accent" disabled={submitting} onClick={onValidate}>
           {submitting ? 'Validando...' : 'Validar'}
@@ -103,11 +111,9 @@ export const ResolveEquationFormPanel = ({
         </Button>
       </div>
 
-      {message && (
-        <p className="mt-4 text-sm" style={{ color: COLORS.accentSecondary }}>
-          {message}
-        </p>
-      )}
+      {message ? (
+        <FormMessage message={message} variant="info" className="mt-4" />
+      ) : null}
     </>
   );
 };
