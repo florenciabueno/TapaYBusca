@@ -16,7 +16,7 @@ export const ResolveEquationStepsCard = ({ steps, embedded = false }: ResolveEqu
     >
       <ul className="flex flex-col gap-2.5 text-base [&_.katex]:!text-base" style={{ color: COLORS.gray[700] }}>
         {steps.map((step, i) => (
-          <ResolutionStepListItem key={i} step={step} />
+          <ResolutionStepListItem key={i} step={step} stepNumber={i + 1} />
         ))}
       </ul>
     </div>

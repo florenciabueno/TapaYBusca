@@ -29,14 +29,12 @@ export const FormPageCard = ({ title, description, children, maxWidth = 'default
         >
           {title}
         </h1>
-        {description != null && description !== '' && (
-          <p
-            className="mb-6 text-sm"
-            style={{ color: COLORS.gray[600] }}
-          >
-            {description}
-          </p>
-        )}
+        <p
+          className="mb-6 text-sm"
+          style={{ color: COLORS.gray[600] }}
+        >
+          {description}
+        </p>
         {children}
       </div>
     </div>
