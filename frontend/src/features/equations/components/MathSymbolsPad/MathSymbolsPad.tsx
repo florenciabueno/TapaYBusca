@@ -24,7 +24,7 @@ export const MathSymbolsPad = ({
             type="button"
             onClick={() => onSymbolClick(insert)}
             disabled={disabled}
-            className="py-3 rounded-xl font-medium transition-colors hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-60"
+            className="cursor-pointer py-3 rounded-xl font-medium transition-colors hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-60"
             style={{
               backgroundColor: COLORS.gray[100],
               color: COLORS.gray[800],

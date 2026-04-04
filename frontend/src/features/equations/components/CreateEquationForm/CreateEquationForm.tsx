@@ -125,9 +125,9 @@ export const CreateEquationForm = () => {
                   const el = e.target as HTMLInputElement;
                   selectionRef.current = { start: el.selectionStart ?? 0, end: el.selectionEnd ?? 0 };
                 }}
-                placeholder="Solo números y x; usa la botonera para el resto"
+                placeholder="x*20 = 100"
                 error={error}
-                helperText="Escribe números y x con el teclado. Usa los botones para operadores y funciones (√, +, =, etc.)."
+                helperText="Teclado: números, x, =, operadores (* + - /) y paréntesis"
                 disabled={isLoading}
                 autoComplete="off"
               />

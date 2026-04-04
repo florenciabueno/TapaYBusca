@@ -43,45 +43,46 @@ export const ResolveEquationFormPanel = ({
 
   return (
     <>
-      <label className="block text-sm font-medium mb-2" style={{ color: COLORS.accentSecondary }}>
-        Subecuación = Tu respuesta
-      </label>
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mb-4">
-        <div className="flex-1 min-w-0">
-          <Input
-            ref={subInputRef}
-            label=""
-            value={subEquationInfix}
-            {...subEquationInputHandlers}
-            placeholder="ej. x, 2*x, x+5"
-            disabled={submitting}
-            autoComplete="off"
-            labelColor="secondary"
-          />
+      <div style={{ marginBottom: SPACING.lg }}>
+        <label className="block text-sm font-medium mb-2" style={{ color: COLORS.accentSecondary }}>
+          Subecuación = Tu respuesta
+        </label>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <div className="flex-1 min-w-0">
+            <Input
+              ref={subInputRef}
+              label=""
+              value={subEquationInfix}
+              {...subEquationInputHandlers}
+              placeholder="ej. x, 2*x, x+5"
+              disabled={submitting}
+              autoComplete="off"
+              labelColor="secondary"
+            />
+          </div>
+          <span
+            className="text-xl font-bold self-center hidden sm:inline"
+            style={{ color: COLORS.accentSecondary }}
+          >
+            =
+          </span>
+          <div className="flex-1 min-w-0">
+            <Input
+              ref={answerInputRef}
+              label=""
+              value={answer}
+              {...answerInputHandlers}
+              placeholder="ej. 3, 1/2, 0,5"
+              disabled={submitting}
+              autoComplete="off"
+              labelColor="secondary"
+            />
+          </div>
         </div>
-        <span
-          className="text-xl font-bold self-center hidden sm:inline"
-          style={{ color: COLORS.accentSecondary }}
-        >
-          =
-        </span>
-        <div className="flex-1 min-w-0">
-          <Input
-            ref={answerInputRef}
-            label=""
-            value={answer}
-            {...answerInputHandlers}
-            placeholder="ej. 3, 1/2, 0,5"
-            disabled={submitting}
-            autoComplete="off"
-            labelColor="secondary"
-          />
-        </div>
+        <p className="mt-1 text-xs" style={{ color: COLORS.gray[500] }}>
+          Teclado: números, x, =, * + - / y paréntesis
+        </p>
       </div>
-      <p className="text-xs mb-4" style={{ color: COLORS.gray[500] }}>
-        Usa la botonera para √, ³√, +, -, etc. Puedes escribir 1/2 o 0,5.
-      </p>
-
       <div style={{ marginBottom: SPACING.lg }}>
         <MathSymbolsPad
           symbols={DEFAULT_MATH_SYMBOLS}
@@ -92,13 +93,13 @@ export const ResolveEquationFormPanel = ({
 
       <div className="flex flex-wrap gap-3">
         <Button type="button" variant="accent" disabled={submitting} onClick={onValidate}>
-          {submitting ? 'Validando...' : 'VALIDAR'}
+          {submitting ? 'Validando...' : 'Validar'}
         </Button>
         <Button type="button" variant="outline" disabled={submitting} onClick={onEmptySet}>
           S = {'{}'}
         </Button>
         <Button type="button" variant="outline" disabled={submitting} onClick={onReset}>
-          Reiniciar desde 0
+          Reiniciar
         </Button>
       </div>
 
