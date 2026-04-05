@@ -60,7 +60,7 @@ export const SignUpPromoBanner = () => {
         style={{ color: COLORS.gray[500] }}
         aria-label="Cerrar"
       >
-        <CloseIcon className="h-5 w-5" />
+        <CloseIcon className="cursor-pointer h-5 w-5" />
       </button>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>

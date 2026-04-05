@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { UseMutationResult, UseQueryResult } from '@tanstack/react-query';
@@ -106,39 +106,6 @@ export const useEquationList = (): UseEquationListReturn => {
     }
   }, [data, totalPages, pageFromUrl, setSearchParams]);
 
-  const setOriginFilter = (origins: EquationOrigin[]) => {
-    setSearchParams((prev) =>
-      applyEquationListFilterPatch(prev, (next) => {
-        if (origins.length === 0) next.delete(EQUATION_LIST_ORIGINS_PARAM);
-        else next.set(EQUATION_LIST_ORIGINS_PARAM, origins.join(','));
-      })
-    );
-  };
-
-  const setStatusFilter = (statuses: EquationListStatusFilter[]) => {
-    setSearchParams((prev) =>
-      applyEquationListFilterPatch(prev, (next) => {
-        if (statuses.length === 0) next.delete(EQUATION_LIST_STATUSES_PARAM);
-        else next.set(EQUATION_LIST_STATUSES_PARAM, statuses.join(','));
-      })
-    );
-  };
-
-  const setDateFilter = (from?: string, to?: string) => {
-    setSearchParams((prev) =>
-      applyEquationListFilterPatch(prev, (next) => {
-        if (from) next.set(EQUATION_LIST_FROM_DATE_PARAM, from);
-        else next.delete(EQUATION_LIST_FROM_DATE_PARAM);
-        if (to) next.set(EQUATION_LIST_TO_DATE_PARAM, to);
-        else next.delete(EQUATION_LIST_TO_DATE_PARAM);
-      })
-    );
-  };
-
-  const goToPage = (page: number) => {
-    setSearchParams((prev) => withEquationListPageParam(prev, page));
-  };
-
   const deleteMutation = useMutation({
     mutationFn: (id: string) => equationService.deleteEquation(id, token),
     onSuccess: () => {
@@ -155,10 +122,55 @@ export const useEquationList = (): UseEquationListReturn => {
     'Error al eliminar la ecuación'
   );
 
-  const clearError = () => {
+  const setOriginFilter = useCallback(
+    (origins: EquationOrigin[]) => {
+      setSearchParams((prev) =>
+        applyEquationListFilterPatch(prev, (next) => {
+          if (origins.length === 0) next.delete(EQUATION_LIST_ORIGINS_PARAM);
+          else next.set(EQUATION_LIST_ORIGINS_PARAM, origins.join(','));
+        })
+      );
+    },
+    [setSearchParams]
+  );
+
+  const setStatusFilter = useCallback(
+    (statuses: EquationListStatusFilter[]) => {
+      setSearchParams((prev) =>
+        applyEquationListFilterPatch(prev, (next) => {
+          if (statuses.length === 0) next.delete(EQUATION_LIST_STATUSES_PARAM);
+          else next.set(EQUATION_LIST_STATUSES_PARAM, statuses.join(','));
+        })
+      );
+    },
+    [setSearchParams]
+  );
+
+  const setDateFilter = useCallback(
+    (from?: string, to?: string) => {
+      setSearchParams((prev) =>
+        applyEquationListFilterPatch(prev, (next) => {
+          if (from) next.set(EQUATION_LIST_FROM_DATE_PARAM, from);
+          else next.delete(EQUATION_LIST_FROM_DATE_PARAM);
+          if (to) next.set(EQUATION_LIST_TO_DATE_PARAM, to);
+          else next.delete(EQUATION_LIST_TO_DATE_PARAM);
+        })
+      );
+    },
+    [setSearchParams]
+  );
+
+  const goToPage = useCallback(
+    (page: number) => {
+      setSearchParams((prev) => withEquationListPageParam(prev, page));
+    },
+    [setSearchParams]
+  );
+
+  const clearError = useCallback(() => {
     deleteMutation.reset();
     void queryClient.invalidateQueries({ queryKey: equationListQueryKey, exact: true });
-  };
+  }, [deleteMutation, queryClient, equationListQueryKey]);
 
   return {
     equations,

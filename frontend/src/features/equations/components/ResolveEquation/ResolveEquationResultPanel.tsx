@@ -1,7 +1,7 @@
 import { COLORS, SHADOW } from '../../../../config/theme';
 import { Button } from '../../../../shared/components/ui/Button/Button';
 import { MathExpression } from '../../../../shared/components/ui/MathExpression';
-import { RESOLUTION_CODES } from '../../hooks/useResolveEquation';
+import { RESOLUTION_CODES } from '../../constants/resolution';
 
 interface ResolveEquationResultPanelProps {
   finishedCode: string | null;

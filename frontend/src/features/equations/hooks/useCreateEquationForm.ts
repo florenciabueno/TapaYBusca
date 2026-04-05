@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ROUTES } from '../../../config/constants';
 import { queryKeys } from '../../../shared/query-keys';
 import { useAuthStore } from '../../../stores';
 import { equationService } from '../services/equation.service';
+import { mergeFormSubmitError } from '../../../shared/utils/formError';
 import { useEquationMathInput } from './useEquationMathInput';
 
 export const useCreateEquationForm = () => {
@@ -42,15 +43,10 @@ export const useCreateEquationForm = () => {
     },
   });
 
-  const error = useMemo(
-    () =>
-      validationError ||
-      (createMutation.error
-        ? createMutation.error instanceof Error
-          ? createMutation.error.message
-          : 'Error al crear la ecuación.'
-        : null),
-    [validationError, createMutation.error]
+  const error = mergeFormSubmitError(
+    validationError,
+    createMutation.error,
+    'Error al crear la ecuación.'
   );
 
   const isLoading = createMutation.isPending;

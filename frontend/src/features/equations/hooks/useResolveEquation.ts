@@ -2,43 +2,13 @@ import { useCallback, useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '../../../shared/query-keys';
 import { useAuthStore } from '../../../stores';
+import {
+  getResolutionFeedbackMessage,
+  RESOLUTION_CODES,
+  RESOLUTION_NO_BRANCH_STEP,
+} from '../constants/resolution';
 import { equationService } from '../services/equation.service';
 import type { Equation, ResolutionStep } from '../types';
-
-const NO_BRANCH_STEP = 1;
-
-export const RESOLUTION_CODES = {
-  STEP_CORRECT: 'PC',
-  RESULT_CORRECT: 'RC',
-  MORE_SOLUTIONS: 'MS',
-  RESOLUTION_FINISHED: 'RT',
-  STEP_INCORRECT: 'PI',
-  RESULT_INCORRECT: 'RI',
-  RESULT_REPEATED: 'RR',
-  SYNTAX_INCORRECT: 'SI',
-  NO_SOLUTION: 'SS',
-  FIRST_WARNING: 'PA',
-  STEP_REPEATED: 'PR',
-} as const;
-
-const CODE_MESSAGES: Record<string, string> = {
-  [RESOLUTION_CODES.STEP_CORRECT]: 'Paso correcto.',
-  [RESOLUTION_CODES.RESULT_CORRECT]: 'Existe otro número que también sirve.',
-  [RESOLUTION_CODES.MORE_SOLUTIONS]: 'Hay más soluciones. Continúa desde la ecuación.',
-  [RESOLUTION_CODES.RESOLUTION_FINISHED]: '¡Resolución terminada con éxito!',
-  [RESOLUTION_CODES.NO_SOLUTION]: '¡No hay ningún número real que sirva!',
-  [RESOLUTION_CODES.FIRST_WARNING]: '¿Mmm….Existirá algún número?',
-  [RESOLUTION_CODES.RESULT_REPEATED]: 'Otro número, no el mismo.',
-  [RESOLUTION_CODES.RESULT_INCORRECT]: '¿Mmm… ¿Estás segur@?',
-  [RESOLUTION_CODES.STEP_INCORRECT]: 'El valor no es correcto para esta subecuación.',
-  [RESOLUTION_CODES.SYNTAX_INCORRECT]: 'La subecuación seleccionada no es válida.',
-  [RESOLUTION_CODES.STEP_REPEATED]: 'Ya ingresaste este paso.',
-};
-
-const getUserMessage = (code: string): string | null => {
-  const msg = CODE_MESSAGES[code];
-  return msg != null && msg !== '' ? msg : null;
-};
 
 export const useResolveEquation = (id?: string) => {
   const queryClient = useQueryClient();
@@ -46,7 +16,6 @@ export const useResolveEquation = (id?: string) => {
 
   const [subEquationInfix, setSubEquationInfix] = useState('');
   const [answer, setAnswer] = useState('');
-  const [stepStatus, setStepStatus] = useState(NO_BRANCH_STEP);
   const [message, setMessage] = useState<string | null>(null);
   const [finished, setFinished] = useState(false);
   const [finishedCode, setFinishedCode] = useState<string | null>(null);
@@ -70,7 +39,6 @@ export const useResolveEquation = (id?: string) => {
   useEffect(() => {
     setSubEquationInfix('');
     setAnswer('');
-    setStepStatus(NO_BRANCH_STEP);
     setMessage(null);
     setFinished(false);
     setFinishedCode(null);
@@ -98,7 +66,6 @@ export const useResolveEquation = (id?: string) => {
     setMessage(null);
     setSubEquationInfix('');
     setAnswer('');
-    setStepStatus(NO_BRANCH_STEP);
   }, []);
 
   const resolveStepMutation = useMutation({
@@ -108,7 +75,7 @@ export const useResolveEquation = (id?: string) => {
       resolutionStepStatus: number;
     }) => equationService.resolveStep(id!, payload, token),
     onSuccess: async (result) => {
-      setMessage(getUserMessage(result.code));
+      setMessage(getResolutionFeedbackMessage(result.code));
       await invalidateEquationQueries();
     },
   });
@@ -156,7 +123,7 @@ export const useResolveEquation = (id?: string) => {
       const result = await resolveStepMutation.mutateAsync({
         subEquationInfix: subEquationInfix.trim() || undefined,
         answer: answer.trim(),
-        resolutionStepStatus: stepStatus,
+        resolutionStepStatus: RESOLUTION_NO_BRANCH_STEP,
       });
       applyResolveResult(result.code);
     } catch (e) {
@@ -171,7 +138,7 @@ export const useResolveEquation = (id?: string) => {
       const result = await resolveStepMutation.mutateAsync({
         subEquationInfix: subEquationInfix.trim() || undefined,
         answer: '{}',
-        resolutionStepStatus: NO_BRANCH_STEP,
+        resolutionStepStatus: RESOLUTION_NO_BRANCH_STEP,
       });
       if (result.code === RESOLUTION_CODES.RESOLUTION_FINISHED) {
         setFinished(true);
