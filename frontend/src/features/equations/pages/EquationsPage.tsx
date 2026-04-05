@@ -10,6 +10,7 @@ import { COLORS } from '../../../config/theme';
 
 export const EquationsPage = () => {
   const user = useAuthStore((state) => state.user);
+  const equationList = useEquationList();
   const {
     selectedOrigins,
     setOriginFilter,
@@ -18,7 +19,7 @@ export const EquationsPage = () => {
     fromDate,
     toDate,
     setDateFilter,
-  } = useEquationList();
+  } = equationList;
 
   return (
     <EquationsLayout>
@@ -44,7 +45,7 @@ export const EquationsPage = () => {
           <DateFilter fromDate={fromDate} toDate={toDate} onChange={setDateFilter} />
         </div>
 
-        <EquationsCardList />
+        <EquationsCardList equationList={equationList} />
       </div>
     </EquationsLayout>
   );

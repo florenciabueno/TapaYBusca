@@ -4,7 +4,7 @@ import { ROUTES } from '../../../../config/constants';
 import { COLORS, PURPLE_RGB, SHADOW } from '../../../../config/theme';
 import { Pagination } from '../../../../shared/components/ui/Pagination';
 import { ConfirmModal } from '../../../../shared/components/ui/ConfirmModal';
-import { useEquationList } from '../../hooks/useEquationList';
+import type { UseEquationListReturn } from '../../hooks/useEquationList';
 import { useAuthStore } from '../../../../stores';
 import { EQUATION_LIST_STATUS_DELETED } from '../../types/equation.types';
 import { canDeleteEquation } from '../../utils/equationPermissions';
@@ -25,7 +25,11 @@ const MESSAGES = {
   CANCEL_BTN: 'Cancelar',
 } as const;
 
-export const EquationsCardList = () => {
+export interface EquationsCardListProps {
+  equationList: UseEquationListReturn;
+}
+
+export const EquationsCardList = ({ equationList }: EquationsCardListProps) => {
   const {
     equations,
     isLoading,
@@ -38,7 +42,7 @@ export const EquationsCardList = () => {
     deleteEquation,
     selectedOrigins,
     selectedStatuses,
-  } = useEquationList();
+  } = equationList;
   const user = useAuthStore((state) => state.user);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
