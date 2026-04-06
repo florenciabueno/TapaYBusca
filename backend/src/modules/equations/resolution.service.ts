@@ -10,16 +10,42 @@ import {
 import {
   validateSubEquation,
   parseAnswerValues,
-  evaluatePostfixWithVariable,
   getSubEquationResult,
   checkStepHasSolution,
   isOnlyVariable,
   isQuadratic,
+  matchAnswerAgainstKnownSolutions,
+  replaceSubListInPostfix,
   listContainsElement,
 } from './equation-solver/resolve-helpers.js';
 import { infixToLatex, resultToLatex } from './infix-to-latex.js';
 
 const RESULT_VALUE_SEPARATOR = ';';
+const MESSAGE_RESOLVE_SUBEQUATION_REQUIRED = 'La subecuación es obligatoria.';
+const MESSAGE_RESOLVE_EQUATION_NOT_FOUND = 'Ecuación no encontrada.';
+const MESSAGE_RESOLVE_NO_PERMISSIONS = 'No tienes permisos para resolver esta ecuación.';
+const MESSAGE_RESOLVE_INVALID_EQUATION = 'La ecuación almacenada es inválida.';
+type ResolveStepPayload = {
+  subEquationInfix?: string;
+  answer: string;
+  resolutionStepStatus: number;
+};
+
+type ResolutionSessionState = {
+  currentResolutionId: number;
+  selectedBranch: string;
+  stateUpdated: boolean;
+};
+
+type StepEvaluation = {
+  resultCode: string;
+  isCorrect: boolean;
+  isVariable: boolean;
+  stepWithoutSolution: boolean;
+  correctResults: number[];
+  selectedBranch: string;
+  stateUpdated: boolean;
+};
 
 function parseSolutionValues(json: unknown): number[] {
   if (json == null) return [];
@@ -37,235 +63,520 @@ export class ResolutionService {
   async resolveStep(
     userEquationId: string,
     userId: string,
-    payload: {
-      subEquationInfix?: string;
-      answer: string;
-      resolutionStepStatus: number;
-    }
+    payload: ResolveStepPayload
   ): Promise<{ code: string; message?: string }> {
     const subEquationInfix = payload.subEquationInfix?.trim();
-    const subEquationPostfix = subEquationInfix
-      ? (infixToPostfix(tokenizeInfix(subEquationInfix)) ?? [])
-      : [];
-    if (!subEquationPostfix?.length) {
-      return { code: RESOLUTION_CODES.SYNTAX_INCORRECT, message: 'Subequation is required' };
+    const subEquationPostfix = this.parseSubEquationPostfix(subEquationInfix);
+    if (subEquationPostfix.length === 0) {
+      return { code: RESOLUTION_CODES.SYNTAX_INCORRECT, message: MESSAGE_RESOLVE_SUBEQUATION_REQUIRED };
     }
-    const { answer, resolutionStepStatus } = payload;
 
     const userEq = await this.equationRepository.findByIdWithEquation(userEquationId);
-    if (!userEq) return { code: RESOLUTION_CODES.SYNTAX_INCORRECT, message: 'Equation not found' };
-    if (userEq.userId !== userId) return { code: RESOLUTION_CODES.SYNTAX_INCORRECT, message: 'No permissions' };
+    if (!userEq) return { code: RESOLUTION_CODES.SYNTAX_INCORRECT, message: MESSAGE_RESOLVE_EQUATION_NOT_FOUND };
+    if (userEq.userId !== userId) return { code: RESOLUTION_CODES.SYNTAX_INCORRECT, message: MESSAGE_RESOLVE_NO_PERMISSIONS };
 
-    const equation = userEq.equation;
-    const infix = equation.infixExpression ?? equation.postfixExpression ?? '';
-    const equationPostfixTokens = infixToPostfix(tokenizeInfix(infix));
-    if (!equationPostfixTokens) return { code: RESOLUTION_CODES.SYNTAX_INCORRECT, message: 'Invalid equation' };
-
-    if (validateSubEquation(equationPostfixTokens, subEquationPostfix)) {
+    const equationPostfixTokens = this.parseEquationPostfix(userEq.equation);
+    if (!equationPostfixTokens) {
+      return { code: RESOLUTION_CODES.SYNTAX_INCORRECT, message: MESSAGE_RESOLVE_INVALID_EQUATION };
+    }
+    if (!validateSubEquation(equationPostfixTokens, subEquationPostfix)) {
       return { code: RESOLUTION_CODES.SYNTAX_INCORRECT };
     }
 
-    const solutions = parseSolutionValues(equation.solutionValues);
-    let stateUpdated = false;
-    let currentResolutionId = userEq.currentResolutionId ?? 0;
-    let selectedBranch = userEq.selectedBranch ?? '';
+    const session = this.initializeSessionState(userEq);
+    const subEquation = subEquationPostfix.join('');
+    const isRepeatedStep = await this.isRepeatedSubmittedStep(
+      userEquationId,
+      session.currentResolutionId,
+      subEquation,
+      payload.answer
+    );
+    if (isRepeatedStep) {
+      return { code: RESOLUTION_CODES.STEP_REPEATED };
+    }
 
+    const evaluation = await this.evaluateStep({
+      userEquationId,
+      answer: payload.answer,
+      resolutionStepStatus: payload.resolutionStepStatus,
+      equationPostfixTokens,
+      subEquationPostfix,
+      subEquation,
+      currentResolutionId: session.currentResolutionId,
+      selectedBranch: session.selectedBranch,
+      stateUpdated: session.stateUpdated,
+      solutions: parseSolutionValues(userEq.equation.solutionValues),
+    });
+
+    await this.persistResolutionOutcome({
+      userEquationId,
+      currentResolutionId: session.currentResolutionId,
+      subEquation,
+      subEquationInfix,
+      answer: payload.answer,
+      resolutionStepStatus: payload.resolutionStepStatus,
+      evaluation,
+    });
+
+    return { code: evaluation.resultCode };
+  }
+
+  private parseSubEquationPostfix(subEquationInfix?: string): string[] {
+    if (!subEquationInfix) return [];
+    return infixToPostfix(tokenizeInfix(subEquationInfix)) ?? [];
+  }
+
+  private parseEquationPostfix(equation: {
+    infixExpression?: string | null;
+    postfixExpression?: string | null;
+  }): string[] | null {
+    const infix = equation.infixExpression ?? equation.postfixExpression ?? '';
+    return infixToPostfix(tokenizeInfix(infix));
+  }
+
+  private initializeSessionState(userEq: {
+    status: string;
+    currentResolutionId?: number | null;
+    selectedBranch?: string | null;
+  }): ResolutionSessionState {
+    let currentResolutionId = userEq.currentResolutionId ?? 0;
+    let stateUpdated = false;
     if (userEq.status === EquationStatus.NOT_STARTED || userEq.status === EquationStatus.SOLVED) {
       currentResolutionId += 1;
       stateUpdated = true;
     }
+    return {
+      currentResolutionId,
+      selectedBranch: userEq.selectedBranch ?? '',
+      stateUpdated,
+    };
+  }
 
-    const subEquation = subEquationPostfix.join('');
+  private async isRepeatedSubmittedStep(
+    userEquationId: string,
+    currentResolutionId: number,
+    subEquation: string,
+    answer: string
+  ): Promise<boolean> {
     const loggedSteps = await this.equationRepository.findResolutionsByUserEquation(
       userEquationId,
       currentResolutionId
     );
-    if (loggedSteps.length > 0) {
-      const last = loggedSteps[loggedSteps.length - 1]!;
-      if (last.subEquation === subEquation && last.proposedResult === answer) {
-        return { code: RESOLUTION_CODES.STEP_REPEATED };
-      }
-    }
+    if (loggedSteps.length === 0) return false;
+    const last = loggedSteps[loggedSteps.length - 1]!;
+    return last.subEquation === subEquation && last.proposedResult === answer;
+  }
 
+  private async evaluateStep(args: {
+    userEquationId: string;
+    answer: string;
+    resolutionStepStatus: number;
+    equationPostfixTokens: string[];
+    subEquationPostfix: string[];
+    subEquation: string;
+    currentResolutionId: number;
+    selectedBranch: string;
+    stateUpdated: boolean;
+    solutions: number[];
+  }): Promise<StepEvaluation> {
+    if (args.answer === EMPTY_SET) {
+      return this.evaluateEmptySetStep(args);
+    }
+    return this.evaluateStandardStep(args);
+  }
+
+  private async evaluateEmptySetStep(args: {
+    userEquationId: string;
+    equationPostfixTokens: string[];
+    subEquationPostfix: string[];
+    currentResolutionId: number;
+    selectedBranch: string;
+    stateUpdated: boolean;
+  }): Promise<StepEvaluation> {
     let resultCode: string = RESOLUTION_CODES.STEP_INCORRECT;
     let isCorrect = false;
-    let isVariable = isOnlyVariable(subEquationPostfix);
-    let stepWithoutSolution = false;
-    const correctResults: number[] = [];
-
-    if (answer === EMPTY_SET) {
-      const loggedResolutions = await this.equationRepository.findResolutionsByUserEquation(
-        userEquationId,
-        currentResolutionId
-      );
-      if (loggedResolutions.length === 0) {
-        const { hasSolution } = checkStepHasSolution(equationPostfixTokens, subEquationPostfix);
-        if (hasSolution) {
-          resultCode = RESOLUTION_CODES.RESULT_INCORRECT;
-        } else {
-          resultCode = RESOLUTION_CODES.RESOLUTION_FINISHED;
-          isCorrect = true;
-        }
-      } else {
+    let stateUpdated = args.stateUpdated;
+    const loggedResolutions = await this.equationRepository.findResolutionsByUserEquation(
+      args.userEquationId,
+      args.currentResolutionId
+    );
+    if (loggedResolutions.length === 0) {
+      const { hasSolution } = checkStepHasSolution(args.equationPostfixTokens, args.subEquationPostfix);
+      if (hasSolution) {
         resultCode = RESOLUTION_CODES.RESULT_INCORRECT;
-        stateUpdated = true;
+      } else {
+        resultCode = RESOLUTION_CODES.RESOLUTION_FINISHED;
+        isCorrect = true;
       }
     } else {
-      let localResultCode: string = RESOLUTION_CODES.STEP_INCORRECT;
-      const answers = parseAnswerValues(answer);
-      if (solutions.length > 0) {
-        for (const resultado of solutions) {
-          const evaluation = evaluatePostfixWithVariable(resultado, subEquationPostfix, false);
-          for (const valResp of answers) {
-            if (listContainsElement(evaluation, valResp)) {
-              isCorrect = true;
-              correctResults.push(valResp);
-              break;
-            }
-          }
-        }
-        if (isCorrect && !isVariable) {
-          const previousStepIsValid = await this.isPreviousStepValid(
-            userEquationId,
-            currentResolutionId,
-            subEquationPostfix,
-            answers[0] ?? 0,
-            resolutionStepStatus
-          );
-          if (!previousStepIsValid) isCorrect = false;
-        }
-        if (isVariable) {
-          if (!isCorrect) {
-            localResultCode = RESOLUTION_CODES.RESULT_INCORRECT;
-          } else {
-            const loggedSolutions = await this.equationRepository.getDistinctLoggedSolutions(
-              userEquationId,
-              currentResolutionId
-            );
-            const solutionSet = [...new Set(solutions)];
-            localResultCode = RESOLUTION_CODES.RESULT_CORRECT;
-            for (const valResp of correctResults) {
-              if (loggedSolutions.some((s) => Math.abs(s - valResp) <= 1e-9)) {
-                localResultCode = RESOLUTION_CODES.RESULT_REPEATED;
-                break;
-              }
-              if (loggedSolutions.length + 1 === solutionSet.length) {
-                localResultCode = RESOLUTION_CODES.RESOLUTION_FINISHED;
-                break;
-              }
-              if (selectedBranch.length === 0) {
-                selectedBranch = subEquation;
-                stateUpdated = true;
-              }
-              break;
-            }
-          }
-        } else if (isCorrect) {
-          const isRepeatedBranchAnswer = await this.hasRepeatedBranchResult(
-            userEquationId,
-            currentResolutionId,
-            resolutionStepStatus,
-            answers[0] ?? 0
-          );
-          if (isRepeatedBranchAnswer) {
-            localResultCode = RESOLUTION_CODES.RESULT_REPEATED;
-            isCorrect = false;
-          } else {
-            const originalEquationPostfix = equationPostfixTokens;
-            if (
-              resolutionStepStatus === RESOLUTION_STEP_NO_BRANCH &&
-              isQuadratic(originalEquationPostfix, subEquationPostfix)
-            ) {
-              const previousStep = await this.equationRepository.getPreviousStep(
-                userEquationId,
-                currentResolutionId,
-                false,
-                resolutionStepStatus
-              );
-              if (!previousStep) {
-                localResultCode = RESOLUTION_CODES.MORE_SOLUTIONS;
-                selectedBranch = subEquation;
-                stateUpdated = true;
-              } else {
-                localResultCode = RESOLUTION_CODES.STEP_CORRECT;
-              }
-            } else {
-              localResultCode = RESOLUTION_CODES.STEP_CORRECT;
-            }
-          }
-        } else {
-          localResultCode = RESOLUTION_CODES.STEP_INCORRECT;
-        }
-        resultCode = localResultCode;
-      } else {
-        const resultsToValidate = getSubEquationResult(
-          equationPostfixTokens,
-          subEquationPostfix,
-          'x',
-          false
-        );
-        if (resultsToValidate.length > 0) {
-          let found = false;
-          for (const valRes of answers) {
-            if (listContainsElement(resultsToValidate, valRes)) {
-              isCorrect = true;
-              correctResults.push(valRes);
-              resultCode = RESOLUTION_CODES.STEP_CORRECT;
-              found = true;
-              break;
-            }
-          }
-          if (!found) resultCode = RESOLUTION_CODES.STEP_INCORRECT;
-          if (isVariable && isCorrect && resultsToValidate.length === 1) {
-            resultCode = RESOLUTION_CODES.RESOLUTION_FINISHED;
-          }
-        } else {
-          stepWithoutSolution = true;
-          const attemptsCount = await this.equationRepository.countStepsWithoutSolution(
-            userEquationId,
-            currentResolutionId
-          );
-          if (attemptsCount + 1 === 3) resultCode = RESOLUTION_CODES.FIRST_WARNING;
-          else if (attemptsCount + 1 === 5) resultCode = RESOLUTION_CODES.NO_SOLUTION;
-          else resultCode = RESOLUTION_CODES.STEP_INCORRECT;
-        }
-      }
+      resultCode = RESOLUTION_CODES.RESULT_INCORRECT;
+      stateUpdated = true;
+    }
+    return {
+      resultCode,
+      isCorrect,
+      isVariable: isOnlyVariable(args.subEquationPostfix),
+      stepWithoutSolution: false,
+      correctResults: [],
+      selectedBranch: args.selectedBranch,
+      stateUpdated,
+    };
+  }
+
+  private async evaluateStandardStep(args: {
+    userEquationId: string;
+    answer: string;
+    resolutionStepStatus: number;
+    equationPostfixTokens: string[];
+    subEquationPostfix: string[];
+    subEquation: string;
+    currentResolutionId: number;
+    selectedBranch: string;
+    stateUpdated: boolean;
+    solutions: number[];
+  }): Promise<StepEvaluation> {
+    const parsedAnswers = parseAnswerValues(args.answer);
+    const answerValue = parsedAnswers[0];
+    let resultCode: string = RESOLUTION_CODES.STEP_INCORRECT;
+    let isCorrect = false;
+    const isVariable = isOnlyVariable(args.subEquationPostfix);
+    let stepWithoutSolution = false;
+    const correctResults: number[] = [];
+    let selectedBranch = args.selectedBranch;
+    let stateUpdated = args.stateUpdated;
+
+    if (args.solutions.length > 0) {
+      const knownSolutionEval = await this.evaluateWhenSolutionsAreKnown({
+        userEquationId: args.userEquationId,
+        currentResolutionId: args.currentResolutionId,
+        resolutionStepStatus: args.resolutionStepStatus,
+        equationPostfixTokens: args.equationPostfixTokens,
+        subEquationPostfix: args.subEquationPostfix,
+        subEquation: args.subEquation,
+        answerValue,
+        solutions: args.solutions,
+        isVariable,
+        selectedBranch,
+        stateUpdated,
+      });
+      resultCode = knownSolutionEval.resultCode;
+      isCorrect = knownSolutionEval.isCorrect;
+      selectedBranch = knownSolutionEval.selectedBranch;
+      stateUpdated = knownSolutionEval.stateUpdated;
+      correctResults.push(...knownSolutionEval.correctResults);
+    } else {
+      const unknownSolutionEval = await this.evaluateWhenSolutionsAreNotKnown({
+        userEquationId: args.userEquationId,
+        currentResolutionId: args.currentResolutionId,
+        equationPostfixTokens: args.equationPostfixTokens,
+        subEquationPostfix: args.subEquationPostfix,
+        answerValue,
+        isVariable,
+      });
+      resultCode = unknownSolutionEval.resultCode;
+      isCorrect = unknownSolutionEval.isCorrect;
+      stepWithoutSolution = unknownSolutionEval.stepWithoutSolution;
+      correctResults.push(...unknownSolutionEval.correctResults);
     }
 
-    const newStatus =
-      resultCode === RESOLUTION_CODES.RESOLUTION_FINISHED ||
-      resultCode === RESOLUTION_CODES.NO_SOLUTION
-        ? EquationStatus.SOLVED
-        : EquationStatus.IN_PROGRESS;
-    if (
-      resultCode === RESOLUTION_CODES.RESOLUTION_FINISHED ||
-      resultCode === RESOLUTION_CODES.NO_SOLUTION
-    ) {
+    return {
+      resultCode,
+      isCorrect,
+      isVariable,
+      stepWithoutSolution,
+      correctResults,
+      selectedBranch,
+      stateUpdated,
+    };
+  }
+
+  private async evaluateWhenSolutionsAreKnown(args: {
+    userEquationId: string;
+    currentResolutionId: number;
+    resolutionStepStatus: number;
+    equationPostfixTokens: string[];
+    subEquationPostfix: string[];
+    subEquation: string;
+    answerValue?: number;
+    solutions: number[];
+    isVariable: boolean;
+    selectedBranch: string;
+    stateUpdated: boolean;
+  }): Promise<{
+    resultCode: string;
+    isCorrect: boolean;
+    correctResults: number[];
+    selectedBranch: string;
+    stateUpdated: boolean;
+  }> {
+    const { isCorrect: matchedIsCorrect, correctResults } = matchAnswerAgainstKnownSolutions(
+      args.subEquationPostfix,
+      args.solutions,
+      args.answerValue
+    );
+    let isCorrect = matchedIsCorrect;
+    let selectedBranch = args.selectedBranch;
+    let stateUpdated = args.stateUpdated;
+
+    if (isCorrect && !args.isVariable) {
+      const previousStepIsValid = await this.isPreviousStepValid(
+        args.userEquationId,
+        args.currentResolutionId,
+        args.subEquationPostfix,
+        args.answerValue ?? 0,
+        args.resolutionStepStatus
+      );
+      if (!previousStepIsValid) isCorrect = false;
+    }
+
+    if (args.isVariable) {
+      const variableDecision = await this.decideKnownVariableResult({
+        userEquationId: args.userEquationId,
+        currentResolutionId: args.currentResolutionId,
+        solutions: args.solutions,
+        subEquation: args.subEquation,
+        selectedBranch,
+        stateUpdated,
+        isCorrect,
+        correctResults,
+      });
+      return {
+        resultCode: variableDecision.resultCode,
+        isCorrect: variableDecision.isCorrect,
+        correctResults,
+        selectedBranch: variableDecision.selectedBranch,
+        stateUpdated: variableDecision.stateUpdated,
+      };
+    }
+
+    const nonVariableDecision = await this.decideKnownNonVariableResult({
+      userEquationId: args.userEquationId,
+      currentResolutionId: args.currentResolutionId,
+      resolutionStepStatus: args.resolutionStepStatus,
+      equationPostfixTokens: args.equationPostfixTokens,
+      subEquationPostfix: args.subEquationPostfix,
+      subEquation: args.subEquation,
+      answerValue: args.answerValue ?? 0,
+      isCorrect,
+      selectedBranch,
+      stateUpdated,
+    });
+
+    return {
+      resultCode: nonVariableDecision.resultCode,
+      isCorrect: nonVariableDecision.isCorrect,
+      correctResults,
+      selectedBranch: nonVariableDecision.selectedBranch,
+      stateUpdated: nonVariableDecision.stateUpdated,
+    };
+  }
+
+  private async decideKnownVariableResult(args: {
+    userEquationId: string;
+    currentResolutionId: number;
+    solutions: number[];
+    subEquation: string;
+    selectedBranch: string;
+    stateUpdated: boolean;
+    isCorrect: boolean;
+    correctResults: number[];
+  }): Promise<{
+    resultCode: string;
+    isCorrect: boolean;
+    selectedBranch: string;
+    stateUpdated: boolean;
+  }> {
+    if (!args.isCorrect || args.correctResults.length === 0) {
+      return {
+        resultCode: RESOLUTION_CODES.RESULT_INCORRECT,
+        isCorrect: false,
+        selectedBranch: args.selectedBranch,
+        stateUpdated: args.stateUpdated,
+      };
+    }
+
+    const answerValue = args.correctResults[0]!;
+    const loggedSolutions = await this.equationRepository.getDistinctLoggedSolutions(
+      args.userEquationId,
+      args.currentResolutionId
+    );
+    const solutionSet = [...new Set(args.solutions)];
+    let resultCode: string = RESOLUTION_CODES.RESULT_CORRECT;
+    let selectedBranch = args.selectedBranch;
+    let stateUpdated = args.stateUpdated;
+
+    if (loggedSolutions.some((s) => Math.abs(s - answerValue) <= 1e-9)) {
+      resultCode = RESOLUTION_CODES.RESULT_REPEATED;
+    } else if (loggedSolutions.length + 1 === solutionSet.length) {
+      resultCode = RESOLUTION_CODES.RESOLUTION_FINISHED;
+    } else if (selectedBranch.length === 0) {
+      selectedBranch = args.subEquation;
       stateUpdated = true;
     }
 
+    return {
+      resultCode,
+      isCorrect: true,
+      selectedBranch,
+      stateUpdated,
+    };
+  }
+
+  private async decideKnownNonVariableResult(args: {
+    userEquationId: string;
+    currentResolutionId: number;
+    resolutionStepStatus: number;
+    equationPostfixTokens: string[];
+    subEquationPostfix: string[];
+    subEquation: string;
+    answerValue: number;
+    isCorrect: boolean;
+    selectedBranch: string;
+    stateUpdated: boolean;
+  }): Promise<{
+    resultCode: string;
+    isCorrect: boolean;
+    selectedBranch: string;
+    stateUpdated: boolean;
+  }> {
+    if (!args.isCorrect) {
+      return {
+        resultCode: RESOLUTION_CODES.STEP_INCORRECT,
+        isCorrect: false,
+        selectedBranch: args.selectedBranch,
+        stateUpdated: args.stateUpdated,
+      };
+    }
+
+    const isRepeatedBranchAnswer = await this.hasRepeatedBranchResult(
+      args.userEquationId,
+      args.currentResolutionId,
+      args.resolutionStepStatus,
+      args.answerValue
+    );
+    if (isRepeatedBranchAnswer) {
+      return {
+        resultCode: RESOLUTION_CODES.RESULT_REPEATED,
+        isCorrect: false,
+        selectedBranch: args.selectedBranch,
+        stateUpdated: args.stateUpdated,
+      };
+    }
+
+    if (
+      args.resolutionStepStatus === RESOLUTION_STEP_NO_BRANCH &&
+      isQuadratic(args.equationPostfixTokens, args.subEquationPostfix)
+    ) {
+      const previousStep = await this.equationRepository.getPreviousStep(
+        args.userEquationId,
+        args.currentResolutionId,
+        false,
+        args.resolutionStepStatus
+      );
+      if (!previousStep) {
+        return {
+          resultCode: RESOLUTION_CODES.MORE_SOLUTIONS,
+          isCorrect: true,
+          selectedBranch: args.subEquation,
+          stateUpdated: true,
+        };
+      }
+    }
+
+    return {
+      resultCode: RESOLUTION_CODES.STEP_CORRECT,
+      isCorrect: true,
+      selectedBranch: args.selectedBranch,
+      stateUpdated: args.stateUpdated,
+    };
+  }
+
+  private async evaluateWhenSolutionsAreNotKnown(args: {
+    userEquationId: string;
+    currentResolutionId: number;
+    equationPostfixTokens: string[];
+    subEquationPostfix: string[];
+    answerValue?: number;
+    isVariable: boolean;
+  }): Promise<{
+    resultCode: string;
+    isCorrect: boolean;
+    stepWithoutSolution: boolean;
+    correctResults: number[];
+  }> {
+    const resultsToValidate = getSubEquationResult(
+      args.equationPostfixTokens,
+      args.subEquationPostfix,
+      'x',
+      false
+    );
+    let resultCode: string = RESOLUTION_CODES.STEP_INCORRECT;
+    let isCorrect = false;
+    let stepWithoutSolution = false;
+    const correctResults: number[] = [];
+
+    if (resultsToValidate.length > 0) {
+      const found =
+        args.answerValue !== undefined && listContainsElement(resultsToValidate, args.answerValue);
+      if (found && args.answerValue !== undefined) {
+        isCorrect = true;
+        correctResults.push(args.answerValue);
+        resultCode = RESOLUTION_CODES.STEP_CORRECT;
+      }
+      if (!found) resultCode = RESOLUTION_CODES.STEP_INCORRECT;
+      if (args.isVariable && isCorrect && resultsToValidate.length === 1) {
+        resultCode = RESOLUTION_CODES.RESOLUTION_FINISHED;
+      }
+      return { resultCode, isCorrect, stepWithoutSolution, correctResults };
+    }
+
+    stepWithoutSolution = true;
+    const attemptsCount = await this.equationRepository.countStepsWithoutSolution(
+      args.userEquationId,
+      args.currentResolutionId
+    );
+    if (attemptsCount + 1 === 3) resultCode = RESOLUTION_CODES.FIRST_WARNING;
+    else if (attemptsCount + 1 === 5) resultCode = RESOLUTION_CODES.NO_SOLUTION;
+    else resultCode = RESOLUTION_CODES.STEP_INCORRECT;
+
+    return { resultCode, isCorrect, stepWithoutSolution, correctResults };
+  }
+
+  private async persistResolutionOutcome(args: {
+    userEquationId: string;
+    currentResolutionId: number;
+    subEquation: string;
+    subEquationInfix?: string;
+    answer: string;
+    resolutionStepStatus: number;
+    evaluation: StepEvaluation;
+  }): Promise<void> {
+    const solved =
+      args.evaluation.resultCode === RESOLUTION_CODES.RESOLUTION_FINISHED ||
+      args.evaluation.resultCode === RESOLUTION_CODES.NO_SOLUTION;
+    const stateUpdated = args.evaluation.stateUpdated || solved;
+    const newStatus = solved ? EquationStatus.SOLVED : EquationStatus.IN_PROGRESS;
+
     if (stateUpdated) {
-      await this.equationRepository.updateResolutionState(userEquationId, {
+      await this.equationRepository.updateResolutionState(args.userEquationId, {
         status: newStatus,
-        currentResolutionId,
-        selectedBranch,
+        currentResolutionId: args.currentResolutionId,
+        selectedBranch: args.evaluation.selectedBranch,
       });
     }
 
     await this.equationRepository.createResolution({
-      userEquationId,
-      resolutionSessionId: currentResolutionId,
-      subEquation,
-      subEquationInfix: payload.subEquationInfix?.trim() || undefined,
-      proposedResult: answer,
-      resultValue: formatResultValue(correctResults),
-      stepWithoutSolution,
-      isCorrect,
-      isVariable,
-      resolutionSide: resolutionStepStatus,
+      userEquationId: args.userEquationId,
+      resolutionSessionId: args.currentResolutionId,
+      subEquation: args.subEquation,
+      subEquationInfix: args.subEquationInfix || undefined,
+      proposedResult: args.answer,
+      resultValue: formatResultValue(args.evaluation.correctResults),
+      stepWithoutSolution: args.evaluation.stepWithoutSolution,
+      isCorrect: args.evaluation.isCorrect,
+      isVariable: args.evaluation.isVariable,
+      resolutionSide: args.resolutionStepStatus,
     });
-
-    return { code: resultCode };
   }
 
   private async isPreviousStepValid(
@@ -282,25 +593,30 @@ export class ResolutionService {
       resolutionStatus
     );
     if (!previousStep) return true;
+
     const answerValues = previousStep.resultValue
       .split(RESULT_VALUE_SEPARATOR)
       .map((s) => Number(s.trim()))
       .filter((n) => !Number.isNaN(n));
+
     const userEq = await this.equationRepository.findByIdWithEquation(userEquationId);
     if (!userEq?.equation) return true;
+
     const infix = userEq.equation.infixExpression ?? userEq.equation.postfixExpression ?? '';
     const equationPostfix = infixToPostfix(tokenizeInfix(infix));
     if (!equationPostfix) return true;
-    const replaced = this.replaceSubListInPostfix(
+    const replaced = replaceSubListInPostfix(
       equationPostfix,
       subEquationPostfix,
       String(answerValue)
     );
     if (!replaced) return true;
+
     const { postfixToTree } = await import('./equation-solver/postfix-to-tree.js');
     const tree = postfixToTree(replaced);
     if (!tree || tree.type !== 'OPERATOR_BINARY' || tree.value !== '=' || !tree.left || !tree.right)
       return true;
+
     const { evaluateTree } = await import('./equation-solver/evaluate-tree.js');
     const leftVals = evaluateTree(tree.left, false);
     const rightVals = evaluateTree(tree.right, false);
@@ -308,24 +624,8 @@ export class ResolutionService {
       if (leftVals.some((v) => Math.abs(v - value) <= 1e-9) || rightVals.some((v) => Math.abs(v - value) <= 1e-9))
         return true;
     }
+    
     return false;
-  }
-
-  private replaceSubListInPostfix(original: string[], subList: string[], replacement: string): string[] | null {
-    if (subList.length === 0) return [...original];
-    const n = original.length;
-    const m = subList.length;
-    for (let i = 0; i <= n - m; i++) {
-      let match = true;
-      for (let j = 0; j < m; j++) {
-        if (original[i + j] !== subList[j]) {
-          match = false;
-          break;
-        }
-      }
-      if (match) return [...original.slice(0, i), replacement, ...original.slice(i + m)];
-    }
-    return null;
   }
 
   private async hasRepeatedBranchResult(

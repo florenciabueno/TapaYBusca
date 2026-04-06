@@ -9,12 +9,12 @@ export function validateSubEquation(
   equationPostfixTokens: string[],
   subEquationPostfix: string[]
 ): boolean {
-  if (!subEquationPostfix || subEquationPostfix.length === 0) return true;
+  if (!subEquationPostfix || subEquationPostfix.length === 0) return false;
   const subStr = subEquationPostfix.join('');
   const eqStr = equationPostfixTokens.join('');
-  if (!eqStr.includes(subStr)) return true;
+  if (!eqStr.includes(subStr)) return false;
   const tree = postfixToTree([...subEquationPostfix]);
-  return tree === null;
+  return tree !== null;
 }
 
 function normalizeDecimalSeparator(s: string): string {
@@ -72,7 +72,7 @@ export function getSubEquationResult(
   return evaluateTree(isolated, disallowNegativeRoot);
 }
 
-function replaceSubListInPostfix(
+export function replaceSubListInPostfix(
   original: string[],
   subList: string[],
   replacement: string
@@ -93,6 +93,24 @@ function replaceSubListInPostfix(
     }
   }
   return null;
+}
+
+export function matchAnswerAgainstKnownSolutions(
+  subEquationPostfix: string[],
+  solutions: number[],
+  answerValue?: number
+): { isCorrect: boolean; correctResults: number[] } {
+  if (answerValue === undefined) return { isCorrect: false, correctResults: [] };
+  const subEquationTree = postfixToTree(subEquationPostfix);
+  if (!subEquationTree) return { isCorrect: false, correctResults: [] };
+
+  for (const solution of solutions) {
+    const evaluation = evaluateTree(subEquationTree, false, solution);
+    if (listContainsElement(evaluation, answerValue)) {
+      return { isCorrect: true, correctResults: [answerValue] };
+    }
+  }
+  return { isCorrect: false, correctResults: [] };
 }
 
 export function checkStepHasSolution(

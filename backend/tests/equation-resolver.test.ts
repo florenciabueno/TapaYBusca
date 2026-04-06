@@ -11,6 +11,7 @@ import {
 import { tokenizeInfix } from '../src/modules/equations/equation-solver/tokenizer.js';
 import { infixToPostfix } from '../src/modules/equations/equation-solver/infix-to-postfix.js';
 import { postfixToTree } from '../src/modules/equations/equation-solver/postfix-to-tree.js';
+import { replaceSubListInPostfix } from '../src/modules/equations/equation-solver/resolve-helpers.js';
 import { ResolutionService } from '../src/modules/equations/resolution.service.js';
 
 vi.mock('../src/modules/equations/equation.repository.js', () => {
@@ -135,7 +136,7 @@ describe('Equation resolver API', () => {
       expect(response.status).toBe(200);
       expect(response.body).toMatchObject({
         code: RESOLUTION_CODES.SYNTAX_INCORRECT,
-        message: 'Subequation is required',
+        message: 'La subecuación es obligatoria.',
       });
     });
 
@@ -150,7 +151,7 @@ describe('Equation resolver API', () => {
       expect(response.status).toBe(200);
       expect(response.body).toMatchObject({
         code: RESOLUTION_CODES.SYNTAX_INCORRECT,
-        message: 'Equation not found',
+        message: 'Ecuación no encontrada.',
       });
     });
 
@@ -167,7 +168,7 @@ describe('Equation resolver API', () => {
       expect(response.status).toBe(200);
       expect(response.body).toMatchObject({
         code: RESOLUTION_CODES.SYNTAX_INCORRECT,
-        message: 'No permissions',
+        message: 'No tienes permisos para resolver esta ecuación.',
       });
     });
 
@@ -190,7 +191,7 @@ describe('Equation resolver API', () => {
       expect(response.status).toBe(200);
       expect(response.body).toMatchObject({
         code: RESOLUTION_CODES.SYNTAX_INCORRECT,
-        message: 'Invalid equation',
+        message: 'La ecuación almacenada es inválida.',
       });
     });
 
@@ -807,14 +808,13 @@ describe('ResolutionService internal branches (existing test file)', () => {
   });
 
   it('replaceSubListInPostfix handles empty sublist and missing matches', () => {
-    const { service } = createService();
     const original = ['x', '5', '+', '12', '='];
 
-    const cloned = (service as any).replaceSubListInPostfix(original, [], '7');
+    const cloned = replaceSubListInPostfix(original, [], '7');
     expect(cloned).toEqual(original);
     expect(cloned).not.toBe(original);
 
-    const noMatch = (service as any).replaceSubListInPostfix(original, ['x', '9', '+'], '7');
+    const noMatch = replaceSubListInPostfix(original, ['x', '9', '+'], '7');
     expect(noMatch).toBeNull();
   });
 
