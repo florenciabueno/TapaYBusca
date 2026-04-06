@@ -1,9 +1,12 @@
 import type { Request } from 'express';
 import {
+  CreateEquationDto,
   DownloadEquationsDto,
   EquationOrigin,
   EquationStatus,
   ResolveStepDto,
+  UpdateEquationUserDto,
+  UploadEquationsDto,
 } from './equation.types.js';
 import { DEFAULT_LIMIT, DEFAULT_PAGE, MAX_LIMIT } from '../../shared/constants/pagination.js';
 
@@ -13,6 +16,11 @@ const LIST_STATUS_DELETED = 'DELETED';
 const PERMISSION_ERROR_KEYWORD = 'permisos';
 
 type QueryParams = Request['query'];
+type RouteParams = Request['params'];
+
+function asObject(value: unknown): Record<string, unknown> {
+  return value && typeof value === 'object' ? (value as Record<string, unknown>) : {};
+}
 
 function parseCsvQuery(rawValue: unknown): string[] {
   if (rawValue === undefined || rawValue === '') return [];
@@ -79,14 +87,20 @@ export function parseDateFilters(
 }
 
 export function parseUserEquationIds(body: unknown): string[] {
-  if (body == null || typeof body !== 'object') return [];
-  const arr = (body as Record<string, unknown>).userEquationIds;
+  const arr = asObject(body).userEquationIds;
   if (!Array.isArray(arr)) return [];
-  return arr.filter((id): id is string => typeof id === 'string');
+  return arr
+    .filter((id): id is string => typeof id === 'string')
+    .map((id) => id.trim())
+    .filter((id) => id.length > 0);
+}
+
+export function parseUploadEquationsBody(body: unknown): UploadEquationsDto {
+  return { userEquationIds: parseUserEquationIds(body) };
 }
 
 export function parseDownloadBody(body: unknown): DownloadEquationsDto {
-  const b = body && typeof body === 'object' ? (body as Record<string, unknown>) : {};
+  const b = asObject(body);
   return {
     quantity: typeof b.quantity === 'number' ? b.quantity : parseInt(String(b.quantity ?? 0), 10),
     fromDate: typeof b.fromDate === 'string' ? b.fromDate : undefined,
@@ -95,7 +109,7 @@ export function parseDownloadBody(body: unknown): DownloadEquationsDto {
 }
 
 export function parseResolveStepBody(body: unknown): ResolveStepDto {
-  const b = body && typeof body === 'object' ? (body as Record<string, unknown>) : {};
+  const b = asObject(body);
   const subEquationInfix = typeof b.subEquationInfix === 'string' ? b.subEquationInfix : undefined;
   const answer = typeof b.answer === 'string' ? b.answer : '';
   const resolutionStepStatus =
@@ -106,6 +120,57 @@ export function parseResolveStepBody(body: unknown): ResolveStepDto {
     answer,
     resolutionStepStatus: resolutionStepStatus ?? 1,
   };
+}
+
+export function parseUserEquationIdParam(params: RouteParams): string {
+  const id = typeof params.id === 'string' ? params.id.trim() : '';
+  if (!id) throw new Error('ID de ecuación inválido.');
+  return id;
+}
+
+export function parseCreateEquationBody(body: unknown, userId: string): CreateEquationDto {
+  const b = asObject(body);
+  const equation = typeof b.equation === 'string' ? b.equation.trim() : '';
+  if (!equation) throw new Error('La ecuación es obligatoria.');
+  return {
+    expression: equation,
+    userId,
+  };
+}
+
+export function parseUpdateEquationBody(body: unknown): UpdateEquationUserDto {
+  const b = asObject(body);
+  const data: UpdateEquationUserDto = {};
+
+  if ('status' in b && b.status !== undefined) {
+    if (typeof b.status !== 'string' || !VALID_STATUSES.has(b.status)) {
+      throw new Error('Estado inválido.');
+    }
+    data.status = b.status as EquationStatus;
+  }
+
+  if ('isActive' in b && b.isActive !== undefined) {
+    if (typeof b.isActive !== 'boolean') throw new Error('isActive inválido.');
+    data.isActive = b.isActive;
+  }
+
+  if ('currentResolutionId' in b && b.currentResolutionId !== undefined) {
+    if (
+      typeof b.currentResolutionId !== 'number' ||
+      !Number.isInteger(b.currentResolutionId) ||
+      b.currentResolutionId < 0
+    ) {
+      throw new Error('currentResolutionId inválido.');
+    }
+    data.currentResolutionId = b.currentResolutionId;
+  }
+
+  if ('selectedBranch' in b && b.selectedBranch !== undefined) {
+    if (typeof b.selectedBranch !== 'string') throw new Error('selectedBranch inválido.');
+    data.selectedBranch = b.selectedBranch;
+  }
+
+  return data;
 }
 
 export function getErrorMessage(error: unknown, fallback: string): string {

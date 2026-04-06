@@ -1,17 +1,19 @@
 import { Request, Response } from 'express';
 import { EquationService } from './equation.service.js';
 import { ResolutionService } from './resolution.service.js';
-import { CreateEquationDto, UpdateEquationUserDto } from './equation.types.js';
 import {
   getErrorMessage,
   isPermissionError,
+  parseCreateEquationBody,
   parseDateFilters,
   parseDownloadBody,
   parseOriginsQuery,
   parsePageAndLimit,
   parseResolveStepBody,
   parseStatusesQuery,
-  parseUserEquationIds,
+  parseUpdateEquationBody,
+  parseUploadEquationsBody,
+  parseUserEquationIdParam,
   parseUserListStatusesQuery,
 } from './equation.controller.helpers.js';
 
@@ -104,8 +106,8 @@ export class EquationController {
   uploadEquations = async (req: Request, res: Response): Promise<void> => {
     try {
       const userId = req.userId!;
-      const userEquationIds = parseUserEquationIds(req.body);
-      await this.equationService.uploadEquations(userId, userEquationIds);
+      const dto = parseUploadEquationsBody(req.body);
+      await this.equationService.uploadEquations(userId, dto.userEquationIds);
       res.status(200).json({ ok: true });
     } catch (error: unknown) {
       res.status(400).json({
@@ -129,7 +131,7 @@ export class EquationController {
 
   getEquationById = async (req: Request, res: Response): Promise<void> => {
     try {
-      const { id } = req.params;
+      const id = parseUserEquationIdParam(req.params);
       const equation = await this.equationService.getEquationById(id);
       if (!equation) {
         res.status(404).json({ error: ERROR_EQUATION_NOT_FOUND });
@@ -146,10 +148,7 @@ export class EquationController {
   createEquation = async (req: Request, res: Response): Promise<void> => {
     try {
       const userId = req.userId!;
-      const data: CreateEquationDto = {
-        expression: req.body.equation,
-        userId,
-      };
+      const data = parseCreateEquationBody(req.body, userId);
       const equation = await this.equationService.createEquation(data);
       res.status(201).json(equation);
     } catch (error: unknown) {
@@ -161,9 +160,9 @@ export class EquationController {
 
   updateEquation = async (req: Request, res: Response): Promise<void> => {
     try {
-      const { id } = req.params;
+      const id = parseUserEquationIdParam(req.params);
       const userId = req.userId!;
-      const data: UpdateEquationUserDto = req.body;
+      const data = parseUpdateEquationBody(req.body);
       const equation = await this.equationService.updateEquation(id, data, userId);
       res.status(200).json(equation);
     } catch (error: unknown) {
@@ -176,7 +175,7 @@ export class EquationController {
 
   deleteEquation = async (req: Request, res: Response): Promise<void> => {
     try {
-      const { id } = req.params;
+      const id = parseUserEquationIdParam(req.params);
       const userId = req.userId!;
       await this.equationService.deleteEquation(id, userId);
       res.status(204).send();
@@ -190,7 +189,7 @@ export class EquationController {
 
   resolveStep = async (req: Request, res: Response): Promise<void> => {
     try {
-      const { id: userEquationId } = req.params;
+      const userEquationId = parseUserEquationIdParam(req.params);
       const userId = req.userId!;
       const payload = parseResolveStepBody(req.body);
       const result = await this.resolutionService.resolveStep(userEquationId, userId, payload);
@@ -204,7 +203,7 @@ export class EquationController {
 
   getResolution = async (req: Request, res: Response): Promise<void> => {
     try {
-      const { id: userEquationId } = req.params;
+      const userEquationId = parseUserEquationIdParam(req.params);
       const userId = req.userId!;
       const data = await this.resolutionService.getResolution(userEquationId, userId);
       if (!data) {
@@ -221,7 +220,7 @@ export class EquationController {
 
   resetResolution = async (req: Request, res: Response): Promise<void> => {
     try {
-      const { id: userEquationId } = req.params;
+      const userEquationId = parseUserEquationIdParam(req.params);
       const userId = req.userId!;
       const ok = await this.resolutionService.resetResolution(userEquationId, userId);
       if (!ok) {

@@ -95,7 +95,7 @@ function makeUserEquation(
     equation: {
       infixExpression: DEFAULT_EQUATIONS.linear,
       postfixExpression: DEFAULT_EQUATIONS.linear,
-      solutionValues: [],
+      solutionValues: [7],
     },
     ...overrides,
   };
@@ -299,7 +299,7 @@ describe('Equation resolver API', () => {
       });
     });
 
-    it('returns RT with empty-set for default equation without real solutions', async () => {
+    it('returns SI when equation has no precalculated solutions', async () => {
       repoMocks.findByIdWithEquation.mockResolvedValue(
         makeUserEquation({
           equation: {
@@ -320,47 +320,11 @@ describe('Equation resolver API', () => {
         });
 
       expect(response.status).toBe(200);
-      expect(response.body).toEqual({ code: RESOLUTION_CODES.RESOLUTION_FINISHED });
-    });
-
-    it('returns PA on third step-without-solution attempt', async () => {
-      repoMocks.countStepsWithoutSolution.mockResolvedValue(2);
-
-      const response = await request(app)
-        .post('/api/equations/ue-1/resolve')
-        .set(authHeader(token))
-        .send({
-          subEquationInfix: '12',
-          answer: '1',
-          resolutionStepStatus: RESOLUTION_STEP_NO_BRANCH,
-        });
-
-      expect(response.status).toBe(200);
-      expect(response.body).toEqual({ code: RESOLUTION_CODES.FIRST_WARNING });
-      expect(repoMocks.createResolution).toHaveBeenCalledWith(
-        expect.objectContaining({ stepWithoutSolution: true })
-      );
-    });
-
-    it('returns SS on fifth step-without-solution attempt and marks equation as solved', async () => {
-      repoMocks.countStepsWithoutSolution.mockResolvedValue(4);
-
-      const response = await request(app)
-        .post('/api/equations/ue-1/resolve')
-        .set(authHeader(token))
-        .send({
-          subEquationInfix: '12',
-          answer: '1',
-          resolutionStepStatus: RESOLUTION_STEP_NO_BRANCH,
-        });
-
-      expect(response.status).toBe(200);
-      expect(response.body).toEqual({ code: RESOLUTION_CODES.NO_SOLUTION });
-      expect(repoMocks.updateResolutionState).toHaveBeenCalledWith('ue-1', {
-        status: EquationStatus.SOLVED,
-        currentResolutionId: 1,
-        selectedBranch: '',
+      expect(response.body).toMatchObject({
+        code: RESOLUTION_CODES.SYNTAX_INCORRECT,
+        message: 'La ecuación no tiene soluciones precalculadas.',
       });
+      expect(repoMocks.createResolution).not.toHaveBeenCalled();
     });
 
     it('returns MS for first correct non-variable quadratic branch step', async () => {

@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { UserService } from './user.service.js';
-import { UpdateProfileDto } from './user.types.js';
+import { getErrorMessage, parseUpdateProfileBody } from './user.controller.helpers.js';
 
 const ERROR_GET_PROFILE = 'Error al obtener el perfil';
 const ERROR_UPDATE_PROFILE = 'Error al actualizar el perfil';
@@ -14,9 +14,9 @@ export class UserController {
       const profile = await this.userService.getProfile(userId);
 
       res.status(200).json(profile);
-    } catch (error: any) {
+    } catch (error: unknown) {
       res.status(error instanceof Error ? 404 : 500).json({
-        error: error.message || ERROR_GET_PROFILE,
+        error: getErrorMessage(error, ERROR_GET_PROFILE),
       });
     }
   };
@@ -24,13 +24,13 @@ export class UserController {
   updateProfile = async (req: Request, res: Response): Promise<void> => {
     try {
       const userId = req.userId!;
-      const data: UpdateProfileDto = req.body;
+      const data = parseUpdateProfileBody(req.body);
       const profile = await this.userService.updateProfile(userId, data);
 
       res.status(200).json(profile);
-    } catch (error: any) {
+    } catch (error: unknown) {
       res.status(error instanceof Error ? 400 : 500).json({
-        error: error.message || ERROR_UPDATE_PROFILE,
+        error: getErrorMessage(error, ERROR_UPDATE_PROFILE),
       });
     }
   };

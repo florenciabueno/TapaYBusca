@@ -99,18 +99,18 @@ export function matchAnswerAgainstKnownSolutions(
   subEquationPostfix: string[],
   solutions: number[],
   answerValue?: number
-): { isCorrect: boolean; correctResults: number[] } {
-  if (answerValue === undefined) return { isCorrect: false, correctResults: [] };
+): { isCorrect: boolean; correctResult?: number } {
+  if (answerValue === undefined) return { isCorrect: false };
   const subEquationTree = postfixToTree(subEquationPostfix);
-  if (!subEquationTree) return { isCorrect: false, correctResults: [] };
+  if (!subEquationTree) return { isCorrect: false };
 
   for (const solution of solutions) {
     const evaluation = evaluateTree(subEquationTree, false, solution);
     if (listContainsElement(evaluation, answerValue)) {
-      return { isCorrect: true, correctResults: [answerValue] };
+      return { isCorrect: true, correctResult: answerValue };
     }
   }
-  return { isCorrect: false, correctResults: [] };
+  return { isCorrect: false };
 }
 
 export function checkStepHasSolution(
