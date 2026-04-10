@@ -69,6 +69,22 @@ function formatResultValue(value?: number): string {
   return value === undefined ? '' : String(value);
 }
 
+function parseStoredResultValues(resultValue: string): number[] {
+  return resultValue
+    .split(RESULT_VALUE_SEPARATOR)
+    .map((s) => Number(s.trim()))
+    .filter((n) => !Number.isNaN(n));
+}
+
+function makeKnownStepDecision(
+  resultCode: string,
+  isCorrect: boolean,
+  selectedBranch: string,
+  stateUpdated: boolean
+): KnownStepDecision {
+  return { resultCode, isCorrect, selectedBranch, stateUpdated };
+}
+
 export class ResolutionService {
   constructor(private equationRepository: EquationRepository) {}
 
@@ -362,12 +378,12 @@ export class ResolutionService {
     correctResult?: number;
   }): Promise<KnownStepDecision> {
     if (!args.isCorrect || args.correctResult === undefined) {
-      return {
-        resultCode: RESOLUTION_CODES.RESULT_INCORRECT,
-        isCorrect: false,
-        selectedBranch: args.selectedBranch,
-        stateUpdated: args.stateUpdated,
-      };
+      return makeKnownStepDecision(
+        RESOLUTION_CODES.RESULT_INCORRECT,
+        false,
+        args.selectedBranch,
+        args.stateUpdated
+      );
     }
 
     const answerValue = args.correctResult;
@@ -389,12 +405,7 @@ export class ResolutionService {
       stateUpdated = true;
     }
 
-    return {
-      resultCode,
-      isCorrect: true,
-      selectedBranch,
-      stateUpdated,
-    };
+    return makeKnownStepDecision(resultCode, true, selectedBranch, stateUpdated);
   }
 
   private async decideKnownNonVariableResult(args: {
@@ -410,12 +421,12 @@ export class ResolutionService {
     stateUpdated: boolean;
   }): Promise<KnownStepDecision> {
     if (!args.isCorrect) {
-      return {
-        resultCode: RESOLUTION_CODES.STEP_INCORRECT,
-        isCorrect: false,
-        selectedBranch: args.selectedBranch,
-        stateUpdated: args.stateUpdated,
-      };
+      return makeKnownStepDecision(
+        RESOLUTION_CODES.STEP_INCORRECT,
+        false,
+        args.selectedBranch,
+        args.stateUpdated
+      );
     }
 
     const isRepeatedBranchAnswer = await this.hasRepeatedBranchResult(
@@ -425,12 +436,12 @@ export class ResolutionService {
       args.answerValue
     );
     if (isRepeatedBranchAnswer) {
-      return {
-        resultCode: RESOLUTION_CODES.RESULT_REPEATED,
-        isCorrect: false,
-        selectedBranch: args.selectedBranch,
-        stateUpdated: args.stateUpdated,
-      };
+      return makeKnownStepDecision(
+        RESOLUTION_CODES.RESULT_REPEATED,
+        false,
+        args.selectedBranch,
+        args.stateUpdated
+      );
     }
 
     if (
@@ -444,21 +455,16 @@ export class ResolutionService {
         args.resolutionStepStatus
       );
       if (!previousStep) {
-        return {
-          resultCode: RESOLUTION_CODES.MORE_SOLUTIONS,
-          isCorrect: true,
-          selectedBranch: args.subEquation,
-          stateUpdated: true,
-        };
+        return makeKnownStepDecision(RESOLUTION_CODES.MORE_SOLUTIONS, true, args.subEquation, true);
       }
     }
 
-    return {
-      resultCode: RESOLUTION_CODES.STEP_CORRECT,
-      isCorrect: true,
-      selectedBranch: args.selectedBranch,
-      stateUpdated: args.stateUpdated,
-    };
+    return makeKnownStepDecision(
+      RESOLUTION_CODES.STEP_CORRECT,
+      true,
+      args.selectedBranch,
+      args.stateUpdated
+    );
   }
 
   private async persistResolutionOutcome(args: {
@@ -513,10 +519,7 @@ export class ResolutionService {
     );
     if (!previousStep) return true;
 
-    const previousAnswerValues = previousStep.resultValue
-      .split(RESULT_VALUE_SEPARATOR)
-      .map((s) => Number(s.trim()))
-      .filter((n) => !Number.isNaN(n));
+    const previousAnswerValues = parseStoredResultValues(previousStep.resultValue);
 
     const userEq = await this.equationRepository.findByIdWithEquation(userEquationId);
     if (!userEq?.equation) return true;
@@ -558,11 +561,7 @@ export class ResolutionService {
       RESOLUTION_STEP_NO_BRANCH
     );
     if (!previousStep) return false;
-    const values = previousStep.resultValue
-      .split(RESULT_VALUE_SEPARATOR)
-      .map((s) => Number(s.trim()))
-      .filter((n) => !Number.isNaN(n));
-    return listContainsElement(values, answerValue);
+    return listContainsElement(parseStoredResultValues(previousStep.resultValue), answerValue);
   }
 
   async getResolution(userEquationId: string, userId: string) {
