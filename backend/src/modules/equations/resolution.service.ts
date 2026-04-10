@@ -2,6 +2,8 @@ import { EquationRepository } from './equation.repository.js';
 import { EquationStatus } from './equation.types.js';
 import { tokenizeInfix } from './equation-solver/tokenizer.js';
 import { infixToPostfix } from './equation-solver/infix-to-postfix.js';
+import { evaluateTree } from './equation-solver/evaluate-tree.js';
+import { postfixToTree } from './equation-solver/postfix-to-tree.js';
 import {
   RESOLUTION_CODES,
   RESOLUTION_STEP_NO_BRANCH,
@@ -25,6 +27,7 @@ const MESSAGE_RESOLVE_EQUATION_NOT_FOUND = 'Ecuación no encontrada.';
 const MESSAGE_RESOLVE_NO_PERMISSIONS = 'No tienes permisos para resolver esta ecuación.';
 const MESSAGE_RESOLVE_INVALID_EQUATION = 'La ecuación almacenada es inválida.';
 const MESSAGE_RESOLVE_MISSING_SOLUTIONS = 'La ecuación no tiene soluciones precalculadas.';
+
 type ResolveStepPayload = {
   subEquationInfix?: string;
   answer: string;
@@ -46,6 +49,15 @@ type StepEvaluation = {
   selectedBranch: string;
   stateUpdated: boolean;
 };
+
+type KnownStepDecision = {
+  resultCode: string;
+  isCorrect: boolean;
+  selectedBranch: string;
+  stateUpdated: boolean;
+};
+
+type KnownSolutionEvalOutcome = KnownStepDecision & { correctResult?: number };
 
 function parseSolutionValues(json: unknown): number[] {
   if (json == null) return [];
@@ -293,21 +305,13 @@ export class ResolutionService {
     isVariable: boolean;
     selectedBranch: string;
     stateUpdated: boolean;
-  }): Promise<{
-    resultCode: string;
-    isCorrect: boolean;
-    correctResult?: number;
-    selectedBranch: string;
-    stateUpdated: boolean;
-  }> {
+  }): Promise<KnownSolutionEvalOutcome> {
     const { isCorrect: matchedIsCorrect, correctResult } = matchAnswerAgainstKnownSolutions(
       args.subEquationPostfix,
       args.solutions,
       args.answerValue
     );
     let isCorrect = matchedIsCorrect;
-    let selectedBranch = args.selectedBranch;
-    let stateUpdated = args.stateUpdated;
 
     if (isCorrect && !args.isVariable) {
       const previousStepIsValid = await this.isPreviousStepValid(
@@ -320,46 +324,31 @@ export class ResolutionService {
       if (!previousStepIsValid) isCorrect = false;
     }
 
-    if (args.isVariable) {
-      const variableDecision = await this.decideKnownVariableResult({
-        userEquationId: args.userEquationId,
-        currentResolutionId: args.currentResolutionId,
-        solutions: args.solutions,
-        subEquation: args.subEquation,
-        selectedBranch,
-        stateUpdated,
-        isCorrect,
-        correctResult,
-      });
-      return {
-        resultCode: variableDecision.resultCode,
-        isCorrect: variableDecision.isCorrect,
-        correctResult,
-        selectedBranch: variableDecision.selectedBranch,
-        stateUpdated: variableDecision.stateUpdated,
-      };
-    }
+    const stepDecision: KnownStepDecision = args.isVariable
+      ? await this.decideKnownVariableResult({
+          userEquationId: args.userEquationId,
+          currentResolutionId: args.currentResolutionId,
+          solutions: args.solutions,
+          subEquation: args.subEquation,
+          selectedBranch: args.selectedBranch,
+          stateUpdated: args.stateUpdated,
+          isCorrect,
+          correctResult,
+        })
+      : await this.decideKnownNonVariableResult({
+          userEquationId: args.userEquationId,
+          currentResolutionId: args.currentResolutionId,
+          resolutionStepStatus: args.resolutionStepStatus,
+          equationPostfixTokens: args.equationPostfixTokens,
+          subEquationPostfix: args.subEquationPostfix,
+          subEquation: args.subEquation,
+          answerValue: args.answerValue ?? 0,
+          isCorrect,
+          selectedBranch: args.selectedBranch,
+          stateUpdated: args.stateUpdated,
+        });
 
-    const nonVariableDecision = await this.decideKnownNonVariableResult({
-      userEquationId: args.userEquationId,
-      currentResolutionId: args.currentResolutionId,
-      resolutionStepStatus: args.resolutionStepStatus,
-      equationPostfixTokens: args.equationPostfixTokens,
-      subEquationPostfix: args.subEquationPostfix,
-      subEquation: args.subEquation,
-      answerValue: args.answerValue ?? 0,
-      isCorrect,
-      selectedBranch,
-      stateUpdated,
-    });
-
-    return {
-      resultCode: nonVariableDecision.resultCode,
-      isCorrect: nonVariableDecision.isCorrect,
-      correctResult,
-      selectedBranch: nonVariableDecision.selectedBranch,
-      stateUpdated: nonVariableDecision.stateUpdated,
-    };
+    return { ...stepDecision, correctResult };
   }
 
   private async decideKnownVariableResult(args: {
@@ -371,12 +360,7 @@ export class ResolutionService {
     stateUpdated: boolean;
     isCorrect: boolean;
     correctResult?: number;
-  }): Promise<{
-    resultCode: string;
-    isCorrect: boolean;
-    selectedBranch: string;
-    stateUpdated: boolean;
-  }> {
+  }): Promise<KnownStepDecision> {
     if (!args.isCorrect || args.correctResult === undefined) {
       return {
         resultCode: RESOLUTION_CODES.RESULT_INCORRECT,
@@ -396,7 +380,7 @@ export class ResolutionService {
     let selectedBranch = args.selectedBranch;
     let stateUpdated = args.stateUpdated;
 
-    if (loggedSolutions.some((s) => Math.abs(s - answerValue) <= 1e-9)) {
+    if (listContainsElement(loggedSolutions, answerValue)) {
       resultCode = RESOLUTION_CODES.RESULT_REPEATED;
     } else if (loggedSolutions.length + 1 === solutionSet.length) {
       resultCode = RESOLUTION_CODES.RESOLUTION_FINISHED;
@@ -424,12 +408,7 @@ export class ResolutionService {
     isCorrect: boolean;
     selectedBranch: string;
     stateUpdated: boolean;
-  }): Promise<{
-    resultCode: string;
-    isCorrect: boolean;
-    selectedBranch: string;
-    stateUpdated: boolean;
-  }> {
+  }): Promise<KnownStepDecision> {
     if (!args.isCorrect) {
       return {
         resultCode: RESOLUTION_CODES.STEP_INCORRECT,
@@ -552,17 +531,14 @@ export class ResolutionService {
     );
     if (!replaced) return true;
 
-    const { postfixToTree } = await import('./equation-solver/postfix-to-tree.js');
     const tree = postfixToTree(replaced);
     if (!tree || tree.type !== 'OPERATOR_BINARY' || tree.value !== '=' || !tree.left || !tree.right)
       return true;
 
-    const { evaluateTree } = await import('./equation-solver/evaluate-tree.js');
     const leftVals = evaluateTree(tree.left, false);
     const rightVals = evaluateTree(tree.right, false);
     for (const value of previousAnswerValues) {
-      if (leftVals.some((v) => Math.abs(v - value) <= 1e-9) || rightVals.some((v) => Math.abs(v - value) <= 1e-9))
-        return true;
+      if (listContainsElement(leftVals, value) || listContainsElement(rightVals, value)) return true;
     }
     
     return false;

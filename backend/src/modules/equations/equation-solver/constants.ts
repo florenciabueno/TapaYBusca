@@ -18,6 +18,8 @@ export const NEGATE = '~';
 
 export const VARIABLE = 'x';
 
+export const DEFAULT_FLOAT_TOLERANCE = 1e-9;
+
 export const TOKENIZE_ORDER: string[] = [
   CUBE_ROOT,
   SQUARE_ROOT,

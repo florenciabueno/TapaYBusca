@@ -9,15 +9,22 @@ import {
   SQUARE_ROOT,
   CUBE_ROOT,
   NEGATE,
+  DEFAULT_FLOAT_TOLERANCE,
 } from './constants.js';
 
-const DEFAULT_TOLERANCE = 1e-9;
-
-export function listContainsElement(list: number[], value: number, tolerance: number = DEFAULT_TOLERANCE): boolean {
+export function listContainsElement(
+  list: number[],
+  value: number,
+  tolerance: number = DEFAULT_FLOAT_TOLERANCE
+): boolean {
   return list.some((v) => Math.abs(v - value) <= tolerance);
 }
 
-export function listContainsList(list: number[], listToVerify: number[], tolerance: number = DEFAULT_TOLERANCE): boolean {
+export function listContainsList(
+  list: number[],
+  listToVerify: number[],
+  tolerance: number = DEFAULT_FLOAT_TOLERANCE
+): boolean {
   return listToVerify.every((elem) => listContainsElement(list, elem, tolerance));
 }
 
