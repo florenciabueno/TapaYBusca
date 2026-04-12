@@ -4,6 +4,7 @@ import { equationService } from '../services/equation.service';
 import { useAuthStore } from '../../../stores';
 import { queryKeys } from '../../../shared/query-keys';
 import { useDismissAfterDelay } from '../../../shared/hooks/useDismissAfterDelay';
+import { mergeFormSubmitError } from '../../../shared/utils/formError';
 import { useUploadableEquations } from './useUploadableEquations';
 
 const UPLOAD_SUCCESS = 'Ecuaciones subidas correctamente. Se han compartido con el resto de estudiantes.';
@@ -12,13 +13,13 @@ const SUCCESS_MESSAGE_DURATION_MS = 4000;
 
 export type UploadTab = 'can-upload' | 'already-uploaded';
 
-export function useUploadForm() {
+export const useUploadForm = () => {
   const queryClient = useQueryClient();
   const token = useAuthStore((state) => state.token);
   const { uploadableEquations, isLoading, error } = useUploadableEquations();
   const [activeTab, setActiveTab] = useState<UploadTab>('can-upload');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [success, setSuccess] = useDismissAfterDelay<string | null>(null, SUCCESS_MESSAGE_DURATION_MS);
+  const [success, setSuccess] = useDismissAfterDelay(null as string | null, SUCCESS_MESSAGE_DURATION_MS);
   const [validationError, setValidationError] = useState<string | null>(null);
 
   const uploadMutation = useMutation({
@@ -31,13 +32,11 @@ export function useUploadForm() {
   });
 
   const isSubmitting = uploadMutation.isPending;
-  const submitError =
-    validationError ||
-    (uploadMutation.error != null
-      ? uploadMutation.error instanceof Error
-        ? uploadMutation.error.message
-        : 'Error al subir ecuaciones'
-      : null);
+  const submitError = mergeFormSubmitError(
+    validationError,
+    uploadMutation.error,
+    'Error al subir ecuaciones'
+  );
 
   const canUploadList = uploadableEquations.filter((e) => !e.isPublished);
   const alreadyUploadedList = uploadableEquations.filter((e) => e.isPublished);
@@ -68,7 +67,7 @@ export function useUploadForm() {
       }
       uploadMutation.mutate(ids);
     },
-    [selectedIds, uploadMutation]
+    [selectedIds, uploadMutation, setSuccess]
   );
 
   return {
@@ -86,4 +85,4 @@ export function useUploadForm() {
     handleToggle,
     handleSubmit,
   };
-}
+};

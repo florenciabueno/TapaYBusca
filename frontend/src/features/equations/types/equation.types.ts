@@ -14,6 +14,14 @@ export interface Equation {
   isActive?: boolean;
 }
 
+export interface ResolutionStep {
+  subEquation: string;
+  proposedResult: string;
+  isCorrect: boolean;
+  subEquationLatex?: string;
+  resultLatex?: string;
+}
+
 export interface UploadableEquation {
   id: string;
   equation: string;
@@ -54,7 +62,7 @@ export const ORIGIN_FILTER_LABELS: Record<EquationOrigin, string> = {
 export const STATUS_LABELS: Record<EquationStatus, string> = {
   NOT_STARTED: 'Sin comenzar',
   IN_PROGRESS: 'En proceso',
-  SOLVED: 'Resuelta',
+  SOLVED: 'Resueltas',
 };
 
 export const EQUATION_LIST_STATUS_FILTER_LABELS: Record<EquationListStatusFilter, string> = {

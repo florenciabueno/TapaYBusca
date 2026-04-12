@@ -24,12 +24,12 @@ export const StatusFilter = ({
     ? [...WORKFLOW_STATUSES, EQUATION_LIST_STATUS_DELETED]
     : WORKFLOW_STATUSES;
 
-  function toggle(status: EquationListStatusFilter) {
+  const toggle = (status: EquationListStatusFilter) => {
     const next = selectedSet.has(status)
       ? (selectedStatuses ?? []).filter((s) => s !== status)
       : [...(selectedStatuses ?? []), status];
     onChange(next);
-  }
+  };
 
   return (
     <div className="flex flex-wrap items-center gap-2">

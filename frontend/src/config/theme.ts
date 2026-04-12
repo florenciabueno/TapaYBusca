@@ -17,6 +17,7 @@ export const PURPLE_RGB = '76, 31, 122' as const;
 
 export const COLORS = {
   ...PALETTE,
+  orangeLight: '#FFB26A',
   primary: PALETTE.teal,
   accentSecondary: PALETTE.purple,
   primaryHover: '#1A7D7F',

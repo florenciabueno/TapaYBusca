@@ -6,7 +6,7 @@ export interface UploadableEquationRowProps {
   item: UploadableEquation;
   selected?: boolean;
   onToggle?: (id: string) => void;
-  /** When true, renders only the equation (no checkbox). For "Ya subidas" tab. */
+  /** When true, renders only the equation (no checkbox). For already uploaded tab. */
   displayOnly?: boolean;
 }
 

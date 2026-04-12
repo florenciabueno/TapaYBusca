@@ -24,6 +24,7 @@ export const queryKeys = {
     uploadable: (token?: string | null) =>
       [...queryKeys.equations.all, 'uploadable', token ?? 'anon'] as const,
     detail: (id: string) => [...queryKeys.equations.all, 'detail', id] as const,
+    resolution: (id: string) => [...queryKeys.equations.all, 'resolution', id] as const,
   },
   profile: {
     all: ['profile'] as const,

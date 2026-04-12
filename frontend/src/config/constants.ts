@@ -10,6 +10,9 @@ export const ROUTES = {
   CREATE_EQUATION: '/crear-ecuacion',
   UPLOAD: '/subir',
   DOWNLOAD: '/descargar',
+  RESOLVE_EQUATION: '/ecuacion/:id/resolver',
 } as const;
+
+export const resolveEquationPath = (id: string) => `/ecuacion/${id}/resolver`;
 
 export const EQUATIONS_PAGE_SIZE = 12;

@@ -1,0 +1,10 @@
+-- Rename resolution columns from Spanish to English.
+ALTER TABLE "resolutions" RENAME COLUMN "subEcuacion" TO "subEquation";
+ALTER TABLE "resolutions" RENAME COLUMN "subEcuacionInfija" TO "subEquationInfix";
+ALTER TABLE "resolutions" RENAME COLUMN "resultadoPropuesto" TO "proposedResult";
+ALTER TABLE "resolutions" RENAME COLUMN "valorResultado" TO "resultValue";
+ALTER TABLE "resolutions" RENAME COLUMN "fechaHora" TO "createdAt";
+ALTER TABLE "resolutions" RENAME COLUMN "pasoSinSolucion" TO "stepWithoutSolution";
+ALTER TABLE "resolutions" RENAME COLUMN "esCorrecto" TO "isCorrect";
+ALTER TABLE "resolutions" RENAME COLUMN "esVariable" TO "isVariable";
+ALTER TABLE "resolutions" RENAME COLUMN "ladoResolucion" TO "resolutionSide";

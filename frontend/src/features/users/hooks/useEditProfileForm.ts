@@ -1,25 +1,20 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { profileService } from '../services/profile.service';
 import { useAuthStore } from '../../../stores';
-import { MSG_PASSWORDS_DONT_MATCH } from '../../../shared/utils/validation';
+import { mergeFormSubmitError } from '../../../shared/utils/formError';
 import type { UpdateProfileData } from '../types';
-
-interface EditProfileFormData {
-  name: string;
-  currentPassword: string;
-  password: string;
-  confirmPassword: string;
-}
-
-const MIN_NAME_LENGTH = 2;
-const MIN_PASSWORD_LENGTH = 8;
+import {
+  buildEditProfileUpdateData,
+  validateEditProfileForm,
+  type EditProfileFormFields,
+} from '../utils/editProfileForm';
 
 export const useEditProfileForm = () => {
   const user = useAuthStore((state) => state.user);
   const setUser = useAuthStore((state) => state.setUser);
 
-  const [formData, setFormData] = useState<EditProfileFormData>({
+  const [formData, setFormData] = useState<EditProfileFormFields>({
     name: user?.name ?? '',
     currentPassword: '',
     password: '',
@@ -28,6 +23,26 @@ export const useEditProfileForm = () => {
 
   const [validationError, setValidationError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const successCloseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (successCloseTimerRef.current !== null) {
+        clearTimeout(successCloseTimerRef.current);
+        successCloseTimerRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    setFormData({
+      name: user.name,
+      currentPassword: '',
+      password: '',
+      confirmPassword: '',
+    });
+  }, [user?.id, user?.name]);
 
   const updateMutation = useMutation({
     mutationFn: (data: UpdateProfileData) => profileService.updateProfile(data),
@@ -38,17 +53,22 @@ export const useEditProfileForm = () => {
         name: updatedProfile.name,
       });
       setSuccess(true);
+      setFormData((prev) => ({
+        ...prev,
+        name: updatedProfile.name,
+        currentPassword: '',
+        password: '',
+        confirmPassword: '',
+      }));
     },
   });
 
   const loading = updateMutation.isPending;
-  const error =
-    validationError ||
-    (updateMutation.error != null
-      ? updateMutation.error instanceof Error
-        ? updateMutation.error.message
-        : 'Error al actualizar el perfil'
-      : null);
+  const error = mergeFormSubmitError(
+    validationError,
+    updateMutation.error,
+    'Error al actualizar el perfil'
+  );
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData((prev) => ({
@@ -59,70 +79,35 @@ export const useEditProfileForm = () => {
     updateMutation.reset();
   };
 
-  const validateForm = (): boolean => {
-    if (!formData.name.trim()) {
-      setValidationError('El nombre no puede estar vacío');
-      return false;
-    }
-
-    if (formData.name.trim().length < MIN_NAME_LENGTH) {
-      setValidationError('El nombre debe tener al menos 2 caracteres');
-      return false;
-    }
-
-    if (formData.currentPassword && !formData.password) {
-      setValidationError('Debe ingresar la nueva contraseña');
-      return false;
-    }
-
-    if (formData.password) {
-      if (!formData.currentPassword) {
-        setValidationError('Debe ingresar la contraseña actual para cambiarla');
-        return false;
-      }
-
-      if (formData.password.length < MIN_PASSWORD_LENGTH) {
-        setValidationError('La nueva contraseña debe tener al menos 8 caracteres');
-        return false;
-      }
-
-      if (formData.password !== formData.confirmPassword) {
-        setValidationError(MSG_PASSWORDS_DONT_MATCH);
-        return false;
-      }
-    }
-
-    return true;
-  };
-
   const handleSubmit = (onSuccess: () => void) => {
+    if (successCloseTimerRef.current !== null) {
+      clearTimeout(successCloseTimerRef.current);
+      successCloseTimerRef.current = null;
+    }
     setValidationError(null);
     updateMutation.reset();
-    if (!validateForm()) return;
 
-    const updateData: UpdateProfileData = {};
-
-    if (formData.name.trim() !== user?.name) {
-      updateData.name = formData.name.trim();
-    }
-
-    if (formData.password) {
-      updateData.currentPassword = formData.currentPassword;
-      updateData.password = formData.password;
-    }
-
-    const hasChanges =
-      Object.keys(updateData).length > 0 &&
-      !(Object.keys(updateData).length === 1 && updateData.currentPassword);
-
-    if (!hasChanges) {
-      setValidationError('No hay cambios para guardar');
+    const validationMsg = validateEditProfileForm(formData);
+    if (validationMsg) {
+      setValidationError(validationMsg);
       return;
     }
 
-    updateMutation.mutate(updateData, {
+    const payload = buildEditProfileUpdateData(formData, user?.name);
+    if (!payload.ok) {
+      setValidationError(payload.error);
+      return;
+    }
+
+    updateMutation.mutate(payload.data, {
       onSuccess: () => {
-        setTimeout(onSuccess, 2000);
+        if (successCloseTimerRef.current !== null) {
+          clearTimeout(successCloseTimerRef.current);
+        }
+        successCloseTimerRef.current = setTimeout(() => {
+          successCloseTimerRef.current = null;
+          onSuccess();
+        }, 2000);
       },
     });
   };

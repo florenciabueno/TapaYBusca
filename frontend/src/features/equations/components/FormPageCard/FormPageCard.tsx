@@ -5,11 +5,16 @@ export interface FormPageCardProps {
   title: string;
   description?: string;
   children: ReactNode;
+  maxWidth?: 'default' | 'wide' | 'full';
 }
 
-export const FormPageCard = ({ title, description, children }: FormPageCardProps) => {
+export const FormPageCard = ({ title, description, children, maxWidth = 'default' }: FormPageCardProps) => {
+  const outerClass =
+    maxWidth === 'full'
+      ? 'w-full max-w-none'
+      : `${maxWidth === 'wide' ? 'max-w-5xl' : 'max-w-3xl'} mx-auto`;
   return (
-    <div className="max-w-3xl mx-auto">
+    <div className={outerClass}>
       <div
         className="p-8 rounded-2xl"
         style={{
@@ -24,14 +29,12 @@ export const FormPageCard = ({ title, description, children }: FormPageCardProps
         >
           {title}
         </h1>
-        {description != null && description !== '' && (
-          <p
-            className="mb-6 text-sm"
-            style={{ color: COLORS.gray[600] }}
-          >
-            {description}
-          </p>
-        )}
+        <p
+          className="mb-6 text-sm"
+          style={{ color: COLORS.gray[600] }}
+        >
+          {description}
+        </p>
         {children}
       </div>
     </div>

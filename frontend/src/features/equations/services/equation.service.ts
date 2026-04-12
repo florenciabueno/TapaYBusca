@@ -1,4 +1,6 @@
 import { API_URL } from '../../../config/constants';
+import { apiFetch } from '../../../shared/utils/apiFetch';
+import { getErrorMessageFromResponse } from '../../../shared/utils/httpErrorMessage';
 import type {
   Equation,
   EquationListStatusFilter,
@@ -56,17 +58,21 @@ export const equationService = {
     if (toDate) params.set('toDate', toDate);
     const url = `${endpoint}?${params.toString()}`;
 
-    const response = await fetch(url, {
+    const response = await apiFetch(url, {
       method: 'GET',
       headers: getAuthHeaders(token),
       credentials: 'include',
     });
 
     if (!response.ok) {
-      throw new Error('Error al obtener ecuaciones');
+      const message = await getErrorMessageFromResponse(response, 'Error al obtener ecuaciones');
+      throw new Error(message);
     }
 
     const raw = await response.json();
+    if (!Array.isArray(raw.data)) {
+      throw new Error('Respuesta del servidor no válida al listar ecuaciones.');
+    }
     return {
       data: raw.data.map(mapItem),
       total: raw.total,
@@ -77,21 +83,23 @@ export const equationService = {
   },
 
   async getEquationById(id: string, token?: string | null): Promise<Equation> {
-    const response = await fetch(`${API_URL}/equations/${id}`, {
+    const response = await apiFetch(`${API_URL}/equations/${id}`, {
       method: 'GET',
       headers: getAuthHeaders(token),
       credentials: 'include',
     });
 
     if (!response.ok) {
-      throw new Error('Error al obtener la ecuación');
+      const message = await getErrorMessageFromResponse(response, 'Error al obtener la ecuación');
+      throw new Error(message);
     }
 
-    return response.json();
+    const raw = (await response.json()) as Parameters<typeof mapItem>[0];
+    return mapItem(raw);
   },
 
   async createEquation(equation: string, token?: string | null): Promise<Equation> {
-    const response = await fetch(`${API_URL}/equations`, {
+    const response = await apiFetch(`${API_URL}/equations`, {
       method: 'POST',
       headers: getAuthHeaders(token),
       credentials: 'include',
@@ -109,7 +117,7 @@ export const equationService = {
   },
 
   async updateEquation(id: string, data: { status?: string; steps?: number }, token?: string | null): Promise<Equation> {
-    const response = await fetch(`${API_URL}/equations/${id}`, {
+    const response = await apiFetch(`${API_URL}/equations/${id}`, {
       method: 'PUT',
       headers: getAuthHeaders(token),
       credentials: 'include',
@@ -124,7 +132,7 @@ export const equationService = {
   },
 
   async deleteEquation(id: string, token?: string | null): Promise<void> {
-    const response = await fetch(`${API_URL}/equations/${id}`, {
+    const response = await apiFetch(`${API_URL}/equations/${id}`, {
       method: 'DELETE',
       headers: getAuthHeaders(token),
       credentials: 'include',
@@ -136,7 +144,7 @@ export const equationService = {
   },
 
   async getEquationsForUpload(token?: string | null): Promise<{ data: UploadableEquation[] }> {
-    const response = await fetch(`${API_URL}/equations/for-upload`, {
+    const response = await apiFetch(`${API_URL}/equations/for-upload`, {
       method: 'GET',
       headers: getAuthHeaders(token),
       credentials: 'include',
@@ -154,7 +162,7 @@ export const equationService = {
     userEquationIds: string[],
     token?: string | null
   ): Promise<void> {
-    const response = await fetch(`${API_URL}/equations/upload`, {
+    const response = await apiFetch(`${API_URL}/equations/upload`, {
       method: 'POST',
       headers: getAuthHeaders(token),
       credentials: 'include',
@@ -173,7 +181,7 @@ export const equationService = {
     params: DownloadEquationsParams,
     token?: string | null
   ): Promise<DownloadEquationsResult> {
-    const response = await fetch(`${API_URL}/equations/download`, {
+    const response = await apiFetch(`${API_URL}/equations/download`, {
       method: 'POST',
       headers: getAuthHeaders(token),
       credentials: 'include',
@@ -191,5 +199,75 @@ export const equationService = {
       added: data.added ?? 0,
       totalRequested: data.totalRequested ?? 0,
     };
+  },
+
+  async resolveStep(
+    userEquationId: string,
+    payload: {
+      subEquationInfix?: string;
+      answer: string;
+      resolutionStepStatus: number;
+    },
+    token?: string | null
+  ): Promise<{ code: string; message?: string }> {
+    const response = await apiFetch(`${API_URL}/equations/${userEquationId}/resolve`, {
+      method: 'POST',
+      headers: getAuthHeaders(token),
+      credentials: 'include',
+      body: JSON.stringify(payload),
+    });
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      const message = typeof data?.error === 'string' ? data.error : 'Error al validar el paso';
+      throw new Error(message);
+    }
+
+    return { code: data.code ?? 'PI', message: data.message };
+  },
+
+  async getResolution(
+    userEquationId: string,
+    token?: string | null
+  ): Promise<{
+    userEquation: unknown;
+    steps: Array<{
+      subEquation: string;
+      proposedResult: string;
+      isCorrect: boolean;
+      subEquationLatex?: string;
+      resultLatex?: string;
+    }>;
+    solutionSet: number[];
+    currentResolutionId: number;
+  } | null> {
+    const response = await apiFetch(`${API_URL}/equations/${userEquationId}/resolution`, {
+      method: 'GET',
+      headers: getAuthHeaders(token),
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      if (response.status === 404) return null;
+      throw new Error('Error al obtener la resolución');
+    }
+
+    return response.json();
+  },
+
+  async resetResolution(userEquationId: string, token?: string | null): Promise<void> {
+    const response = await apiFetch(`${API_URL}/equations/${userEquationId}/reset-resolution`, {
+      method: 'POST',
+      headers: getAuthHeaders(token),
+      credentials: 'include',
+    });
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      const message = typeof data?.error === 'string' ? data.error : 'Error al reiniciar';
+      throw new Error(message);
+    }
   },
 };

@@ -9,6 +9,27 @@ export function infixToLatex(expression: string): string {
   return `${convertInfixPart(left)}=${convertInfixPart(right)}`;
 }
 
+export function resultToLatex(result: string): string {
+  const s = (result ?? '').trim();
+  if (!s) return s;
+  if (s === '{}') return '\\emptyset';
+  const negMatch = s.match(/^neg\((.+)\)$/i);
+  if (negMatch) {
+    const inner = negMatch[1] ?? '';
+    return `-${infixToLatex(inner)}`;
+  }
+  const simpleFrac = s.match(/^(-?\d+)\/(\d+)$/);
+  if (simpleFrac) {
+    const [, num, den] = simpleFrac;
+    return `\\frac{${num}}{${den}}`;
+  }
+  try {
+    return infixToLatex(s);
+  } catch {
+    return s;
+  }
+}
+
 function convertInfixPart(expr: string): string {
   let out = expr;
   let changed = true;

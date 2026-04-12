@@ -7,7 +7,7 @@ import { useState, useRef, useEffect } from 'react';
 import { EditProfileModal } from '../../../../features/users/components/EditProfileModal';
 import logoImage from '../../../../assets/logo.png';
 
-function LogoutIcon({ className }: { className?: string }) {
+const LogoutIcon = ({ className }: { className?: string }) => {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path
@@ -21,9 +21,9 @@ function LogoutIcon({ className }: { className?: string }) {
       <path d="M21 12H9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
-}
+};
 
-function UserIcon({ className }: { className?: string }) {
+const UserIcon = ({ className }: { className?: string }) => {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path
@@ -42,9 +42,9 @@ function UserIcon({ className }: { className?: string }) {
       />
     </svg>
   );
-}
+};
 
-function EditIcon({ className }: { className?: string }) {
+const EditIcon = ({ className }: { className?: string }) => {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path
@@ -63,7 +63,7 @@ function EditIcon({ className }: { className?: string }) {
       />
     </svg>
   );
-}
+};
 
 export const Header = () => {
   const { user, logout } = useAuth();
@@ -173,7 +173,7 @@ export const Header = () => {
                 <button
                   type="button"
                   onClick={openEditProfile}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm transition-colors hover:bg-gray-100 focus:outline-none focus:bg-gray-100"
+                  className="w-full cursor-pointer flex items-center gap-2 px-3 py-2 text-left text-sm transition-colors hover:bg-gray-100 focus:outline-none focus:bg-gray-100"
                   style={{ color: COLORS.brandDark }}
                   role="menuitem"
                 >
@@ -183,7 +183,7 @@ export const Header = () => {
                 <button
                   type="button"
                   onClick={handleLogout}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm transition-colors hover:bg-gray-100 focus:outline-none focus:bg-gray-100"
+                  className="w-full cursor-pointer flex items-center gap-2 px-3 py-2 text-left text-sm transition-colors hover:bg-gray-100 focus:outline-none focus:bg-gray-100"
                   style={{ color: COLORS.gray[600] }}
                   role="menuitem"
                 >

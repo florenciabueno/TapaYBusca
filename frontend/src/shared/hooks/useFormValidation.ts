@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 
 export interface ValidationErrors {
   [key: string]: string | null;
@@ -15,44 +15,44 @@ export interface UseFormValidationReturn {
 export const useFormValidation = (): UseFormValidationReturn => {
   const [errors, setErrors] = useState<ValidationErrors>({});
 
-  const validateField = (name: string, value: string, validator: (value: string) => string | null) => {
+  const validateField = useCallback((name: string, value: string, validator: (value: string) => string | null) => {
     const error = validator(value);
     setErrors((prev) => ({
       ...prev,
       [name]: error,
     }));
-  };
+  }, []);
 
-  const validateForm = (
-    validators: Record<string, (value: string) => string | null>,
-    values: Record<string, string>
-  ): boolean => {
-    const newErrors: ValidationErrors = {};
-    let isValid = true;
+  const validateForm = useCallback(
+    (validators: Record<string, (value: string) => string | null>, values: Record<string, string>): boolean => {
+      const newErrors: ValidationErrors = {};
+      let isValid = true;
 
-    Object.keys(validators).forEach((key) => {
-      const error = validators[key](values[key] || '');
-      if (error) {
-        newErrors[key] = error;
-        isValid = false;
-      }
-    });
+      Object.keys(validators).forEach((key) => {
+        const error = validators[key](values[key] || '');
+        if (error) {
+          newErrors[key] = error;
+          isValid = false;
+        }
+      });
 
-    setErrors(newErrors);
-    return isValid;
-  };
+      setErrors(newErrors);
+      return isValid;
+    },
+    []
+  );
 
-  const clearError = (name: string) => {
+  const clearError = useCallback((name: string) => {
     setErrors((prev) => {
       const newErrors = { ...prev };
       delete newErrors[name];
       return newErrors;
     });
-  };
+  }, []);
 
-  const clearAllErrors = () => {
+  const clearAllErrors = useCallback(() => {
     setErrors({});
-  };
+  }, []);
 
   return {
     errors,

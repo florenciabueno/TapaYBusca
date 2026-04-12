@@ -4,10 +4,10 @@ import { stripDeletedStatusTokenFromParams } from '../utils/equationListSearchPa
 
 type SetSearchParams = ReturnType<typeof useSearchParams>[1];
 
-export function useStripDeletedEquationFilterWhenLoggedOut(
+export const useStripDeletedEquationFilterWhenLoggedOut = (
   hasToken: boolean,
   setSearchParams: SetSearchParams
-): void {
+): void => {
   useEffect(() => {
     if (hasToken) return;
     setSearchParams((prev) => {
@@ -15,4 +15,4 @@ export function useStripDeletedEquationFilterWhenLoggedOut(
       return next ?? prev;
     });
   }, [hasToken, setSearchParams]);
-}
+};

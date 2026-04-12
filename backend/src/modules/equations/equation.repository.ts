@@ -1,3 +1,4 @@
+import type { Prisma } from '@prisma/client';
 import { prisma } from '../../config/database.js';
 import {
   CreateEquationDto,
@@ -8,13 +9,11 @@ import {
 
 type TxClient = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
 
-type UserEquationListWhere = {
-  userId: string;
-  isActive: boolean;
-  origin?: { in: EquationOrigin[] };
-  status?: { in: EquationStatus[] };
-  updatedAt?: { gte?: Date; lte?: Date };
-};
+const LIST_STATUS_ORDER = [
+  EquationStatus.IN_PROGRESS,
+  EquationStatus.NOT_STARTED,
+  EquationStatus.SOLVED,
+] as const;
 
 const USER_EQUATION_INCLUDE_EQUATION = { equation: true } as const;
 const DEFAULT_EQUATION_WHERE = { isDefault: true } as const;
@@ -28,7 +27,7 @@ export class EquationRepository {
     statuses?: EquationStatus[],
     fromDate?: Date,
     toDate?: Date,
-    deletedOnly = false
+    includeDeleted = false
   ) {
     const where = this.buildUserEquationListWhere(
       userId,
@@ -36,15 +35,15 @@ export class EquationRepository {
       statuses,
       fromDate,
       toDate,
-      deletedOnly
+      includeDeleted
     );
-    return prisma.userEquation.findMany({
+    const all = await prisma.userEquation.findMany({
       where,
       include: USER_EQUATION_INCLUDE_EQUATION,
-      orderBy: [{ status: 'asc' }, { updatedAt: 'desc' }],
-      skip: (page - 1) * limit,
-      take: limit,
     });
+    const sorted = this.sortUserEquationsForList(all);
+    const start = (page - 1) * limit;
+    return sorted.slice(start, start + limit);
   }
 
   async countForUser(
@@ -53,7 +52,7 @@ export class EquationRepository {
     statuses?: EquationStatus[],
     fromDate?: Date,
     toDate?: Date,
-    deletedOnly = false
+    includeDeleted = false
   ): Promise<number> {
     const where = this.buildUserEquationListWhere(
       userId,
@@ -61,7 +60,7 @@ export class EquationRepository {
       statuses,
       fromDate,
       toDate,
-      deletedOnly
+      includeDeleted
     );
     return prisma.userEquation.count({ where });
   }
@@ -70,6 +69,139 @@ export class EquationRepository {
     return prisma.userEquation.findUnique({
       where: { id: userEquationId },
       include: USER_EQUATION_INCLUDE_EQUATION,
+    });
+  }
+
+  async findByIdWithEquation(userEquationId: string) {
+    return prisma.userEquation.findUnique({
+      where: { id: userEquationId },
+      include: { equation: true },
+    });
+  }
+
+  async updateResolutionState(
+    userEquationId: string,
+    data: { status?: EquationStatus; currentResolutionId?: number; selectedBranch?: string }
+  ) {
+    return prisma.userEquation.update({
+      where: { id: userEquationId },
+      data: { ...data, updatedAt: new Date() },
+      include: { equation: true },
+    });
+  }
+
+  async createResolution(data: {
+    userEquationId: string;
+    resolutionSessionId: number;
+    subEquation: string;
+    subEquationInfix?: string | null;
+    proposedResult: string;
+    resultValue: string;
+    stepWithoutSolution: boolean;
+    isCorrect: boolean;
+    isVariable: boolean;
+    resolutionSide: number;
+  }) {
+    return prisma.resolution.create({
+      data: {
+        ...data,
+        subEquationInfix: data.subEquationInfix ?? undefined,
+      },
+    });
+  }
+
+  async findResolutionsByUserEquation(userEquationId: string, resolutionSessionId: number) {
+    return prisma.resolution.findMany({
+      where: { userEquationId, resolutionSessionId },
+      orderBy: { createdAt: 'asc' },
+    });
+  }
+
+  async getResolutionCounts(
+    pairs: Array<{ userEquationId: string; resolutionSessionId: number }>
+  ): Promise<Map<string, number>> {
+    if (pairs.length === 0) return new Map();
+    const ids = [...new Set(pairs.map((p) => p.userEquationId))];
+    const groups = await prisma.resolution.groupBy({
+      by: ['userEquationId', 'resolutionSessionId'],
+      _count: { id: true },
+      where: { userEquationId: { in: ids } },
+    });
+    const map = new Map<string, number>();
+    for (const g of groups) {
+      map.set(`${g.userEquationId}-${g.resolutionSessionId}`, g._count.id);
+    }
+    return map;
+  }
+
+  async getPreviousStep(
+    userEquationId: string,
+    resolutionSessionId: number,
+    bifurcoResolucion: boolean,
+    statusResolucion: number
+  ) {
+    const BIFURCO = 2;
+    const NO_BIFURCO = 1;
+    const where: { userEquationId: string; resolutionSessionId: number; isCorrect: boolean; isVariable?: boolean; resolutionSide?: number } = {
+      userEquationId,
+      resolutionSessionId,
+      isCorrect: true,
+    };
+    if (bifurcoResolucion) {
+      where.resolutionSide = BIFURCO;
+    } else {
+      if (statusResolucion === BIFURCO) {
+        const bifurcoStep = await prisma.resolution.findFirst({
+          where: { userEquationId, resolutionSessionId, isCorrect: true, resolutionSide: BIFURCO },
+          orderBy: { id: 'desc' },
+          select: { id: true },
+        });
+        if (!bifurcoStep) return null;
+        return prisma.resolution.findFirst({
+          where: {
+            userEquationId,
+            resolutionSessionId,
+            isCorrect: true,
+            isVariable: false,
+            resolutionSide: NO_BIFURCO,
+            id: { lt: bifurcoStep.id },
+          },
+          orderBy: { id: 'desc' },
+        });
+      }
+      where.isVariable = false;
+    }
+    return prisma.resolution.findFirst({
+      where,
+      orderBy: { id: 'desc' },
+    });
+  }
+
+  async getDistinctLoggedSolutions(userEquationId: string, resolutionSessionId: number): Promise<number[]> {
+    const rows = await prisma.resolution.findMany({
+      where: { userEquationId, resolutionSessionId, isVariable: true, isCorrect: true },
+      select: { resultValue: true },
+    });
+    const values = new Set<number>();
+    for (const row of rows) {
+      const parts = row.resultValue.split(';').filter(Boolean);
+      for (const p of parts) {
+        const n = Number(p.trim());
+        if (!Number.isNaN(n) && Number.isFinite(n)) values.add(n);
+      }
+    }
+    return [...values];
+  }
+
+  async countStepsWithoutSolution(userEquationId: string, resolutionSessionId: number): Promise<number> {
+    return prisma.resolution.count({
+      where: { userEquationId, resolutionSessionId, stepWithoutSolution: true },
+    });
+  }
+
+  async deleteResolutionsByUserEquation(userEquationId: string) {
+    return prisma.resolution.deleteMany({
+      where: { userEquationId },
     });
   }
 
@@ -92,6 +224,24 @@ export class EquationRepository {
     return prisma.userEquation.update({
       where: { id: userEquationId },
       data: { isActive: false, updatedAt: new Date() },
+    });
+  }
+
+  async hardDeleteNotStartedUserEquation(userEquationId: string): Promise<void> {
+    await prisma.$transaction(async (tx) => {
+      const row = await tx.userEquation.findUnique({
+        where: { id: userEquationId },
+        select: {
+          equationId: true,
+          equation: { select: { isDefault: true } },
+        },
+      });
+      if (!row) return;
+      await tx.userEquation.delete({ where: { id: userEquationId } });
+      const remaining = await tx.userEquation.count({ where: { equationId: row.equationId } });
+      if (remaining === 0 && !row.equation.isDefault) {
+        await tx.equation.delete({ where: { id: row.equationId } });
+      }
     });
   }
 
@@ -239,23 +389,61 @@ export class EquationRepository {
     return d;
   }
 
+  private sortUserEquationsForList<T extends { status: string; updatedAt: Date }>(
+    rows: T[]
+  ): T[] {
+    const rank = (s: string) => {
+      const i = (LIST_STATUS_ORDER as readonly string[]).indexOf(s);
+      return i === -1 ? LIST_STATUS_ORDER.length : i;
+    };
+    return [...rows].sort((a, b) => {
+      const dr = rank(a.status) - rank(b.status);
+      if (dr !== 0) return dr;
+      return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+    });
+  }
+
   private buildUserEquationListWhere(
     userId: string,
     origins?: EquationOrigin[],
     statuses?: EquationStatus[],
     fromDate?: Date,
     toDate?: Date,
-    deletedOnly = false
-  ): UserEquationListWhere {
-    const where: UserEquationListWhere = { userId, isActive: !deletedOnly };
-    if (origins && origins.length > 0) where.origin = { in: origins };
-    if (statuses && statuses.length > 0) where.status = { in: statuses };
-    if (fromDate !== undefined || toDate !== undefined) {
-      where.updatedAt = {};
-      if (fromDate !== undefined) where.updatedAt.gte = fromDate;
-      if (toDate !== undefined) where.updatedAt.lte = this.endOfDay(toDate);
+    includeDeleted = false
+  ): Prisma.UserEquationWhereInput {
+    const hasWorkflowFilter = statuses !== undefined && statuses.length > 0;
+    const dateClause: Prisma.UserEquationWhereInput =
+      fromDate !== undefined || toDate !== undefined
+        ? {
+            updatedAt: {
+              ...(fromDate !== undefined ? { gte: fromDate } : {}),
+              ...(toDate !== undefined ? { lte: this.endOfDay(toDate) } : {}),
+            },
+          }
+        : {};
+
+    const originClause: Prisma.UserEquationWhereInput =
+      origins && origins.length > 0 ? { origin: { in: origins } } : {};
+
+    const base: Prisma.UserEquationWhereInput = {
+      userId,
+      ...originClause,
+      ...dateClause,
+    };
+
+    if (includeDeleted && hasWorkflowFilter) {
+      return {
+        ...base,
+        OR: [{ isActive: true, status: { in: statuses } }, { isActive: false }],
+      };
     }
-    return where;
+    if (includeDeleted && !hasWorkflowFilter) {
+      return { ...base, isActive: false };
+    }
+    if (!includeDeleted && hasWorkflowFilter) {
+      return { ...base, isActive: true, status: { in: statuses } };
+    }
+    return { ...base, isActive: true };
   }
 
   private buildDefaultEquationWhere(
@@ -294,6 +482,7 @@ export class EquationRepository {
         postfixExpression: expression,
         infixExpression: expression,
         latexExpression: data.latexExpression ?? null,
+        solutionValues: data.solutionValues ?? undefined,
         creatorId: data.userId,
         isDefault: false,
       },

@@ -1,6 +1,6 @@
 import { COLORS } from '../../../../config/theme';
 
-export type FormMessageVariant = 'success' | 'error';
+export type FormMessageVariant = 'success' | 'error' | 'info';
 
 export interface FormMessageProps {
   message: string;
@@ -9,16 +9,20 @@ export interface FormMessageProps {
 }
 
 export const FormMessage = ({ message, variant, className = '' }: FormMessageProps) => {
-  const isSuccess = variant === 'success';
-  const style = isSuccess
-    ? { backgroundColor: COLORS.success.bg, color: COLORS.success.text }
-    : { backgroundColor: COLORS.error.bg, color: COLORS.error.text };
+  const style =
+    variant === 'success'
+      ? { backgroundColor: COLORS.success.bg, color: COLORS.success.text }
+      : variant === 'error'
+        ? { backgroundColor: COLORS.error.bg, color: COLORS.error.text }
+        : { backgroundColor: COLORS.gray[50], color: COLORS.accentSecondary };
+
+  const role = variant === 'error' ? 'alert' : 'status';
 
   return (
     <div
       className={`rounded-lg p-3 text-sm ${className}`.trim()}
       style={style}
-      role={isSuccess ? 'status' : 'alert'}
+      role={role}
     >
       {message}
     </div>

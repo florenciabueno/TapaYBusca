@@ -57,11 +57,12 @@ model Equation {
   postfixExpression   String
   infixExpression     String?
   latexExpression     String?
+  solutionValues      Json?
   creatorId           String?
   isDefault           Boolean  @default(false)
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
-  
+
   creator             User?    @relation("CreatedEquations", fields: [creatorId], references: [id])
   userEquations       UserEquation[]
   publishedEquations  PublishedEquation[]
@@ -70,20 +71,43 @@ model Equation {
 }
 
 model UserEquation {
-  id          String         @id @default(uuid())
-  userId      String
-  equationId  String
-  status      EquationStatus @default(NOT_STARTED)
-  origin      EquationOrigin
-  isActive    Boolean        @default(true)
-  addedAt     DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
-  
-  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  equation    Equation       @relation(fields: [equationId], references: [id], onDelete: Cascade)
+  id                   String         @id @default(uuid())
+  userId               String
+  equationId           String
+  status               EquationStatus @default(NOT_STARTED)
+  origin               EquationOrigin
+  isActive             Boolean        @default(true)
+  currentResolutionId  Int            @default(0)
+  selectedBranch       String         @default("")
+  addedAt              DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  equation    Equation     @relation(fields: [equationId], references: [id], onDelete: Cascade)
+  resolutions Resolution[]
 
   @@unique([userId, equationId])
   @@map("user_equations")
+}
+
+model Resolution {
+  id                  String   @id @default(uuid())
+  userEquationId      String
+  resolutionSessionId Int
+  subEquation         String
+  subEquationInfix    String?
+  proposedResult      String
+  resultValue         String
+  createdAt           DateTime @default(now())
+  stepWithoutSolution Boolean  @default(false)
+  isCorrect           Boolean  @default(false)
+  isVariable          Boolean  @default(false)
+  resolutionSide      Int
+
+  userEquation UserEquation @relation(fields: [userEquationId], references: [id], onDelete: Cascade)
+
+  @@index([userEquationId, resolutionSessionId])
+  @@map("resolutions")
 }
 
 model PublishedEquation {

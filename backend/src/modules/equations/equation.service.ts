@@ -16,21 +16,13 @@ import { validateEquation } from './equation.validators.js';
 import { solveEquation } from './equation-solver/index.js';
 import { infixToLatex } from './infix-to-latex.js';
 import { ensureValidationPassedWithErrorList } from '../../shared/utils/validation.js';
+import { DEFAULT_LIMIT, DEFAULT_PAGE, MAX_LIMIT } from '../../shared/constants/pagination.js';
 
 const STEPS_DEFAULT = 0;
-const DEFAULT_PAGE = 1;
-const DEFAULT_LIMIT = 9;
-const MAX_LIMIT = 50;
 const DOWNLOAD_QUANTITY_MIN = 1;
 const DOWNLOAD_QUANTITY_MAX = 50;
 const DOWNLOAD_FETCH_MULTIPLIER = 3;
 const DOWNLOAD_FETCH_MAX = 200;
-
-const STATUS_ORDER: EquationStatus[] = [
-  EquationStatus.IN_PROGRESS,
-  EquationStatus.NOT_STARTED,
-  EquationStatus.SOLVED,
-];
 
 const MESSAGE_EQUATION_VALIDATION_PREFIX = '';
 const MESSAGE_EQUATION_NO_SOLUTION = 'La ecuación no tiene solución.';
@@ -54,7 +46,7 @@ export class EquationService {
     statuses?: EquationStatus[],
     fromDate?: Date,
     toDate?: Date,
-    deletedOnly = false
+    includeDeleted = false
   ): Promise<PaginatedEquationsResponse> {
     const { page: p, limit: l } = this.sanitizePagination(page, limit);
     const [userEquations, total] = await Promise.all([
@@ -66,7 +58,7 @@ export class EquationService {
         statuses,
         fromDate,
         toDate,
-        deletedOnly
+        includeDeleted
       ),
       this.equationRepository.countForUser(
         userId,
@@ -74,18 +66,32 @@ export class EquationService {
         statuses,
         fromDate,
         toDate,
-        deletedOnly
+        includeDeleted
       ),
     ]);
-    const sorted = this.sortByStatusAndUpdatedAt(userEquations);
-    const data = sorted.map((row) => this.toEquationResponse(row));
+    const countMap = await this.getResolutionCountsOrDefault(
+      userEquations.map((r) => ({
+        userEquationId: r.id,
+        resolutionSessionId: (r as { currentResolutionId?: number }).currentResolutionId ?? 0,
+      }))
+    );
+    const data = userEquations.map((row) => {
+      const resolutionId = (row as { currentResolutionId?: number }).currentResolutionId ?? 0;
+      const steps = countMap.get(`${row.id}-${resolutionId}`) ?? STEPS_DEFAULT;
+      return this.toEquationResponse(row, steps);
+    });
     return this.buildPaginatedResponse(data, total, p, l);
   }
 
   async getEquationById(userEquationId: string): Promise<EquationResponse | null> {
     const userEquation = await this.equationRepository.findById(userEquationId);
     if (!userEquation) return null;
-    return this.toEquationResponse(userEquation);
+    const resolutionId = (userEquation as { currentResolutionId?: number }).currentResolutionId ?? 0;
+    const countMap = await this.getResolutionCountsOrDefault([
+      { userEquationId: userEquation.id, resolutionSessionId: resolutionId },
+    ]);
+    const steps = countMap.get(`${userEquation.id}-${resolutionId}`) ?? STEPS_DEFAULT;
+    return this.toEquationResponse(userEquation, steps);
   }
 
   async createEquation(data: CreateEquationDto): Promise<EquationResponse> {
@@ -96,6 +102,7 @@ export class EquationService {
     const equationUser = await this.equationRepository.create({
       ...data,
       latexExpression,
+      solutionValues: solveResult.solutions ?? [],
     });
     return this.toEquationResponse(equationUser);
   }
@@ -112,6 +119,12 @@ export class EquationService {
 
   async deleteEquation(equationUserId: string, userId: string): Promise<void> {
     await this.ensureCanDeleteEquation(equationUserId, userId);
+    const row = await this.equationRepository.findById(equationUserId);
+    if (!row) throw new Error(MESSAGE_NO_PERMISSION_DELETE);
+    if (row.status === EquationStatus.NOT_STARTED) {
+      await this.equationRepository.hardDeleteNotStartedUserEquation(equationUserId);
+      return;
+    }
     await this.equationRepository.softDelete(equationUserId);
   }
 
@@ -180,20 +193,6 @@ export class EquationService {
     return { page: p, limit: l };
   }
 
-  private statusOrderIndex(status: string): number {
-    const i = STATUS_ORDER.indexOf(status as EquationStatus);
-    return i === -1 ? STATUS_ORDER.length : i;
-  }
-
-  private sortByStatusAndUpdatedAt(rows: UserEquationRow[]): UserEquationRow[] {
-    return [...rows].sort((a, b) => {
-      const statusA = this.statusOrderIndex(a.status);
-      const statusB = this.statusOrderIndex(b.status);
-      if (statusA !== statusB) return statusA - statusB;
-      return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
-    });
-  }
-
   private buildPaginatedResponse(
     data: EquationResponse[],
     total: number,
@@ -204,13 +203,13 @@ export class EquationService {
     return { data, total, page, limit, totalPages };
   }
 
-  private toEquationResponse(row: UserEquationRow): EquationResponse {
+  private toEquationResponse(row: UserEquationRow, steps = STEPS_DEFAULT): EquationResponse {
     return {
       id: row.id,
       equation: this.getDisplayExpression(row.equation),
       origin: row.origin as EquationOrigin,
       status: row.status as EquationStatus,
-      steps: STEPS_DEFAULT,
+      steps,
       date: this.formatDate(row.updatedAt),
       isActive: row.isActive,
     };
@@ -243,7 +242,8 @@ export class EquationService {
     latexExpression?: string | null;
     infixExpression?: string | null;
     postfixExpression?: string | null;
-  }): string {
+  } | null | undefined): string {
+    if (equation == null) return '';
     const latex = equation.latexExpression?.trim();
     if (latex) return latex;
     const raw = equation.infixExpression || equation.postfixExpression || '';
@@ -319,5 +319,18 @@ export class EquationService {
       throw new Error(MESSAGE_DOWNLOAD_DATE_RANGE);
     }
     return { quantity, fromDate, toDate };
+  }
+
+  private async getResolutionCountsOrDefault(
+    pairs: Array<{ userEquationId: string; resolutionSessionId: number }>
+  ): Promise<Map<string, number>> {
+    if (pairs.length === 0) return new Map();
+    const maybeGetResolutionCounts = (
+      this.equationRepository as Partial<Pick<EquationRepository, 'getResolutionCounts'>>
+    ).getResolutionCounts;
+    if (typeof maybeGetResolutionCounts !== 'function') {
+      return new Map();
+    }
+    return maybeGetResolutionCounts.call(this.equationRepository, pairs);
   }
 }
