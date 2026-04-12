@@ -9,6 +9,7 @@ import {
   RESOLUTION_STEP_NO_BRANCH,
   EMPTY_SET,
 } from './equation-solver/resolution-constants.js';
+import { DEFAULT_FLOAT_TOLERANCE } from './equation-solver/constants.js';
 import {
   validateSubEquation,
   parseAnswerValues,
@@ -538,12 +539,34 @@ export class ResolutionService {
     if (!tree || tree.type !== 'OPERATOR_BINARY' || tree.value !== '=' || !tree.left || !tree.right)
       return true;
 
+    const knownSolutions = parseSolutionValues(userEq.equation.solutionValues);
+    if (knownSolutions.length > 0) {
+      for (const s of knownSolutions) {
+        const leftVals = evaluateTree(tree.left, false, s);
+        const rightVals = evaluateTree(tree.right, false, s);
+        for (const value of previousAnswerValues) {
+          if (listContainsElement(leftVals, value) || listContainsElement(rightVals, value)) return true;
+        }
+        if (this.equationSidesShareNumericValue(leftVals, rightVals)) return true;
+      }
+      return false;
+    }
+
     const leftVals = evaluateTree(tree.left, false);
     const rightVals = evaluateTree(tree.right, false);
     for (const value of previousAnswerValues) {
       if (listContainsElement(leftVals, value) || listContainsElement(rightVals, value)) return true;
     }
-    
+
+    return false;
+  }
+
+  private equationSidesShareNumericValue(leftVals: number[], rightVals: number[]): boolean {
+    for (const a of leftVals) {
+      for (const b of rightVals) {
+        if (Math.abs(a - b) <= DEFAULT_FLOAT_TOLERANCE) return true;
+      }
+    }
     return false;
   }
 

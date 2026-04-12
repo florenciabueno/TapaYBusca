@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { solveEquation } from '../src/modules/equations/equation-solver/index.js';
 
 const prisma = new PrismaClient();
 
@@ -21,7 +22,7 @@ const defaultEquations = [
   { infija: '39=pot2(x)-10', postfija: '39xpot210-=', latex: '39=x^2-10' },
   { infija: '5=12-x', postfija: '512x-=', latex: '5=12-x' },
   { infija: '((4*(x+5))/(3))=4', postfija: '4x5+*3/4=', latex: '\\frac{4*(x+5)}{3}=4' },
-  { infija: '((pot2(x)+9)/(5))=1', postfija: 'xpot29+5/1=', latex: '\\frac{x^2+9}{5}=1' },
+  { infija: '((pot2(x)+9)/(5))=2', postfija: 'xpot29+5/2=', latex: '\\frac{x^2+9}{5}=2' },
   { infija: 'pot3(x)+1=28', postfija: 'xpot31+28=', latex: 'x^3+1=28' },
   { infija: '9=sqrt(-(x)+15)', postfija: '9x~15+sqrt=', latex: '9=\\sqrt{-x+15}' },
   { infija: 'x+16=9', postfija: 'x16+9=', latex: 'x+16=9' },
@@ -54,11 +55,18 @@ async function seedFinalEquations() {
 
     for (let i = 0; i < defaultEquations.length; i++) {
       const eq = defaultEquations[i];
+      const solved = solveEquation(eq.infija);
+      if (!solved.ok) {
+        throw new Error(
+          `Ecuación por defecto ${i + 1} "${eq.infija}" no se puede resolver: ${solved.message ?? solved.errorCode}`
+        );
+      }
       const equation = await prisma.equation.create({
         data: {
           postfixExpression: eq.postfija,
           infixExpression: eq.infija,
           latexExpression: eq.latex,
+          solutionValues: solved.solutions,
           isDefault: true,
           creatorId: null,
         },

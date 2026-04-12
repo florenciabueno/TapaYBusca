@@ -75,7 +75,12 @@ export const useResolveEquation = (id?: string) => {
       resolutionStepStatus: number;
     }) => equationService.resolveStep(id!, payload, token),
     onSuccess: async (result) => {
-      setMessage(getResolutionFeedbackMessage(result.code));
+      const fallback = getResolutionFeedbackMessage(result.code);
+      const text =
+        result.code === RESOLUTION_CODES.SYNTAX_INCORRECT && result.message?.trim()
+          ? result.message.trim()
+          : fallback;
+      setMessage(text);
       await invalidateEquationQueries();
     },
   });

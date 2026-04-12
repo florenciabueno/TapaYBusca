@@ -15,7 +15,9 @@
     "db:clear-default-equations": "tsx scripts/clear-default-equations.ts",
     "db:studio": "prisma studio",
     "db:seed": "tsx scripts/create-test-user.ts",
-    "db:seed-equations": "tsx scripts/seed-default-equations.ts"
+    "db:clear-default-equations": "tsx scripts/clear-default-equations.ts",
+    "db:seed-equations": "tsx scripts/seed-default-equations.ts",
+    "db:backfill-default-solutions": "tsx scripts/backfill-default-equation-solutions.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
