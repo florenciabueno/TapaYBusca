@@ -11,10 +11,43 @@ import { TOKENIZE_ORDER } from './constants.js';
 
 const UNARY_MINUS_AFTER = new Set([EQUALS, LEFT_PAREN, ADD, SUBTRACT, MULTIPLY, DIVIDE]);
 
+/** `)^3` / `)^2` must be processed before `)^2` so nested powers normalize inside-out. */
+function normalizeParenPowers(s: string): string {
+  let out = s;
+  for (const [suffix, fn] of [
+    [')^3', 'pot3'],
+    [')^2', 'pot2'],
+  ] as const) {
+    for (;;) {
+      const closeIdx = out.indexOf(suffix);
+      if (closeIdx === -1) break;
+      const openIdx = findMatchingOpenParen(out, closeIdx);
+      if (openIdx === -1) break;
+      const inner = out.slice(openIdx + 1, closeIdx);
+      out = out.slice(0, openIdx) + `${fn}(` + inner + ')' + out.slice(closeIdx + suffix.length);
+    }
+  }
+  return out;
+}
+
+function findMatchingOpenParen(s: string, closeIdx: number): number {
+  let depth = 1;
+  for (let i = closeIdx - 1; i >= 0; i--) {
+    const c = s[i];
+    if (c === ')') depth++;
+    else if (c === '(') {
+      depth--;
+      if (depth === 0) return i;
+    }
+  }
+  return -1;
+}
+
 export function normalizeInfix(equation: string): string {
   let s = equation.replace(/\s/g, '');
   s = s.replace(/x\^3/g, 'pot3(x)');
   s = s.replace(/x\^2/g, 'pot2(x)');
+  s = normalizeParenPowers(s);
   return s;
 }
 

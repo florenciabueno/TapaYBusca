@@ -11,7 +11,10 @@ import {
 import { tokenizeInfix } from '../src/modules/equations/equation-solver/tokenizer.js';
 import { infixToPostfix } from '../src/modules/equations/equation-solver/infix-to-postfix.js';
 import { postfixToTree } from '../src/modules/equations/equation-solver/postfix-to-tree.js';
-import { replaceSubListInPostfix } from '../src/modules/equations/equation-solver/resolve-helpers.js';
+import {
+  replaceSubListInPostfix,
+  validateSubEquation,
+} from '../src/modules/equations/equation-solver/resolve-helpers.js';
 import { ResolutionService } from '../src/modules/equations/resolution.service.js';
 
 vi.mock('../src/modules/equations/equation.repository.js', () => {
@@ -769,6 +772,48 @@ describe('ResolutionService internal branches (existing test file)', () => {
       RESOLUTION_STEP_NO_BRANCH
     );
     expect(valid).toBe(false);
+  });
+
+  it('isPreviousStepValid accepts sqrt-chain step when sides balance at a known solution', async () => {
+    const { service } = createService({
+      getPreviousStep: vi.fn().mockResolvedValue({ resultValue: '1' }),
+      findByIdWithEquation: vi.fn().mockResolvedValue(
+        makeUserEquation({
+          equation: {
+            infixExpression: '-1=sqrt(1+sqrt(x))-2',
+            postfixExpression: '',
+            solutionValues: [0],
+          },
+        })
+      ),
+    });
+
+    const valid = await (service as any).isPreviousStepValid(
+      'ue-1',
+      1,
+      toPostfixTokens('1+sqrt(x)'),
+      1,
+      RESOLUTION_STEP_NO_BRANCH
+    );
+    expect(valid).toBe(true);
+  });
+
+  it('normalizeInfix: (x+7)^2 tokenizes to same postfix as pot2(x+7)', () => {
+    const a = infixToPostfix(tokenizeInfix('(x+7)^2'));
+    const b = infixToPostfix(tokenizeInfix('pot2(x+7)'));
+    expect(a).toEqual(b);
+  });
+
+  it('validateSubEquation accepts (x+7)^2 as subexpression of pot2(x+7)+10=74', () => {
+    const eq = infixToPostfix(tokenizeInfix('pot2(x+7)+10=74'))!;
+    const sub = infixToPostfix(tokenizeInfix('(x+7)^2'))!;
+    expect(validateSubEquation(eq, sub)).toBe(true);
+  });
+
+  it('normalizeInfix: nested ((x+1)^3)^2 parses to postfix containing pot', () => {
+    const p = infixToPostfix(tokenizeInfix('((x+1)^3)^2'));
+    expect(p).not.toBeNull();
+    expect(p!.join('')).toContain('pot');
   });
 
   it('replaceSubListInPostfix handles empty sublist and missing matches', () => {
