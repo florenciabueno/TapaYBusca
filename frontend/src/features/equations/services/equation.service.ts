@@ -240,6 +240,7 @@ export const equationService = {
       resultLatex?: string;
     }>;
     solutionSet: number[];
+    expectedDistinctSolutionCount: number;
     currentResolutionId: number;
   } | null> {
     const response = await apiFetch(`${API_URL}/equations/${userEquationId}/resolution`, {
@@ -254,6 +255,26 @@ export const equationService = {
     }
 
     return response.json();
+  },
+
+  async finishResolution(
+    userEquationId: string,
+    token?: string | null
+  ): Promise<{ code: string; message?: string }> {
+    const response = await apiFetch(`${API_URL}/equations/${userEquationId}/finish-resolution`, {
+      method: 'POST',
+      headers: getAuthHeaders(token),
+      credentials: 'include',
+    });
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      const message = typeof data?.error === 'string' ? data.error : 'Error al finalizar la resolución';
+      throw new Error(message);
+    }
+
+    return { code: data.code ?? 'MS', message: data.message };
   },
 
   async resetResolution(userEquationId: string, token?: string | null): Promise<void> {

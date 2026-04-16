@@ -233,7 +233,7 @@ describe('Equation resolver API', () => {
       expect(repoMocks.createResolution).not.toHaveBeenCalled();
     });
 
-    it('returns RT and marks SOLVED for a correct variable answer (default linear equation)', async () => {
+    it('returns PF for a correct variable answer when the conjunto solución está completo en el paso (default linear equation)', async () => {
       const response = await request(app)
         .post('/api/equations/ue-1/resolve')
         .set(authHeader(token))
@@ -244,9 +244,9 @@ describe('Equation resolver API', () => {
         });
 
       expect(response.status).toBe(200);
-      expect(response.body).toEqual({ code: RESOLUTION_CODES.RESOLUTION_FINISHED });
+      expect(response.body).toEqual({ code: RESOLUTION_CODES.PENDING_FINISH });
       expect(repoMocks.updateResolutionState).toHaveBeenCalledWith('ue-1', {
-        status: EquationStatus.SOLVED,
+        status: EquationStatus.IN_PROGRESS,
         currentResolutionId: 1,
         selectedBranch: '',
       });
@@ -330,7 +330,7 @@ describe('Equation resolver API', () => {
       expect(repoMocks.createResolution).not.toHaveBeenCalled();
     });
 
-    it('returns MS for first correct non-variable quadratic branch step', async () => {
+    it('returns PC for first correct non-variable quadratic branch step (sin mensaje MS hasta finalizar)', async () => {
       repoMocks.findByIdWithEquation.mockResolvedValue(
         makeUserEquation({
           equation: {
@@ -351,7 +351,7 @@ describe('Equation resolver API', () => {
         });
 
       expect(response.status).toBe(200);
-      expect(response.body).toEqual({ code: RESOLUTION_CODES.MORE_SOLUTIONS });
+      expect(response.body).toEqual({ code: RESOLUTION_CODES.STEP_CORRECT });
       expect(repoMocks.updateResolutionState).toHaveBeenCalledWith('ue-1', {
         status: EquationStatus.IN_PROGRESS,
         currentResolutionId: 1,
@@ -619,6 +619,81 @@ describe('Equation resolution lifecycle endpoints', () => {
         resultLatex: '\\frac{3}{4}',
       });
       expect(response.body.solutionSet).toEqual([2, -6]);
+      expect(response.body.expectedDistinctSolutionCount).toBe(1);
+    });
+  });
+
+  describe('POST /api/equations/:id/finish-resolution', () => {
+    it('returns 401 when Authorization is missing', async () => {
+      const response = await request(app).post('/api/equations/ue-1/finish-resolution');
+      expect(response.status).toBe(401);
+    });
+
+    it('returns MS when falta alguna raíz del conjunto solución', async () => {
+      repoMocks.findByIdWithEquation.mockResolvedValue(
+        makeUserEquation({
+          status: EquationStatus.IN_PROGRESS,
+          currentResolutionId: 1,
+          equation: {
+            infixExpression: DEFAULT_EQUATIONS.quadratic,
+            postfixExpression: DEFAULT_EQUATIONS.quadratic,
+            solutionValues: [2, -6],
+          },
+        })
+      );
+      repoMocks.getDistinctLoggedSolutions.mockResolvedValue([2]);
+
+      const response = await request(app)
+        .post('/api/equations/ue-1/finish-resolution')
+        .set(authHeader(token));
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({ code: RESOLUTION_CODES.MORE_SOLUTIONS });
+      expect(repoMocks.updateResolutionState).not.toHaveBeenCalled();
+    });
+
+    it('returns RT and marks SOLVED when todas las raíces están registradas', async () => {
+      repoMocks.findByIdWithEquation.mockResolvedValue(
+        makeUserEquation({
+          status: EquationStatus.IN_PROGRESS,
+          currentResolutionId: 1,
+          equation: {
+            infixExpression: DEFAULT_EQUATIONS.quadratic,
+            postfixExpression: DEFAULT_EQUATIONS.quadratic,
+            solutionValues: [2, -6],
+          },
+        })
+      );
+      repoMocks.getDistinctLoggedSolutions.mockResolvedValue([2, -6]);
+
+      const response = await request(app)
+        .post('/api/equations/ue-1/finish-resolution')
+        .set(authHeader(token));
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({ code: RESOLUTION_CODES.RESOLUTION_FINISHED });
+      expect(repoMocks.updateResolutionState).toHaveBeenCalledWith('ue-1', {
+        status: EquationStatus.SOLVED,
+        currentResolutionId: 1,
+        selectedBranch: '',
+      });
+    });
+
+    it('returns RT when la ecuación ya estaba resuelta', async () => {
+      repoMocks.findByIdWithEquation.mockResolvedValue(
+        makeUserEquation({
+          status: EquationStatus.SOLVED,
+          currentResolutionId: 1,
+        })
+      );
+
+      const response = await request(app)
+        .post('/api/equations/ue-1/finish-resolution')
+        .set(authHeader(token));
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({ code: RESOLUTION_CODES.RESOLUTION_FINISHED });
+      expect(repoMocks.getDistinctLoggedSolutions).not.toHaveBeenCalled();
     });
   });
 

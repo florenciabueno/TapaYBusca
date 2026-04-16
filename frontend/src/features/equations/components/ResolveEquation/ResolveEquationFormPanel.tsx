@@ -10,11 +10,16 @@ interface ResolveEquationFormPanelProps {
   subEquationInfix: string;
   answer: string;
   submitting: boolean;
+  resolveStepPending: boolean;
+  finishResolutionPending: boolean;
   message: string | null;
+  solutionSet: number[];
+  expectedDistinctSolutionCount: number;
   onSubEquationChange: Dispatch<SetStateAction<string>>;
   onAnswerChange: Dispatch<SetStateAction<string>>;
   onValidate: () => void;
   onEmptySet: () => void;
+  onFinishResolution: () => void;
   onReset: () => void;
 }
 
@@ -22,11 +27,16 @@ export const ResolveEquationFormPanel = ({
   subEquationInfix,
   answer,
   submitting,
+  resolveStepPending,
+  finishResolutionPending,
   message,
+  solutionSet,
+  expectedDistinctSolutionCount,
   onSubEquationChange,
   onAnswerChange,
   onValidate,
   onEmptySet,
+  onFinishResolution,
   onReset,
 }: ResolveEquationFormPanelProps) => {
   const {
@@ -42,8 +52,44 @@ export const ResolveEquationFormPanel = ({
     onAnswerChange
   );
 
+  const showSolutionChips = solutionSet.length > 0;
+  const showMultiHint = expectedDistinctSolutionCount > 1;
+
   return (
     <>
+      {showSolutionChips ? (
+        <div style={{ marginBottom: SPACING.lg }}>
+          <p className="text-sm font-medium mb-2" style={{ color: COLORS.accentSecondary }}>
+            Raíces ya registradas
+          </p>
+          <ul className="flex flex-wrap gap-2 list-none p-0 m-0" aria-label="Raíces del conjunto solución ingresadas">
+            {solutionSet.map((v) => (
+              <li
+                key={`${v}`}
+                className="inline-flex items-center rounded-full px-3 py-1 text-sm font-medium"
+                style={{
+                  backgroundColor: COLORS.gray[100],
+                  color: COLORS.brandDark,
+                  border: `1px solid ${COLORS.gray[200]}`,
+                }}
+              >
+                {formatSolutionChipLabel(v)}
+              </li>
+            ))}
+          </ul>
+          {showMultiHint ? (
+            <p className="mt-2 text-xs" style={{ color: COLORS.gray[500] }}>
+              Esta ecuación tiene hasta {expectedDistinctSolutionCount} raíces distintas en el conjunto
+              solución. Ingresalas como subecuación «x» antes de terminar.
+            </p>
+          ) : null}
+        </div>
+      ) : showMultiHint ? (
+        <p className="mb-4 text-xs" style={{ color: COLORS.gray[500], marginBottom: SPACING.lg }}>
+          Cuando corresponda, registrá las raíces como subecuación «x». Esta ecuación tiene hasta{' '}
+          {expectedDistinctSolutionCount} raíces distintas.
+        </p>
+      ) : null}
       <fieldset
         style={{ marginBottom: SPACING.lg }}
         className="min-w-0 border-0 p-0 m-0"
@@ -101,7 +147,10 @@ export const ResolveEquationFormPanel = ({
       />
       <div className="flex flex-wrap gap-3">
         <Button type="button" variant="accent" disabled={submitting} onClick={onValidate}>
-          {submitting ? 'Validando...' : 'Validar'}
+          {resolveStepPending ? 'Validando...' : 'Validar paso'}
+        </Button>
+        <Button type="button" variant="accent" disabled={submitting} onClick={onFinishResolution}>
+          {finishResolutionPending ? 'Finalizando...' : 'Terminar resolución'}
         </Button>
         <Button type="button" variant="outline" disabled={submitting} onClick={onEmptySet}>
           S = {'{}'}
@@ -117,3 +166,9 @@ export const ResolveEquationFormPanel = ({
     </>
   );
 };
+
+function formatSolutionChipLabel(value: number): string {
+  const roundedInt = Math.round(value);
+  if (Math.abs(value - roundedInt) <= 1e-9) return String(roundedInt);
+  return String(Number(value.toFixed(4)));
+}

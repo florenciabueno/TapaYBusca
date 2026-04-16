@@ -5,6 +5,7 @@ export const RESOLUTION_CODES = {
   STEP_CORRECT: 'PC',
   RESULT_CORRECT: 'RC',
   MORE_SOLUTIONS: 'MS',
+  PENDING_FINISH: 'PF',
   RESOLUTION_FINISHED: 'RT',
   STEP_INCORRECT: 'PI',
   RESULT_INCORRECT: 'RI',
@@ -17,8 +18,11 @@ export const RESOLUTION_CODES = {
 
 const CODE_MESSAGES: Record<string, string> = {
   [RESOLUTION_CODES.STEP_CORRECT]: 'Paso correcto.',
-  [RESOLUTION_CODES.RESULT_CORRECT]: 'Existe otro número que también sirve.',
-  [RESOLUTION_CODES.MORE_SOLUTIONS]: 'Hay más soluciones. Continúa desde la ecuación.',
+  [RESOLUTION_CODES.RESULT_CORRECT]: 'Raíz correcta. Podés ingresar otra si aún falta.',
+  [RESOLUTION_CODES.MORE_SOLUTIONS]:
+    'Aún no registraste todas las raíces del conjunto solución. Seguí resolviendo e ingresalas como subecuación x antes de terminar.',
+  [RESOLUTION_CODES.PENDING_FINISH]:
+    'Ya tenés todas las raíces del conjunto solución. Pulsa «Terminar resolución» para cerrar.',
   [RESOLUTION_CODES.RESOLUTION_FINISHED]: '¡Resolución terminada con éxito!',
   [RESOLUTION_CODES.NO_SOLUTION]: '¡No hay ningún número real que sirva!',
   [RESOLUTION_CODES.FIRST_WARNING]: '¿Mmm….Existirá algún número?',

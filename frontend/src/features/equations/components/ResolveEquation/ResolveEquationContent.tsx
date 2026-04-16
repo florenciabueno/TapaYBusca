@@ -9,9 +9,12 @@ interface ResolveEquationContentProps {
   equationExpression: string;
   steps: ResolutionStep[];
   solutionSet: number[];
+  expectedDistinctSolutionCount: number;
   subEquationInfix: string;
   answer: string;
   submitting: boolean;
+  resolveStepPending: boolean;
+  finishResolutionPending: boolean;
   message: string | null;
   finished: boolean;
   finishedCode: string | null;
@@ -20,6 +23,7 @@ interface ResolveEquationContentProps {
   onAnswerChange: Dispatch<SetStateAction<string>>;
   onValidate: () => void;
   onEmptySet: () => void;
+  onFinishResolution: () => void;
   onReset: () => void;
 }
 
@@ -27,9 +31,12 @@ export const ResolveEquationContent = ({
   equationExpression,
   steps,
   solutionSet,
+  expectedDistinctSolutionCount,
   subEquationInfix,
   answer,
   submitting,
+  resolveStepPending,
+  finishResolutionPending,
   message,
   finished,
   finishedCode,
@@ -38,6 +45,7 @@ export const ResolveEquationContent = ({
   onAnswerChange,
   onValidate,
   onEmptySet,
+  onFinishResolution,
   onReset,
 }: ResolveEquationContentProps) => {
   const hasSteps = steps.length > 0;
@@ -64,14 +72,18 @@ export const ResolveEquationContent = ({
       subEquationInfix={subEquationInfix}
       answer={answer}
       submitting={submitting}
+      resolveStepPending={resolveStepPending}
+      finishResolutionPending={finishResolutionPending}
       message={message}
       finished={finished}
       finishedCode={finishedCode}
       solutionSet={solutionSet}
+      expectedDistinctSolutionCount={expectedDistinctSolutionCount}
       onSubEquationChange={onSubEquationChange}
       onAnswerChange={onAnswerChange}
       onValidate={onValidate}
       onEmptySet={onEmptySet}
+      onFinishResolution={onFinishResolution}
       onReset={onReset}
     />
   );

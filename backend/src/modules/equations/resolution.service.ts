@@ -20,6 +20,7 @@ import {
   replaceSubListInPostfix,
   listContainsElement,
 } from './equation-solver/resolve-helpers.js';
+import { listContainsList } from './equation-solver/evaluate-tree.js';
 import { infixToLatex, resultToLatex } from './infix-to-latex.js';
 
 const RESULT_VALUE_SEPARATOR = ';';
@@ -400,7 +401,7 @@ export class ResolutionService {
     if (listContainsElement(loggedSolutions, answerValue)) {
       resultCode = RESOLUTION_CODES.RESULT_REPEATED;
     } else if (loggedSolutions.length + 1 === solutionSet.length) {
-      resultCode = RESOLUTION_CODES.RESOLUTION_FINISHED;
+      resultCode = RESOLUTION_CODES.PENDING_FINISH;
     } else if (selectedBranch.length === 0) {
       selectedBranch = args.subEquation;
       stateUpdated = true;
@@ -456,7 +457,7 @@ export class ResolutionService {
         args.resolutionStepStatus
       );
       if (!previousStep) {
-        return makeKnownStepDecision(RESOLUTION_CODES.MORE_SOLUTIONS, true, args.subEquation, true);
+        return makeKnownStepDecision(RESOLUTION_CODES.STEP_CORRECT, true, args.subEquation, true);
       }
     }
 
@@ -607,12 +608,50 @@ export class ResolutionService {
       userEquationId,
       currentResolutionId
     );
+    const expectedDistinctSolutionCount = [...new Set(parseSolutionValues(userEq.equation.solutionValues))].length;
     return {
       userEquation: userEq,
       steps,
       solutionSet,
+      expectedDistinctSolutionCount,
       currentResolutionId,
     };
+  }
+
+  async finishResolution(userEquationId: string, userId: string): Promise<{ code: string; message?: string }> {
+    const userEq = await this.equationRepository.findByIdWithEquation(userEquationId);
+    if (!userEq) {
+      return { code: RESOLUTION_CODES.SYNTAX_INCORRECT, message: MESSAGE_RESOLVE_EQUATION_NOT_FOUND };
+    }
+    if (userEq.userId !== userId) {
+      return { code: RESOLUTION_CODES.SYNTAX_INCORRECT, message: MESSAGE_RESOLVE_NO_PERMISSIONS };
+    }
+    if (userEq.status === EquationStatus.SOLVED) {
+      return { code: RESOLUTION_CODES.RESOLUTION_FINISHED };
+    }
+
+    const knownSolutions = [...new Set(parseSolutionValues(userEq.equation.solutionValues))];
+    if (knownSolutions.length === 0) {
+      return { code: RESOLUTION_CODES.SYNTAX_INCORRECT, message: MESSAGE_RESOLVE_MISSING_SOLUTIONS };
+    }
+
+    const currentResolutionId = userEq.currentResolutionId ?? 0;
+    const logged = await this.equationRepository.getDistinctLoggedSolutions(userEquationId, currentResolutionId);
+
+    const complete =
+      logged.length === knownSolutions.length && listContainsList(logged, knownSolutions);
+
+    if (!complete) {
+      return { code: RESOLUTION_CODES.MORE_SOLUTIONS };
+    }
+
+    await this.equationRepository.updateResolutionState(userEquationId, {
+      status: EquationStatus.SOLVED,
+      currentResolutionId,
+      selectedBranch: userEq.selectedBranch ?? '',
+    });
+
+    return { code: RESOLUTION_CODES.RESOLUTION_FINISHED };
   }
 
   async resetResolution(userEquationId: string, userId: string): Promise<boolean> {
