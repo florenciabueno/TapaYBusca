@@ -111,13 +111,19 @@ export const useResolveEquation = (id?: string) => {
     if (code === RESOLUTION_CODES.RESOLUTION_FINISHED || code === RESOLUTION_CODES.NO_SOLUTION) {
       setFinished(true);
       setFinishedCode(code);
+      setSubEquationInfix('');
+      setAnswer('');
+      return;
     }
     if (code === RESOLUTION_CODES.RESULT_CORRECT) {
       setSubEquationInfix('x');
       setAnswer('');
-    } else {
+      return;
+    }
+    if (code === RESOLUTION_CODES.STEP_CORRECT || code === RESOLUTION_CODES.MORE_SOLUTIONS) {
       setSubEquationInfix('');
       setAnswer('');
+      return;
     }
   };
 
@@ -148,9 +154,9 @@ export const useResolveEquation = (id?: string) => {
       if (result.code === RESOLUTION_CODES.RESOLUTION_FINISHED) {
         setFinished(true);
         setFinishedCode(result.code);
+        setSubEquationInfix('');
+        setAnswer('');
       }
-      setSubEquationInfix('');
-      setAnswer('');
     } catch (e) {
       setMessage(e instanceof Error ? e.message : 'Error al validar');
     }
