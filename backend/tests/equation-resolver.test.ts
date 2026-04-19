@@ -14,6 +14,7 @@ import { tokenizeInfix } from '../src/modules/equations/equation-solver/tokenize
 import { infixToPostfix } from '../src/modules/equations/equation-solver/infix-to-postfix.js';
 import { postfixToTree } from '../src/modules/equations/equation-solver/postfix-to-tree.js';
 import {
+  computeEffectiveResolutionSessionId,
   replaceSubListInPostfix,
   validateSubEquation,
 } from '../src/modules/equations/equation-solver/resolve-helpers.js';
@@ -1084,5 +1085,13 @@ describe('ResolutionService internal branches (existing test file)', () => {
 
     const repeated = await (service as any).hasRepeatedBranchResult('ue-1', 1, 2, 5);
     expect(repeated).toBe(true);
+  });
+});
+
+describe('computeEffectiveResolutionSessionId', () => {
+  it('toma el máximo entre sesión calculada, valor en BD y sesiones existentes', () => {
+    expect(computeEffectiveResolutionSessionId(1, 0, 0)).toBe(1);
+    expect(computeEffectiveResolutionSessionId(0, 0, 2)).toBe(2);
+    expect(computeEffectiveResolutionSessionId(0, 1, 1)).toBe(1);
   });
 });

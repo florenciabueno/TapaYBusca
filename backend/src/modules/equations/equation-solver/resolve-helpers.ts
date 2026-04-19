@@ -15,10 +15,6 @@ export function infixContainsVariable(infix: string): boolean {
   }
 }
 
-/**
- * Chooses which field is the subexpression containing x and which is the other side (constant / numeric step).
- * If the student puts the value on the left and the expression on the right, we swap.
- */
 export function pickExpressionAndAnswer(
   firstField: string,
   secondField: string
@@ -183,12 +179,12 @@ function containsSquareOfVariable(node: { type: string; value: string; left?: un
   return false;
 }
 
-export const validateSubEcuacion = validateSubEquation;
-export const hallarValorDeRespuesta = parseAnswerValues;
-export const evaluar = evaluatePostfixWithVariable;
-export const obtenerResultadoSubEcuacion = getSubEquationResult;
-export const verificarSiPasoTieneSolucion = checkStepHasSolution;
-export const isSoloVariable = isOnlyVariable;
-export const esCuadratica = isQuadratic;
+export function computeEffectiveResolutionSessionId(
+  sessionCurrentResolutionId: number,
+  storedCurrentResolutionId: number,
+  maxExistingSessionId: number
+): number {
+  return Math.max(sessionCurrentResolutionId, storedCurrentResolutionId, maxExistingSessionId);
+}
 
 export { listContainsElement };
