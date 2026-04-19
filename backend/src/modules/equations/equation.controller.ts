@@ -29,6 +29,7 @@ const ERROR_DOWNLOAD_EQUATIONS = 'Error al descargar ecuaciones';
 const ERROR_RESOLVE_STEP = 'Error al validar el paso';
 const ERROR_GET_RESOLUTION = 'Error al obtener la resolucion';
 const ERROR_RESET_RESOLUTION = 'Error al reiniciar la resolucion';
+const ERROR_FINISH_RESOLUTION = 'Error al finalizar la resolucion';
 
 export class EquationController {
   constructor(
@@ -231,6 +232,19 @@ export class EquationController {
     } catch (error: unknown) {
       res.status(500).json({
         error: getErrorMessage(error, ERROR_RESET_RESOLUTION),
+      });
+    }
+  };
+
+  finishResolution = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const userEquationId = parseUserEquationIdParam(req.params);
+      const userId = req.userId!;
+      const result = await this.resolutionService.finishResolution(userEquationId, userId);
+      res.status(200).json(result);
+    } catch (error: unknown) {
+      res.status(500).json({
+        error: getErrorMessage(error, ERROR_FINISH_RESOLUTION),
       });
     }
   };

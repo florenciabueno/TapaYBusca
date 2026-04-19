@@ -7,11 +7,14 @@ import {
   EMPTY_SET,
   RESOLUTION_CODES,
   RESOLUTION_STEP_NO_BRANCH,
+  RESOLUTION_STEP_FINISH_ATTEMPT,
+  RESOLUTION_STEP_INVALID_SUBEQUATION_ATTEMPT,
 } from '../src/modules/equations/equation-solver/resolution-constants.js';
 import { tokenizeInfix } from '../src/modules/equations/equation-solver/tokenizer.js';
 import { infixToPostfix } from '../src/modules/equations/equation-solver/infix-to-postfix.js';
 import { postfixToTree } from '../src/modules/equations/equation-solver/postfix-to-tree.js';
 import {
+  computeEffectiveResolutionSessionId,
   replaceSubListInPostfix,
   validateSubEquation,
 } from '../src/modules/equations/equation-solver/resolve-helpers.js';
@@ -27,6 +30,7 @@ vi.mock('../src/modules/equations/equation.repository.js', () => {
   const countStepsWithoutSolution = vi.fn();
   const canUserModify = vi.fn();
   const deleteResolutionsByUserEquation = vi.fn();
+  const getMaxResolutionSessionId = vi.fn();
 
   return {
     EquationRepository: class MockEquationRepository {
@@ -39,6 +43,7 @@ vi.mock('../src/modules/equations/equation.repository.js', () => {
       countStepsWithoutSolution = countStepsWithoutSolution;
       canUserModify = canUserModify;
       deleteResolutionsByUserEquation = deleteResolutionsByUserEquation;
+      getMaxResolutionSessionId = getMaxResolutionSessionId;
     },
     __resolutionRepoMocks: {
       findByIdWithEquation,
@@ -50,6 +55,7 @@ vi.mock('../src/modules/equations/equation.repository.js', () => {
       countStepsWithoutSolution,
       canUserModify,
       deleteResolutionsByUserEquation,
+      getMaxResolutionSessionId,
     },
   };
 });
@@ -118,6 +124,7 @@ describe('Equation resolver API', () => {
     repoMocks.countStepsWithoutSolution.mockResolvedValue(0);
     repoMocks.canUserModify.mockResolvedValue(true);
     repoMocks.deleteResolutionsByUserEquation.mockResolvedValue(undefined);
+    repoMocks.getMaxResolutionSessionId.mockResolvedValue(0);
   });
 
   describe('POST /api/equations/:id/resolve', () => {
@@ -139,8 +146,22 @@ describe('Equation resolver API', () => {
       expect(response.status).toBe(200);
       expect(response.body).toMatchObject({
         code: RESOLUTION_CODES.SYNTAX_INCORRECT,
-        message: 'La subecuación es obligatoria.',
+        message: 'La subecuación es obligatoria',
       });
+    });
+
+    it('accepts variable side in the answer field (constant first, expression second)', async () => {
+      const response = await request(app)
+        .post('/api/equations/ue-1/resolve')
+        .set(authHeader(token))
+        .send({
+          subEquationInfix: '7',
+          answer: 'x',
+          resolutionStepStatus: RESOLUTION_STEP_NO_BRANCH,
+        });
+
+      expect(response.status).toBe(200);
+      expect([RESOLUTION_CODES.RESULT_CORRECT, RESOLUTION_CODES.PENDING_FINISH]).toContain(response.body.code);
     });
 
     it('returns SI when equation does not exist', async () => {
@@ -199,6 +220,8 @@ describe('Equation resolver API', () => {
     });
 
     it('returns SI when subEquation is not part of the equation', async () => {
+      const subEquationPostfix = toPostfixTokens('x+99');
+
       const response = await request(app)
         .post('/api/equations/ue-1/resolve')
         .set(authHeader(token))
@@ -210,6 +233,81 @@ describe('Equation resolver API', () => {
 
       expect(response.status).toBe(200);
       expect(response.body).toEqual({ code: RESOLUTION_CODES.SYNTAX_INCORRECT });
+      expect(repoMocks.updateResolutionState).toHaveBeenCalledWith(
+        'ue-1',
+        expect.objectContaining({
+          status: EquationStatus.IN_PROGRESS,
+          currentResolutionId: 1,
+        })
+      );
+      expect(repoMocks.createResolution).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userEquationId: 'ue-1',
+          resolutionSessionId: 1,
+          subEquation: subEquationPostfix.join(''),
+          subEquationInfix: 'x+99',
+          proposedResult: '7',
+          isCorrect: false,
+          resolutionSide: RESOLUTION_STEP_INVALID_SUBEQUATION_ATTEMPT,
+        })
+      );
+    });
+
+    it('returns PR when invalid subequation attempt is repeated', async () => {
+      const subEquationPostfix = toPostfixTokens('x+99');
+      repoMocks.findResolutionsByUserEquation.mockResolvedValue([
+        { subEquation: subEquationPostfix.join(''), proposedResult: '7' },
+      ]);
+
+      const response = await request(app)
+        .post('/api/equations/ue-1/resolve')
+        .set(authHeader(token))
+        .send({
+          subEquationInfix: 'x+99',
+          answer: '7',
+          resolutionStepStatus: RESOLUTION_STEP_NO_BRANCH,
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body.code).toBe(RESOLUTION_CODES.STEP_REPEATED);
+      expect(repoMocks.createResolution).not.toHaveBeenCalled();
+    });
+
+    it('logs invalid subequation in the same session when currentResolutionId lags behind stored steps', async () => {
+      const subEquationPostfix = toPostfixTokens('x+99');
+      repoMocks.findByIdWithEquation.mockResolvedValue(
+        makeUserEquation({
+          status: EquationStatus.IN_PROGRESS,
+          currentResolutionId: 0,
+        })
+      );
+      repoMocks.getMaxResolutionSessionId.mockResolvedValue(2);
+
+      const response = await request(app)
+        .post('/api/equations/ue-1/resolve')
+        .set(authHeader(token))
+        .send({
+          subEquationInfix: 'x+99',
+          answer: '7',
+          resolutionStepStatus: RESOLUTION_STEP_NO_BRANCH,
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({ code: RESOLUTION_CODES.SYNTAX_INCORRECT });
+      expect(repoMocks.updateResolutionState).toHaveBeenCalledWith(
+        'ue-1',
+        expect.objectContaining({
+          status: EquationStatus.IN_PROGRESS,
+          currentResolutionId: 2,
+        })
+      );
+      expect(repoMocks.createResolution).toHaveBeenCalledWith(
+        expect.objectContaining({
+          resolutionSessionId: 2,
+          subEquation: subEquationPostfix.join(''),
+          resolutionSide: RESOLUTION_STEP_INVALID_SUBEQUATION_ATTEMPT,
+        })
+      );
     });
 
     it('returns PR when the step is repeated', async () => {
@@ -233,7 +331,15 @@ describe('Equation resolver API', () => {
       expect(repoMocks.createResolution).not.toHaveBeenCalled();
     });
 
-    it('returns RT and marks SOLVED for a correct variable answer (default linear equation)', async () => {
+    it('persists correct step in max resolution session when currentResolutionId lags in DB', async () => {
+      repoMocks.findByIdWithEquation.mockResolvedValue(
+        makeUserEquation({
+          status: EquationStatus.IN_PROGRESS,
+          currentResolutionId: 0,
+        })
+      );
+      repoMocks.getMaxResolutionSessionId.mockResolvedValue(1);
+
       const response = await request(app)
         .post('/api/equations/ue-1/resolve')
         .set(authHeader(token))
@@ -244,9 +350,34 @@ describe('Equation resolver API', () => {
         });
 
       expect(response.status).toBe(200);
-      expect(response.body).toEqual({ code: RESOLUTION_CODES.RESOLUTION_FINISHED });
+      expect(response.body).toEqual({ code: RESOLUTION_CODES.PENDING_FINISH });
+      expect(repoMocks.createResolution).toHaveBeenCalledWith(
+        expect.objectContaining({
+          resolutionSessionId: 1,
+        })
+      );
+      expect(repoMocks.updateResolutionState).toHaveBeenCalledWith(
+        'ue-1',
+        expect.objectContaining({
+          currentResolutionId: 1,
+        })
+      );
+    });
+
+    it('returns PF for a correct variable answer when the conjunto solución está completo en el paso (default linear equation)', async () => {
+      const response = await request(app)
+        .post('/api/equations/ue-1/resolve')
+        .set(authHeader(token))
+        .send({
+          subEquationInfix: 'x',
+          answer: '7',
+          resolutionStepStatus: RESOLUTION_STEP_NO_BRANCH,
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({ code: RESOLUTION_CODES.PENDING_FINISH });
       expect(repoMocks.updateResolutionState).toHaveBeenCalledWith('ue-1', {
-        status: EquationStatus.SOLVED,
+        status: EquationStatus.IN_PROGRESS,
         currentResolutionId: 1,
         selectedBranch: '',
       });
@@ -302,7 +433,7 @@ describe('Equation resolver API', () => {
       });
     });
 
-    it('returns SI when equation has no precalculated solutions', async () => {
+    it('returns RT when equation has no precalculated solutions and empty-set is correct', async () => {
       repoMocks.findByIdWithEquation.mockResolvedValue(
         makeUserEquation({
           equation: {
@@ -323,14 +454,16 @@ describe('Equation resolver API', () => {
         });
 
       expect(response.status).toBe(200);
-      expect(response.body).toMatchObject({
-        code: RESOLUTION_CODES.SYNTAX_INCORRECT,
-        message: 'La ecuación no tiene soluciones precalculadas.',
+      expect(response.body).toEqual({ code: RESOLUTION_CODES.RESOLUTION_FINISHED });
+      expect(repoMocks.createResolution).toHaveBeenCalled();
+      expect(repoMocks.updateResolutionState).toHaveBeenCalledWith('ue-1', {
+        status: EquationStatus.SOLVED,
+        currentResolutionId: 1,
+        selectedBranch: '',
       });
-      expect(repoMocks.createResolution).not.toHaveBeenCalled();
     });
 
-    it('returns MS for first correct non-variable quadratic branch step', async () => {
+    it('returns PC for first correct non-variable quadratic branch step (sin mensaje MS hasta finalizar)', async () => {
       repoMocks.findByIdWithEquation.mockResolvedValue(
         makeUserEquation({
           equation: {
@@ -351,7 +484,7 @@ describe('Equation resolver API', () => {
         });
 
       expect(response.status).toBe(200);
-      expect(response.body).toEqual({ code: RESOLUTION_CODES.MORE_SOLUTIONS });
+      expect(response.body).toEqual({ code: RESOLUTION_CODES.STEP_CORRECT });
       expect(repoMocks.updateResolutionState).toHaveBeenCalledWith('ue-1', {
         status: EquationStatus.IN_PROGRESS,
         currentResolutionId: 1,
@@ -619,6 +752,117 @@ describe('Equation resolution lifecycle endpoints', () => {
         resultLatex: '\\frac{3}{4}',
       });
       expect(response.body.solutionSet).toEqual([2, -6]);
+      expect(response.body.expectedDistinctSolutionCount).toBe(1);
+    });
+  });
+
+  describe('POST /api/equations/:id/finish-resolution', () => {
+    it('returns 401 when Authorization is missing', async () => {
+      const response = await request(app).post('/api/equations/ue-1/finish-resolution');
+      expect(response.status).toBe(401);
+    });
+
+    it('returns MS when falta alguna raíz del conjunto solución', async () => {
+      repoMocks.findByIdWithEquation.mockResolvedValue(
+        makeUserEquation({
+          status: EquationStatus.IN_PROGRESS,
+          currentResolutionId: 1,
+          equation: {
+            infixExpression: DEFAULT_EQUATIONS.quadratic,
+            postfixExpression: DEFAULT_EQUATIONS.quadratic,
+            solutionValues: [2, -6],
+          },
+        })
+      );
+      repoMocks.getDistinctLoggedSolutions.mockResolvedValue([2]);
+
+      const response = await request(app)
+        .post('/api/equations/ue-1/finish-resolution')
+        .set(authHeader(token));
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({ code: RESOLUTION_CODES.MORE_SOLUTIONS });
+      expect(repoMocks.updateResolutionState).toHaveBeenCalledWith('ue-1', {
+        status: EquationStatus.IN_PROGRESS,
+        currentResolutionId: 1,
+        selectedBranch: '',
+      });
+      expect(repoMocks.createResolution).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userEquationId: 'ue-1',
+          resolutionSessionId: 1,
+          isCorrect: false,
+          resolutionSide: RESOLUTION_STEP_FINISH_ATTEMPT,
+        })
+      );
+    });
+
+    it('MS desde NOT_STARTED guarda el intento en la misma sesión que el próximo resolveStep', async () => {
+      repoMocks.findByIdWithEquation.mockResolvedValue(makeUserEquation());
+      repoMocks.getMaxResolutionSessionId.mockResolvedValue(0);
+      repoMocks.getDistinctLoggedSolutions.mockResolvedValue([]);
+
+      const response = await request(app)
+        .post('/api/equations/ue-1/finish-resolution')
+        .set(authHeader(token));
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({ code: RESOLUTION_CODES.MORE_SOLUTIONS });
+      expect(repoMocks.createResolution).toHaveBeenCalledWith(
+        expect.objectContaining({
+          resolutionSessionId: 1,
+          resolutionSide: RESOLUTION_STEP_FINISH_ATTEMPT,
+        })
+      );
+      expect(repoMocks.updateResolutionState).toHaveBeenCalledWith('ue-1', {
+        status: EquationStatus.IN_PROGRESS,
+        currentResolutionId: 1,
+        selectedBranch: '',
+      });
+    });
+
+    it('returns RT and marks SOLVED when todas las raíces están registradas', async () => {
+      repoMocks.findByIdWithEquation.mockResolvedValue(
+        makeUserEquation({
+          status: EquationStatus.IN_PROGRESS,
+          currentResolutionId: 1,
+          equation: {
+            infixExpression: DEFAULT_EQUATIONS.quadratic,
+            postfixExpression: DEFAULT_EQUATIONS.quadratic,
+            solutionValues: [2, -6],
+          },
+        })
+      );
+      repoMocks.getDistinctLoggedSolutions.mockResolvedValue([2, -6]);
+
+      const response = await request(app)
+        .post('/api/equations/ue-1/finish-resolution')
+        .set(authHeader(token));
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({ code: RESOLUTION_CODES.RESOLUTION_FINISHED });
+      expect(repoMocks.updateResolutionState).toHaveBeenCalledWith('ue-1', {
+        status: EquationStatus.SOLVED,
+        currentResolutionId: 1,
+        selectedBranch: '',
+      });
+    });
+
+    it('returns RT when la ecuación ya estaba resuelta', async () => {
+      repoMocks.findByIdWithEquation.mockResolvedValue(
+        makeUserEquation({
+          status: EquationStatus.SOLVED,
+          currentResolutionId: 1,
+        })
+      );
+
+      const response = await request(app)
+        .post('/api/equations/ue-1/finish-resolution')
+        .set(authHeader(token));
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({ code: RESOLUTION_CODES.RESOLUTION_FINISHED });
+      expect(repoMocks.getDistinctLoggedSolutions).not.toHaveBeenCalled();
     });
   });
 
@@ -841,5 +1085,13 @@ describe('ResolutionService internal branches (existing test file)', () => {
 
     const repeated = await (service as any).hasRepeatedBranchResult('ue-1', 1, 2, 5);
     expect(repeated).toBe(true);
+  });
+});
+
+describe('computeEffectiveResolutionSessionId', () => {
+  it('toma el máximo entre sesión calculada, valor en BD y sesiones existentes', () => {
+    expect(computeEffectiveResolutionSessionId(1, 0, 0)).toBe(1);
+    expect(computeEffectiveResolutionSessionId(0, 0, 2)).toBe(2);
+    expect(computeEffectiveResolutionSessionId(0, 1, 1)).toBe(1);
   });
 });

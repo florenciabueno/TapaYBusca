@@ -11,7 +11,23 @@ import { TOKENIZE_ORDER } from './constants.js';
 
 const UNARY_MINUS_AFTER = new Set([EQUALS, LEFT_PAREN, ADD, SUBTRACT, MULTIPLY, DIVIDE]);
 
-/** `)^3` / `)^2` must be processed before `)^2` so nested powers normalize inside-out. */
+const NUMERIC_LITERAL_POWER = /(\d+(?:\.\d+)?)\^(\d+)/;
+
+function expandNumericLiteralPowers(s: string): string {
+  let out = s;
+  for (let guard = 0; guard < 64; guard++) {
+    const m = out.match(NUMERIC_LITERAL_POWER);
+    if (!m) break;
+    const base = Number(m[1]);
+    const exp = Number(m[2]);
+    if (!Number.isFinite(base) || !Number.isFinite(exp) || exp < 0 || exp > 512) break;
+    const val = Math.pow(base, exp);
+    if (!Number.isFinite(val)) break;
+    out = out.replace(NUMERIC_LITERAL_POWER, String(val));
+  }
+  return out;
+}
+
 function normalizeParenPowers(s: string): string {
   let out = s;
   for (const [suffix, fn] of [
@@ -45,6 +61,7 @@ function findMatchingOpenParen(s: string, closeIdx: number): number {
 
 export function normalizeInfix(equation: string): string {
   let s = equation.replace(/\s/g, '');
+  s = expandNumericLiteralPowers(s);
   s = s.replace(/x\^3/g, 'pot3(x)');
   s = s.replace(/x\^2/g, 'pot2(x)');
   s = normalizeParenPowers(s);

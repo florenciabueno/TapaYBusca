@@ -20,6 +20,8 @@ export const ResolveEquationPage = () => {
     subEquationInfix,
     answer,
     submitting,
+    resolveStepPending,
+    finishResolutionPending,
     message,
     finished,
     finishedCode,
@@ -27,6 +29,7 @@ export const ResolveEquationPage = () => {
     setAnswer,
     handleValidate,
     handleEmptySet,
+    handleFinishResolution,
     handleReset,
   } = useResolveEquation(id);
 
@@ -77,6 +80,8 @@ export const ResolveEquationPage = () => {
         subEquationInfix={subEquationInfix}
         answer={answer}
         submitting={submitting}
+        resolveStepPending={resolveStepPending}
+        finishResolutionPending={finishResolutionPending}
         message={message}
         finished={finished}
         finishedCode={finishedCode}
@@ -85,6 +90,7 @@ export const ResolveEquationPage = () => {
         onAnswerChange={setAnswer}
         onValidate={handleValidate}
         onEmptySet={handleEmptySet}
+        onFinishResolution={handleFinishResolution}
         onReset={handleReset}
       />
     </EquationsLayout>

@@ -10,11 +10,14 @@ interface ResolveEquationFormPanelProps {
   subEquationInfix: string;
   answer: string;
   submitting: boolean;
+  resolveStepPending: boolean;
+  finishResolutionPending: boolean;
   message: string | null;
   onSubEquationChange: Dispatch<SetStateAction<string>>;
   onAnswerChange: Dispatch<SetStateAction<string>>;
   onValidate: () => void;
   onEmptySet: () => void;
+  onFinishResolution: () => void;
   onReset: () => void;
 }
 
@@ -22,11 +25,14 @@ export const ResolveEquationFormPanel = ({
   subEquationInfix,
   answer,
   submitting,
+  resolveStepPending,
+  finishResolutionPending,
   message,
   onSubEquationChange,
   onAnswerChange,
   onValidate,
   onEmptySet,
+  onFinishResolution,
   onReset,
 }: ResolveEquationFormPanelProps) => {
   const {
@@ -52,7 +58,7 @@ export const ResolveEquationFormPanel = ({
           className="block text-sm font-medium mb-2 px-0"
           style={{ color: COLORS.accentSecondary }}
         >
-          Subecuación = Tu respuesta
+          Ingresa la subecuación de un lado y del otro tu respuesta
         </legend>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
           <div className="flex-1 min-w-0">
@@ -101,7 +107,10 @@ export const ResolveEquationFormPanel = ({
       />
       <div className="flex flex-wrap gap-3">
         <Button type="button" variant="accent" disabled={submitting} onClick={onValidate}>
-          {submitting ? 'Validando...' : 'Validar'}
+          {resolveStepPending ? 'Validando...' : 'Validar paso'}
+        </Button>
+        <Button type="button" variant="accent" disabled={submitting} onClick={onFinishResolution}>
+          {finishResolutionPending ? 'Finalizando...' : 'Terminar resolución'}
         </Button>
         <Button type="button" variant="outline" disabled={submitting} onClick={onEmptySet}>
           S = {'{}'}

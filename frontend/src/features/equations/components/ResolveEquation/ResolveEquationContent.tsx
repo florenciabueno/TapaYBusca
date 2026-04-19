@@ -12,6 +12,8 @@ interface ResolveEquationContentProps {
   subEquationInfix: string;
   answer: string;
   submitting: boolean;
+  resolveStepPending: boolean;
+  finishResolutionPending: boolean;
   message: string | null;
   finished: boolean;
   finishedCode: string | null;
@@ -20,6 +22,7 @@ interface ResolveEquationContentProps {
   onAnswerChange: Dispatch<SetStateAction<string>>;
   onValidate: () => void;
   onEmptySet: () => void;
+  onFinishResolution: () => void;
   onReset: () => void;
 }
 
@@ -30,6 +33,8 @@ export const ResolveEquationContent = ({
   subEquationInfix,
   answer,
   submitting,
+  resolveStepPending,
+  finishResolutionPending,
   message,
   finished,
   finishedCode,
@@ -38,6 +43,7 @@ export const ResolveEquationContent = ({
   onAnswerChange,
   onValidate,
   onEmptySet,
+  onFinishResolution,
   onReset,
 }: ResolveEquationContentProps) => {
   const hasSteps = steps.length > 0;
@@ -64,6 +70,8 @@ export const ResolveEquationContent = ({
       subEquationInfix={subEquationInfix}
       answer={answer}
       submitting={submitting}
+      resolveStepPending={resolveStepPending}
+      finishResolutionPending={finishResolutionPending}
       message={message}
       finished={finished}
       finishedCode={finishedCode}
@@ -72,21 +80,24 @@ export const ResolveEquationContent = ({
       onAnswerChange={onAnswerChange}
       onValidate={onValidate}
       onEmptySet={onEmptySet}
+      onFinishResolution={onFinishResolution}
       onReset={onReset}
     />
   );
 
   return (
-    <div className="w-full min-h-[calc(100vh-7rem)] flex flex-col items-center justify-center">
+    <div className="flex min-h-[calc(100vh-7rem)] w-full flex-col items-center justify-center px-2 py-4">
       {hasSteps ? (
-        <div className="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(280px,24rem)] gap-6 items-stretch">
-          <div className="min-w-0 min-h-0">{workspace}</div>
-          <div className="flex min-h-0 min-w-0 flex-col lg:h-full">
+        <div className="flex w-full max-w-7xl flex-col gap-6 lg:min-h-0 lg:flex-row lg:items-stretch lg:justify-center">
+          <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col">
+            {workspace}
+          </div>
+          <div className="flex min-h-0 w-full min-w-0 flex-col overflow-hidden lg:w-[min(24rem,100%)] lg:flex-shrink-0">
             <ResolveEquationStepsCard steps={steps} />
           </div>
         </div>
       ) : (
-        <div className="w-full max-w-5xl mx-auto">{workspace}</div>
+        <div className="mx-auto w-full max-w-5xl">{workspace}</div>
       )}
     </div>
   );

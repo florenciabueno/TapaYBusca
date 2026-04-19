@@ -20,6 +20,7 @@ router.post('/download', authMiddleware, equationController.downloadEquations.bi
 router.post('/:id/resolve', authMiddleware, equationController.resolveStep.bind(equationController));
 router.get('/:id/resolution', authMiddleware, equationController.getResolution.bind(equationController));
 router.post('/:id/reset-resolution', authMiddleware, equationController.resetResolution.bind(equationController));
+router.post('/:id/finish-resolution', authMiddleware, equationController.finishResolution.bind(equationController));
 router.get('/:id', authMiddleware, equationController.getEquationById.bind(equationController));
 router.post('/', authMiddleware, equationController.createEquation.bind(equationController));
 router.put('/:id', authMiddleware, equationController.updateEquation.bind(equationController));

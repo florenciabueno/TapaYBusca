@@ -5,6 +5,7 @@ export const RESOLUTION_CODES = {
   STEP_CORRECT: 'PC',
   RESULT_CORRECT: 'RC',
   MORE_SOLUTIONS: 'MS',
+  PENDING_FINISH: 'PF',
   RESOLUTION_FINISHED: 'RT',
   STEP_INCORRECT: 'PI',
   RESULT_INCORRECT: 'RI',
@@ -16,17 +17,19 @@ export const RESOLUTION_CODES = {
 } as const;
 
 const CODE_MESSAGES: Record<string, string> = {
-  [RESOLUTION_CODES.STEP_CORRECT]: 'Paso correcto.',
-  [RESOLUTION_CODES.RESULT_CORRECT]: 'Existe otro número que también sirve.',
-  [RESOLUTION_CODES.MORE_SOLUTIONS]: 'Hay más soluciones. Continúa desde la ecuación.',
+  [RESOLUTION_CODES.STEP_CORRECT]: 'Paso correcto',
+  [RESOLUTION_CODES.RESULT_CORRECT]: 'Solución correcta. Podés ingresar otra si aún falta.',
+  [RESOLUTION_CODES.MORE_SOLUTIONS]:
+    'Aún no registraste todas las soluciones del conjunto solución',
+  [RESOLUTION_CODES.PENDING_FINISH]: 'Solución correcta. Podés ingresar otra si aún falta.',
   [RESOLUTION_CODES.RESOLUTION_FINISHED]: '¡Resolución terminada con éxito!',
   [RESOLUTION_CODES.NO_SOLUTION]: '¡No hay ningún número real que sirva!',
   [RESOLUTION_CODES.FIRST_WARNING]: '¿Mmm….Existirá algún número?',
-  [RESOLUTION_CODES.RESULT_REPEATED]: 'Otro número, no el mismo.',
+  [RESOLUTION_CODES.RESULT_REPEATED]: 'Otro número, no el mismo',
   [RESOLUTION_CODES.RESULT_INCORRECT]: '¿Mmm… ¿Estás segur@?',
-  [RESOLUTION_CODES.STEP_INCORRECT]: 'El valor no es correcto para esta subecuación.',
-  [RESOLUTION_CODES.SYNTAX_INCORRECT]: 'La subecuación seleccionada no es válida.',
-  [RESOLUTION_CODES.STEP_REPEATED]: 'Ya ingresaste este paso.',
+  [RESOLUTION_CODES.STEP_INCORRECT]: 'El valor no es correcto para esta subecuación',
+  [RESOLUTION_CODES.SYNTAX_INCORRECT]: 'La subecuación seleccionada no es válida',
+  [RESOLUTION_CODES.STEP_REPEATED]: 'Ya ingresaste este paso',
 };
 
 export function getResolutionFeedbackMessage(code: string): string | null {

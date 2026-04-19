@@ -96,7 +96,14 @@ export const useResolveEquation = (id?: string) => {
     },
   });
 
-  const submitting = resolveStepMutation.isPending || resetResolutionMutation.isPending;
+  const finishResolutionMutation = useMutation({
+    mutationFn: () => equationService.finishResolution(id!, token),
+  });
+
+  const resolveStepPending = resolveStepMutation.isPending;
+  const finishResolutionPending = finishResolutionMutation.isPending;
+  const submitting =
+    resolveStepPending || resetResolutionMutation.isPending || finishResolutionPending;
   const queriesEnabled = Boolean(id && token);
   const loading =
     queriesEnabled && (equationQuery.isLoading || resolutionQuery.isLoading);
@@ -111,13 +118,9 @@ export const useResolveEquation = (id?: string) => {
     if (code === RESOLUTION_CODES.RESOLUTION_FINISHED || code === RESOLUTION_CODES.NO_SOLUTION) {
       setFinished(true);
       setFinishedCode(code);
-    }
-    if (code === RESOLUTION_CODES.RESULT_CORRECT) {
-      setSubEquationInfix('x');
-      setAnswer('');
-    } else {
       setSubEquationInfix('');
       setAnswer('');
+      return;
     }
   };
 
@@ -148,9 +151,9 @@ export const useResolveEquation = (id?: string) => {
       if (result.code === RESOLUTION_CODES.RESOLUTION_FINISHED) {
         setFinished(true);
         setFinishedCode(result.code);
+        setSubEquationInfix('');
+        setAnswer('');
       }
-      setSubEquationInfix('');
-      setAnswer('');
     } catch (e) {
       setMessage(e instanceof Error ? e.message : 'Error al validar');
     }
@@ -166,6 +169,29 @@ export const useResolveEquation = (id?: string) => {
     }
   };
 
+  const handleFinishResolution = async () => {
+    if (!id || !token) return;
+    setMessage(null);
+    try {
+      const result = await finishResolutionMutation.mutateAsync();
+      const fallback = getResolutionFeedbackMessage(result.code);
+      const text =
+        result.code === RESOLUTION_CODES.SYNTAX_INCORRECT && result.message?.trim()
+          ? result.message.trim()
+          : fallback;
+      setMessage(text ?? null);
+      await invalidateEquationQueries();
+      if (result.code === RESOLUTION_CODES.RESOLUTION_FINISHED) {
+        setFinished(true);
+        setFinishedCode(RESOLUTION_CODES.RESOLUTION_FINISHED);
+        setSubEquationInfix('');
+        setAnswer('');
+      }
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : 'Error al finalizar');
+    }
+  };
+
   return {
     token,
     equation,
@@ -176,6 +202,8 @@ export const useResolveEquation = (id?: string) => {
     subEquationInfix,
     answer,
     submitting,
+    resolveStepPending,
+    finishResolutionPending,
     message,
     finished,
     finishedCode,
@@ -183,6 +211,7 @@ export const useResolveEquation = (id?: string) => {
     setAnswer,
     handleValidate,
     handleEmptySet,
+    handleFinishResolution,
     handleReset,
   };
 };

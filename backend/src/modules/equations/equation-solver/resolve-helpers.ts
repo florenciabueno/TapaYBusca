@@ -5,6 +5,29 @@ import { isolateVariable } from './isolate-variable.js';
 import { evaluateTree, listContainsElement } from './evaluate-tree.js';
 import { VARIABLE } from './constants.js';
 
+export function infixContainsVariable(infix: string): boolean {
+  const trimmed = (infix ?? '').trim();
+  if (!trimmed) return false;
+  try {
+    return tokenizeInfix(trimmed).includes(VARIABLE);
+  } catch {
+    return false;
+  }
+}
+
+export function pickExpressionAndAnswer(
+  firstField: string,
+  secondField: string
+): { expressionInfix: string; answerContent: string } {
+  const a = (firstField ?? '').trim();
+  const b = (secondField ?? '').trim();
+  const aVar = infixContainsVariable(a);
+  const bVar = infixContainsVariable(b);
+  if (aVar && !bVar) return { expressionInfix: a, answerContent: b };
+  if (!aVar && bVar) return { expressionInfix: b, answerContent: a };
+  return { expressionInfix: a, answerContent: b };
+}
+
 export function validateSubEquation(
   equationPostfixTokens: string[],
   subEquationPostfix: string[]
@@ -156,12 +179,12 @@ function containsSquareOfVariable(node: { type: string; value: string; left?: un
   return false;
 }
 
-export const validateSubEcuacion = validateSubEquation;
-export const hallarValorDeRespuesta = parseAnswerValues;
-export const evaluar = evaluatePostfixWithVariable;
-export const obtenerResultadoSubEcuacion = getSubEquationResult;
-export const verificarSiPasoTieneSolucion = checkStepHasSolution;
-export const isSoloVariable = isOnlyVariable;
-export const esCuadratica = isQuadratic;
+export function computeEffectiveResolutionSessionId(
+  sessionCurrentResolutionId: number,
+  storedCurrentResolutionId: number,
+  maxExistingSessionId: number
+): number {
+  return Math.max(sessionCurrentResolutionId, storedCurrentResolutionId, maxExistingSessionId);
+}
 
 export { listContainsElement };

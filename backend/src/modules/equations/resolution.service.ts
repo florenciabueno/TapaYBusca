@@ -7,6 +7,8 @@ import { postfixToTree } from './equation-solver/postfix-to-tree.js';
 import {
   RESOLUTION_CODES,
   RESOLUTION_STEP_NO_BRANCH,
+  RESOLUTION_STEP_FINISH_ATTEMPT,
+  RESOLUTION_STEP_INVALID_SUBEQUATION_ATTEMPT,
   EMPTY_SET,
 } from './equation-solver/resolution-constants.js';
 import { DEFAULT_FLOAT_TOLERANCE } from './equation-solver/constants.js';
@@ -19,15 +21,19 @@ import {
   matchAnswerAgainstKnownSolutions,
   replaceSubListInPostfix,
   listContainsElement,
+  pickExpressionAndAnswer,
+  computeEffectiveResolutionSessionId,
 } from './equation-solver/resolve-helpers.js';
+import { listContainsList } from './equation-solver/evaluate-tree.js';
 import { infixToLatex, resultToLatex } from './infix-to-latex.js';
 
 const RESULT_VALUE_SEPARATOR = ';';
-const MESSAGE_RESOLVE_SUBEQUATION_REQUIRED = 'La subecuación es obligatoria.';
+const MESSAGE_RESOLVE_SUBEQUATION_REQUIRED = 'La subecuación es obligatoria';
 const MESSAGE_RESOLVE_EQUATION_NOT_FOUND = 'Ecuación no encontrada.';
 const MESSAGE_RESOLVE_NO_PERMISSIONS = 'No tienes permisos para resolver esta ecuación.';
 const MESSAGE_RESOLVE_INVALID_EQUATION = 'La ecuación almacenada es inválida.';
-const MESSAGE_RESOLVE_MISSING_SOLUTIONS = 'La ecuación no tiene soluciones precalculadas.';
+
+const FINISH_ATTEMPT_SUBEQUATION_KEY = '__finish_attempt__';
 
 type ResolveStepPayload = {
   subEquationInfix?: string;
@@ -94,7 +100,13 @@ export class ResolutionService {
     userId: string,
     payload: ResolveStepPayload
   ): Promise<{ code: string; message?: string }> {
-    const subEquationInfix = payload.subEquationInfix?.trim();
+    const rawSub = (payload.subEquationInfix ?? '').trim();
+    const rawAnswer = (payload.answer ?? '').trim();
+    const picked =
+      rawAnswer === EMPTY_SET
+        ? { expressionInfix: rawSub, answerContent: rawAnswer }
+        : pickExpressionAndAnswer(rawSub, rawAnswer);
+    const subEquationInfix = picked.expressionInfix;
     const subEquationPostfix = this.parseSubEquationPostfix(subEquationInfix);
     if (subEquationPostfix.length === 0) {
       return { code: RESOLUTION_CODES.SYNTAX_INCORRECT, message: MESSAGE_RESOLVE_SUBEQUATION_REQUIRED };
@@ -109,22 +121,33 @@ export class ResolutionService {
       return { code: RESOLUTION_CODES.SYNTAX_INCORRECT, message: MESSAGE_RESOLVE_INVALID_EQUATION };
     }
 
-    const knownSolutions = parseSolutionValues(userEq.equation.solutionValues);
-    if (knownSolutions.length === 0) {
-      return { code: RESOLUTION_CODES.SYNTAX_INCORRECT, message: MESSAGE_RESOLVE_MISSING_SOLUTIONS };
-    }
-    
+    const subEquation = subEquationPostfix.join('');
+    const answerForStep = rawAnswer === EMPTY_SET ? rawAnswer : picked.answerContent;
+
+    const { session, effectiveResolutionId } = await this.loadEffectiveResolutionSession(
+      userEquationId,
+      userEq
+    );
+
     if (!validateSubEquation(equationPostfixTokens, subEquationPostfix)) {
-      return { code: RESOLUTION_CODES.SYNTAX_INCORRECT };
+      return this.persistInvalidSubequationAttempt({
+        userEquationId,
+        userEq,
+        session,
+        effectiveResolutionId,
+        subEquation,
+        subEquationInfix,
+        answerForStep,
+      });
     }
 
-    const session = this.initializeSessionState(userEq);
-    const subEquation = subEquationPostfix.join('');
+    const knownSolutions = parseSolutionValues(userEq.equation.solutionValues);
+
     const isRepeatedStep = await this.isRepeatedSubmittedStep(
       userEquationId,
-      session.currentResolutionId,
+      effectiveResolutionId,
       subEquation,
-      payload.answer
+      answerForStep
     );
     if (isRepeatedStep) {
       return { code: RESOLUTION_CODES.STEP_REPEATED };
@@ -132,12 +155,12 @@ export class ResolutionService {
 
     const evaluation = await this.evaluateStep({
       userEquationId,
-      answer: payload.answer,
+      answer: answerForStep,
       resolutionStepStatus: payload.resolutionStepStatus,
       equationPostfixTokens,
       subEquationPostfix,
       subEquation,
-      currentResolutionId: session.currentResolutionId,
+      currentResolutionId: effectiveResolutionId,
       selectedBranch: session.selectedBranch,
       stateUpdated: session.stateUpdated,
       solutions: knownSolutions,
@@ -145,10 +168,10 @@ export class ResolutionService {
 
     await this.persistResolutionOutcome({
       userEquationId,
-      currentResolutionId: session.currentResolutionId,
+      currentResolutionId: effectiveResolutionId,
       subEquation,
       subEquationInfix,
-      answer: payload.answer,
+      answer: answerForStep,
       resolutionStepStatus: payload.resolutionStepStatus,
       evaluation,
     });
@@ -185,6 +208,97 @@ export class ResolutionService {
       selectedBranch: userEq.selectedBranch ?? '',
       stateUpdated,
     };
+  }
+
+  private async loadEffectiveResolutionSession(
+    userEquationId: string,
+    userEq: { status: string; currentResolutionId?: number | null; selectedBranch?: string | null }
+  ): Promise<{ session: ResolutionSessionState; effectiveResolutionId: number }> {
+    const session = this.initializeSessionState(userEq);
+    const maxExistingSession = await this.equationRepository.getMaxResolutionSessionId(userEquationId);
+    const effectiveResolutionId = computeEffectiveResolutionSessionId(
+      session.currentResolutionId,
+      userEq.currentResolutionId ?? 0,
+      maxExistingSession
+    );
+    return { session, effectiveResolutionId };
+  }
+
+  private needsResolutionStateSync(
+    session: ResolutionSessionState,
+    userEq: { currentResolutionId?: number | null },
+    effectiveResolutionId: number
+  ): boolean {
+    return session.stateUpdated || (userEq.currentResolutionId ?? 0) !== effectiveResolutionId;
+  }
+
+  private async syncInProgressResolutionState(
+    userEquationId: string,
+    effectiveResolutionId: number,
+    selectedBranch: string
+  ): Promise<void> {
+    await this.equationRepository.updateResolutionState(userEquationId, {
+      status: EquationStatus.IN_PROGRESS,
+      currentResolutionId: effectiveResolutionId,
+      selectedBranch,
+    });
+  }
+
+  private async persistInvalidSubequationAttempt(params: {
+    userEquationId: string;
+    userEq: { currentResolutionId?: number | null; selectedBranch?: string | null };
+    session: ResolutionSessionState;
+    effectiveResolutionId: number;
+    subEquation: string;
+    subEquationInfix: string;
+    answerForStep: string;
+  }): Promise<{ code: string }> {
+    const {
+      userEquationId,
+      userEq,
+      session,
+      effectiveResolutionId,
+      subEquation,
+      subEquationInfix,
+      answerForStep,
+    } = params;
+
+    const isRepeated = await this.isRepeatedSubmittedStep(
+      userEquationId,
+      effectiveResolutionId,
+      subEquation,
+      answerForStep
+    );
+    if (isRepeated) {
+      return { code: RESOLUTION_CODES.STEP_REPEATED };
+    }
+
+    if (this.needsResolutionStateSync(session, userEq, effectiveResolutionId)) {
+      await this.syncInProgressResolutionState(
+        userEquationId,
+        effectiveResolutionId,
+        session.selectedBranch
+      );
+    }
+
+    await this.equationRepository.createResolution({
+      userEquationId,
+      resolutionSessionId: effectiveResolutionId,
+      subEquation,
+      subEquationInfix: subEquationInfix,
+      proposedResult: answerForStep,
+      resultValue: '',
+      stepWithoutSolution: false,
+      isCorrect: false,
+      isVariable: false,
+      resolutionSide: RESOLUTION_STEP_INVALID_SUBEQUATION_ATTEMPT,
+    });
+    return { code: RESOLUTION_CODES.SYNTAX_INCORRECT };
+  }
+
+  private isKnownSolutionSetComplete(knownSolutions: number[], logged: number[]): boolean {
+    if (knownSolutions.length === 0) return false;
+    return logged.length === knownSolutions.length && listContainsList(logged, knownSolutions);
   }
 
   private async isRepeatedSubmittedStep(
@@ -400,7 +514,7 @@ export class ResolutionService {
     if (listContainsElement(loggedSolutions, answerValue)) {
       resultCode = RESOLUTION_CODES.RESULT_REPEATED;
     } else if (loggedSolutions.length + 1 === solutionSet.length) {
-      resultCode = RESOLUTION_CODES.RESOLUTION_FINISHED;
+      resultCode = RESOLUTION_CODES.PENDING_FINISH;
     } else if (selectedBranch.length === 0) {
       selectedBranch = args.subEquation;
       stateUpdated = true;
@@ -456,7 +570,7 @@ export class ResolutionService {
         args.resolutionStepStatus
       );
       if (!previousStep) {
-        return makeKnownStepDecision(RESOLUTION_CODES.MORE_SOLUTIONS, true, args.subEquation, true);
+        return makeKnownStepDecision(RESOLUTION_CODES.STEP_CORRECT, true, args.subEquation, true);
       }
     }
 
@@ -480,16 +594,13 @@ export class ResolutionService {
     const solved =
       args.evaluation.resultCode === RESOLUTION_CODES.RESOLUTION_FINISHED ||
       args.evaluation.resultCode === RESOLUTION_CODES.NO_SOLUTION;
-    const stateUpdated = args.evaluation.stateUpdated || solved;
     const newStatus = solved ? EquationStatus.SOLVED : EquationStatus.IN_PROGRESS;
 
-    if (stateUpdated) {
-      await this.equationRepository.updateResolutionState(args.userEquationId, {
-        status: newStatus,
-        currentResolutionId: args.currentResolutionId,
-        selectedBranch: args.evaluation.selectedBranch,
-      });
-    }
+    await this.equationRepository.updateResolutionState(args.userEquationId, {
+      status: newStatus,
+      currentResolutionId: args.currentResolutionId,
+      selectedBranch: args.evaluation.selectedBranch,
+    });
 
     await this.equationRepository.createResolution({
       userEquationId: args.userEquationId,
@@ -595,24 +706,84 @@ export class ResolutionService {
       userEquationId,
       currentResolutionId
     );
-    const steps = rawSteps.map((step) => ({
-      subEquation: step.subEquation,
-      proposedResult: step.proposedResult,
-      isCorrect: step.isCorrect,
-      subEquationLatex:
-        step.subEquationInfix?.trim() ? infixToLatex(step.subEquationInfix.trim()) : undefined,
-      resultLatex: resultToLatex(step.proposedResult),
-    }));
+    const steps = rawSteps.map((step) => {
+      const finishAttempt = step.resolutionSide === RESOLUTION_STEP_FINISH_ATTEMPT;
+      const infix = step.subEquationInfix?.trim() ?? '';
+      return {
+        subEquation: step.subEquation,
+        proposedResult: step.proposedResult,
+        isCorrect: step.isCorrect,
+        finishAttempt,
+        subEquationLatex:
+          finishAttempt || !infix ? undefined : infixToLatex(infix),
+        resultLatex: finishAttempt ? undefined : resultToLatex(step.proposedResult),
+      };
+    });
     const solutionSet = await this.equationRepository.getDistinctLoggedSolutions(
       userEquationId,
       currentResolutionId
     );
+    const expectedDistinctSolutionCount = [...new Set(parseSolutionValues(userEq.equation.solutionValues))].length;
     return {
       userEquation: userEq,
       steps,
       solutionSet,
+      expectedDistinctSolutionCount,
       currentResolutionId,
     };
+  }
+
+  async finishResolution(userEquationId: string, userId: string): Promise<{ code: string; message?: string }> {
+    const userEq = await this.equationRepository.findByIdWithEquation(userEquationId);
+    if (!userEq) {
+      return { code: RESOLUTION_CODES.SYNTAX_INCORRECT, message: MESSAGE_RESOLVE_EQUATION_NOT_FOUND };
+    }
+    if (userEq.userId !== userId) {
+      return { code: RESOLUTION_CODES.SYNTAX_INCORRECT, message: MESSAGE_RESOLVE_NO_PERMISSIONS };
+    }
+    if (userEq.status === EquationStatus.SOLVED) {
+      return { code: RESOLUTION_CODES.RESOLUTION_FINISHED };
+    }
+
+    const knownSolutions = [...new Set(parseSolutionValues(userEq.equation.solutionValues))];
+
+    const { effectiveResolutionId } = await this.loadEffectiveResolutionSession(userEquationId, userEq);
+
+    const logged = await this.equationRepository.getDistinctLoggedSolutions(
+      userEquationId,
+      effectiveResolutionId
+    );
+
+    const complete = this.isKnownSolutionSetComplete(knownSolutions, logged);
+
+    if (!complete) {
+      await this.equationRepository.createResolution({
+        userEquationId,
+        resolutionSessionId: effectiveResolutionId,
+        subEquation: FINISH_ATTEMPT_SUBEQUATION_KEY,
+        subEquationInfix: 'Terminar resolución',
+        proposedResult: '',
+        resultValue: '',
+        stepWithoutSolution: false,
+        isCorrect: false,
+        isVariable: false,
+        resolutionSide: RESOLUTION_STEP_FINISH_ATTEMPT,
+      });
+      await this.syncInProgressResolutionState(
+        userEquationId,
+        effectiveResolutionId,
+        userEq.selectedBranch ?? ''
+      );
+      return { code: RESOLUTION_CODES.MORE_SOLUTIONS };
+    }
+
+    await this.equationRepository.updateResolutionState(userEquationId, {
+      status: EquationStatus.SOLVED,
+      currentResolutionId: effectiveResolutionId,
+      selectedBranch: userEq.selectedBranch ?? '',
+    });
+
+    return { code: RESOLUTION_CODES.RESOLUTION_FINISHED };
   }
 
   async resetResolution(userEquationId: string, userId: string): Promise<boolean> {

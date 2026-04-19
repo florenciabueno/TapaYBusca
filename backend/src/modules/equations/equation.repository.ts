@@ -117,6 +117,14 @@ export class EquationRepository {
     });
   }
 
+  async getMaxResolutionSessionId(userEquationId: string): Promise<number> {
+    const agg = await prisma.resolution.aggregate({
+      where: { userEquationId },
+      _max: { resolutionSessionId: true },
+    });
+    return agg._max.resolutionSessionId ?? 0;
+  }
+
   async getResolutionCounts(
     pairs: Array<{ userEquationId: string; resolutionSessionId: number }>
   ): Promise<Map<string, number>> {

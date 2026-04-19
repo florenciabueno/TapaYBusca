@@ -10,6 +10,8 @@ export interface ResolveEquationWorkspaceProps {
   subEquationInfix: string;
   answer: string;
   submitting: boolean;
+  resolveStepPending: boolean;
+  finishResolutionPending: boolean;
   message: string | null;
   finished: boolean;
   finishedCode: string | null;
@@ -18,6 +20,7 @@ export interface ResolveEquationWorkspaceProps {
   onAnswerChange: Dispatch<SetStateAction<string>>;
   onValidate: () => void;
   onEmptySet: () => void;
+  onFinishResolution: () => void;
   onReset: () => void;
 }
 
@@ -27,6 +30,8 @@ export const ResolveEquationWorkspace = ({
   subEquationInfix,
   answer,
   submitting,
+  resolveStepPending,
+  finishResolutionPending,
   message,
   finished,
   finishedCode,
@@ -35,6 +40,7 @@ export const ResolveEquationWorkspace = ({
   onAnswerChange,
   onValidate,
   onEmptySet,
+  onFinishResolution,
   onReset,
 }: ResolveEquationWorkspaceProps) => {
   return (
@@ -57,11 +63,14 @@ export const ResolveEquationWorkspace = ({
               subEquationInfix={subEquationInfix}
               answer={answer}
               submitting={submitting}
+              resolveStepPending={resolveStepPending}
+              finishResolutionPending={finishResolutionPending}
               message={message}
               onSubEquationChange={onSubEquationChange}
               onAnswerChange={onAnswerChange}
               onValidate={onValidate}
               onEmptySet={onEmptySet}
+              onFinishResolution={onFinishResolution}
               onReset={onReset}
             />
           )}

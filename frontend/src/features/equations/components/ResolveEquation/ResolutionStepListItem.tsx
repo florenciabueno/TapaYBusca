@@ -24,21 +24,29 @@ export const ResolutionStepListItem = ({ step, stepNumber }: ResolutionStepListI
         {stepNumber}.
       </span>
       <span className="inline-flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
-        {step.subEquationLatex ? (
-          <MathExpression expression={step.subEquationLatex} />
+        {step.finishAttempt ? (
+          <span className="text-sm" style={{ color: COLORS.gray[700] }}>
+            Terminar resolución — intento incompleto
+          </span>
         ) : (
-          <span>{step.subEquation}</span>
-        )}
-        <span>=</span>
-        {step.proposedResult === '{}' ? (
           <>
-            <span>S = </span>
-            <MathExpression expression="\emptyset" />
+            {step.subEquationLatex ? (
+              <MathExpression expression={step.subEquationLatex} />
+            ) : (
+              <span>{step.subEquation}</span>
+            )}
+            <span>=</span>
+            {step.proposedResult === '{}' ? (
+              <>
+                <span>S = </span>
+                <MathExpression expression="\emptyset" />
+              </>
+            ) : step.resultLatex ? (
+              <MathExpression expression={step.resultLatex} />
+            ) : (
+              <span>{step.proposedResult}</span>
+            )}
           </>
-        ) : step.resultLatex ? (
-          <MathExpression expression={step.resultLatex} />
-        ) : (
-          <span>{step.proposedResult}</span>
         )}
       </span>
       <span
