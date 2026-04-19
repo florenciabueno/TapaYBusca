@@ -5,6 +5,33 @@ import { isolateVariable } from './isolate-variable.js';
 import { evaluateTree, listContainsElement } from './evaluate-tree.js';
 import { VARIABLE } from './constants.js';
 
+export function infixContainsVariable(infix: string): boolean {
+  const trimmed = (infix ?? '').trim();
+  if (!trimmed) return false;
+  try {
+    return tokenizeInfix(trimmed).includes(VARIABLE);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Chooses which field is the subexpression containing x and which is the other side (constant / numeric step).
+ * If the student puts the value on the left and the expression on the right, we swap.
+ */
+export function pickExpressionAndAnswer(
+  firstField: string,
+  secondField: string
+): { expressionInfix: string; answerContent: string } {
+  const a = (firstField ?? '').trim();
+  const b = (secondField ?? '').trim();
+  const aVar = infixContainsVariable(a);
+  const bVar = infixContainsVariable(b);
+  if (aVar && !bVar) return { expressionInfix: a, answerContent: b };
+  if (!aVar && bVar) return { expressionInfix: b, answerContent: a };
+  return { expressionInfix: a, answerContent: b };
+}
+
 export function validateSubEquation(
   equationPostfixTokens: string[],
   subEquationPostfix: string[]

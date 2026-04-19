@@ -15,7 +15,6 @@ export const ResolveEquationPage = () => {
     equation,
     steps,
     solutionSet,
-    expectedDistinctSolutionCount,
     loading,
     error,
     subEquationInfix,
@@ -78,7 +77,6 @@ export const ResolveEquationPage = () => {
         equationExpression={equation.equation}
         steps={steps}
         solutionSet={solutionSet}
-        expectedDistinctSolutionCount={expectedDistinctSolutionCount}
         subEquationInfix={subEquationInfix}
         answer={answer}
         submitting={submitting}

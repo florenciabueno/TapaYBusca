@@ -16,7 +16,6 @@ export interface ResolveEquationWorkspaceProps {
   finished: boolean;
   finishedCode: string | null;
   solutionSet: number[];
-  expectedDistinctSolutionCount: number;
   onSubEquationChange: Dispatch<SetStateAction<string>>;
   onAnswerChange: Dispatch<SetStateAction<string>>;
   onValidate: () => void;
@@ -37,7 +36,6 @@ export const ResolveEquationWorkspace = ({
   finished,
   finishedCode,
   solutionSet,
-  expectedDistinctSolutionCount,
   onSubEquationChange,
   onAnswerChange,
   onValidate,
@@ -68,8 +66,6 @@ export const ResolveEquationWorkspace = ({
               resolveStepPending={resolveStepPending}
               finishResolutionPending={finishResolutionPending}
               message={message}
-              solutionSet={solutionSet}
-              expectedDistinctSolutionCount={expectedDistinctSolutionCount}
               onSubEquationChange={onSubEquationChange}
               onAnswerChange={onAnswerChange}
               onValidate={onValidate}

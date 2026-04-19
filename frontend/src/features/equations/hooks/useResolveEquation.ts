@@ -35,8 +35,6 @@ export const useResolveEquation = (id?: string) => {
   const equation: Equation | null = equationQuery.data ?? null;
   const steps: ResolutionStep[] = resolutionQuery.data?.steps ?? [];
   const solutionSet: number[] = resolutionQuery.data?.solutionSet ?? [];
-  const expectedDistinctSolutionCount =
-    resolutionQuery.data?.expectedDistinctSolutionCount ?? 0;
 
   useEffect(() => {
     setSubEquationInfix('');
@@ -124,20 +122,6 @@ export const useResolveEquation = (id?: string) => {
       setAnswer('');
       return;
     }
-    if (code === RESOLUTION_CODES.RESULT_CORRECT) {
-      setSubEquationInfix('x');
-      setAnswer('');
-      return;
-    }
-    if (
-      code === RESOLUTION_CODES.STEP_CORRECT ||
-      code === RESOLUTION_CODES.MORE_SOLUTIONS ||
-      code === RESOLUTION_CODES.PENDING_FINISH
-    ) {
-      setSubEquationInfix('');
-      setAnswer('');
-      return;
-    }
   };
 
   const handleValidate = async () => {
@@ -196,8 +180,8 @@ export const useResolveEquation = (id?: string) => {
           ? result.message.trim()
           : fallback;
       setMessage(text ?? null);
+      await invalidateEquationQueries();
       if (result.code === RESOLUTION_CODES.RESOLUTION_FINISHED) {
-        await invalidateEquationQueries();
         setFinished(true);
         setFinishedCode(RESOLUTION_CODES.RESOLUTION_FINISHED);
         setSubEquationInfix('');
@@ -213,7 +197,6 @@ export const useResolveEquation = (id?: string) => {
     equation,
     steps,
     solutionSet,
-    expectedDistinctSolutionCount,
     loading,
     error,
     subEquationInfix,

@@ -17,6 +17,9 @@ export type ResolutionCode = (typeof RESOLUTION_CODES)[keyof typeof RESOLUTION_C
 
 export const RESOLUTION_STEP_NO_BRANCH = 1;
 export const RESOLUTION_STEP_BRANCH = 2;
+export const RESOLUTION_STEP_FINISH_ATTEMPT = 3;
+/** Intento de validar una subexpresión que no forma parte válida de la ecuación principal */
+export const RESOLUTION_STEP_INVALID_SUBEQUATION_ATTEMPT = 4;
 export const EMPTY_SET = '{}';
 
 export const NO_BIFURCO_RESOLUCION = RESOLUTION_STEP_NO_BRANCH;

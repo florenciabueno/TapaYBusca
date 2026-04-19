@@ -236,6 +236,7 @@ export const equationService = {
       subEquation: string;
       proposedResult: string;
       isCorrect: boolean;
+      finishAttempt?: boolean;
       subEquationLatex?: string;
       resultLatex?: string;
     }>;
