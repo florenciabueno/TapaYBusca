@@ -34,6 +34,7 @@ const MESSAGE_RESOLVE_NO_PERMISSIONS = 'No tienes permisos para resolver esta ec
 const MESSAGE_RESOLVE_INVALID_EQUATION = 'La ecuación almacenada es inválida.';
 
 const FINISH_ATTEMPT_SUBEQUATION_KEY = '__finish_attempt__';
+const EMPTY_SET_WITHOUT_SUBEQUATION_KEY = '__empty_set_no_sub__';
 
 type ResolveStepPayload = {
   subEquationInfix?: string;
@@ -102,13 +103,13 @@ export class ResolutionService {
   ): Promise<{ code: string; message?: string }> {
     const rawSub = (payload.subEquationInfix ?? '').trim();
     const rawAnswer = (payload.answer ?? '').trim();
-    const picked =
-      rawAnswer === EMPTY_SET
-        ? { expressionInfix: rawSub, answerContent: rawAnswer }
-        : pickExpressionAndAnswer(rawSub, rawAnswer);
+    const isEmptySetAnswer = rawAnswer === EMPTY_SET;
+    const picked = isEmptySetAnswer
+      ? { expressionInfix: rawSub, answerContent: rawAnswer }
+      : pickExpressionAndAnswer(rawSub, rawAnswer);
     const subEquationInfix = picked.expressionInfix;
     const subEquationPostfix = this.parseSubEquationPostfix(subEquationInfix);
-    if (subEquationPostfix.length === 0) {
+    if (subEquationPostfix.length === 0 && !isEmptySetAnswer) {
       return { code: RESOLUTION_CODES.SYNTAX_INCORRECT, message: MESSAGE_RESOLVE_SUBEQUATION_REQUIRED };
     }
 
@@ -121,15 +122,20 @@ export class ResolutionService {
       return { code: RESOLUTION_CODES.SYNTAX_INCORRECT, message: MESSAGE_RESOLVE_INVALID_EQUATION };
     }
 
-    const subEquation = subEquationPostfix.join('');
-    const answerForStep = rawAnswer === EMPTY_SET ? rawAnswer : picked.answerContent;
+    const subEquation =
+      subEquationPostfix.length === 0 && isEmptySetAnswer
+        ? EMPTY_SET_WITHOUT_SUBEQUATION_KEY
+        : subEquationPostfix.join('');
+    const answerForStep = isEmptySetAnswer ? rawAnswer : picked.answerContent;
 
     const { session, effectiveResolutionId } = await this.loadEffectiveResolutionSession(
       userEquationId,
       userEq
     );
 
-    if (!validateSubEquation(equationPostfixTokens, subEquationPostfix)) {
+    const skipSubequationValidation = isEmptySetAnswer && subEquationPostfix.length === 0;
+    const subEquationInfixForStep = skipSubequationValidation ? '\\emptyset' : subEquationInfix.trim();
+    if (!skipSubequationValidation && !validateSubEquation(equationPostfixTokens, subEquationPostfix)) {
       return this.persistInvalidSubequationAttempt({
         userEquationId,
         userEq,
@@ -170,7 +176,7 @@ export class ResolutionService {
       userEquationId,
       currentResolutionId: effectiveResolutionId,
       subEquation,
-      subEquationInfix,
+      subEquationInfix: subEquationInfixForStep,
       answer: answerForStep,
       resolutionStepStatus: payload.resolutionStepStatus,
       evaluation,
@@ -329,7 +335,15 @@ export class ResolutionService {
     solutions: number[];
   }): Promise<StepEvaluation> {
     if (args.answer === EMPTY_SET) {
-      return this.evaluateEmptySetStep(args);
+      return this.evaluateEmptySetStep({
+        userEquationId: args.userEquationId,
+        equationPostfixTokens: args.equationPostfixTokens,
+        subEquationPostfix: args.subEquationPostfix,
+        currentResolutionId: args.currentResolutionId,
+        selectedBranch: args.selectedBranch,
+        stateUpdated: args.stateUpdated,
+        knownSolutions: args.solutions,
+      });
     }
     return this.evaluateStandardStep(args);
   }
@@ -341,6 +355,7 @@ export class ResolutionService {
     currentResolutionId: number;
     selectedBranch: string;
     stateUpdated: boolean;
+    knownSolutions: number[];
   }): Promise<StepEvaluation> {
     let resultCode: string = RESOLUTION_CODES.STEP_INCORRECT;
     let isCorrect = false;
@@ -350,12 +365,16 @@ export class ResolutionService {
       args.currentResolutionId
     );
     if (loggedResolutions.length === 0) {
-      const { hasSolution } = checkStepHasSolution(args.equationPostfixTokens, args.subEquationPostfix);
-      if (hasSolution) {
+      if (args.knownSolutions.length > 0) {
         resultCode = RESOLUTION_CODES.RESULT_INCORRECT;
       } else {
-        resultCode = RESOLUTION_CODES.RESOLUTION_FINISHED;
-        isCorrect = true;
+        const { hasSolution } = checkStepHasSolution(args.equationPostfixTokens, args.subEquationPostfix);
+        if (hasSolution) {
+          resultCode = RESOLUTION_CODES.RESULT_INCORRECT;
+        } else {
+          resultCode = RESOLUTION_CODES.RESOLUTION_FINISHED;
+          isCorrect = true;
+        }
       }
     } else {
       resultCode = RESOLUTION_CODES.RESULT_INCORRECT;

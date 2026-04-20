@@ -148,12 +148,7 @@ export const useResolveEquation = (id?: string) => {
         answer: '{}',
         resolutionStepStatus: RESOLUTION_NO_BRANCH_STEP,
       });
-      if (result.code === RESOLUTION_CODES.RESOLUTION_FINISHED) {
-        setFinished(true);
-        setFinishedCode(result.code);
-        setSubEquationInfix('');
-        setAnswer('');
-      }
+      applyResolveResult(result.code);
     } catch (e) {
       setMessage(e instanceof Error ? e.message : 'Error al validar');
     }

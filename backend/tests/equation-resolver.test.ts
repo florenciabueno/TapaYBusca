@@ -463,6 +463,42 @@ describe('Equation resolver API', () => {
       });
     });
 
+    it('returns RT when empty-set is correct without subequation (no real solutions)', async () => {
+      repoMocks.findByIdWithEquation.mockResolvedValue(
+        makeUserEquation({
+          equation: {
+            infixExpression: DEFAULT_EQUATIONS.noRealSolution,
+            postfixExpression: DEFAULT_EQUATIONS.noRealSolution,
+            solutionValues: [],
+          },
+        })
+      );
+
+      const response = await request(app)
+        .post('/api/equations/ue-1/resolve')
+        .set(authHeader(token))
+        .send({
+          answer: EMPTY_SET,
+          resolutionStepStatus: RESOLUTION_STEP_NO_BRANCH,
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({ code: RESOLUTION_CODES.RESOLUTION_FINISHED });
+    });
+
+    it('returns RI when empty-set without subequation but equation has known solutions', async () => {
+      const response = await request(app)
+        .post('/api/equations/ue-1/resolve')
+        .set(authHeader(token))
+        .send({
+          answer: EMPTY_SET,
+          resolutionStepStatus: RESOLUTION_STEP_NO_BRANCH,
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({ code: RESOLUTION_CODES.RESULT_INCORRECT });
+    });
+
     it('returns PC for first correct non-variable quadratic branch step (sin mensaje MS hasta finalizar)', async () => {
       repoMocks.findByIdWithEquation.mockResolvedValue(
         makeUserEquation({

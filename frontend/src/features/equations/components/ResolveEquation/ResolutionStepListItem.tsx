@@ -28,6 +28,11 @@ export const ResolutionStepListItem = ({ step, stepNumber }: ResolutionStepListI
           <span className="text-sm" style={{ color: COLORS.gray[700] }}>
             Terminar resolución — intento incompleto
           </span>
+        ) : step.proposedResult === '{}' ? (
+          <>
+            <span>S = </span>
+            <MathExpression expression="\emptyset" />
+          </>
         ) : (
           <>
             {step.subEquationLatex ? (
@@ -36,12 +41,7 @@ export const ResolutionStepListItem = ({ step, stepNumber }: ResolutionStepListI
               <span>{step.subEquation}</span>
             )}
             <span>=</span>
-            {step.proposedResult === '{}' ? (
-              <>
-                <span>S = </span>
-                <MathExpression expression="\emptyset" />
-              </>
-            ) : step.resultLatex ? (
+            {step.resultLatex ? (
               <MathExpression expression={step.resultLatex} />
             ) : (
               <span>{step.proposedResult}</span>
