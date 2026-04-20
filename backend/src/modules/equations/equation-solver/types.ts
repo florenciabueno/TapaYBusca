@@ -24,6 +24,6 @@ export const ERROR_CODES = {
 export const ERROR_MESSAGES: Record<string, string> = {
   [ERROR_CODES.MISSING_PARENTHESES]: 'Paréntesis desbalanceados.',
   [ERROR_CODES.MALFORMED_EQUATION]: 'La ecuación está mal formada o no pudo resolverse.',
-  [ERROR_CODES.INFINITE_RESULT]: 'La ecuación produce un resultado no válido (infinito o indeterminado).',
+  [ERROR_CODES.INFINITE_RESULT]: 'Hay una división por cero o un resultado no válido (infinito o indeterminado).',
   [ERROR_CODES.NO_SOLUTION]: 'La ecuación no tiene solución real.',
 };

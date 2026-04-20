@@ -6,6 +6,7 @@ import {
   EquationStatus,
   EquationOrigin,
 } from './equation.types.js';
+import { RESOLUTION_STEP_NO_BRANCH } from './equation-solver/resolution-constants.js';
 
 type TxClient = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
 
@@ -204,6 +205,21 @@ export class EquationRepository {
   async countStepsWithoutSolution(userEquationId: string, resolutionSessionId: number): Promise<number> {
     return prisma.resolution.count({
       where: { userEquationId, resolutionSessionId, stepWithoutSolution: true },
+    });
+  }
+
+  async countEmptySolutionWrongNumericAttempts(
+    userEquationId: string,
+    resolutionSessionId: number
+  ): Promise<number> {
+    return prisma.resolution.count({
+      where: {
+        userEquationId,
+        resolutionSessionId,
+        stepWithoutSolution: true,
+        isCorrect: false,
+        resolutionSide: RESOLUTION_STEP_NO_BRANCH,
+      },
     });
   }
 

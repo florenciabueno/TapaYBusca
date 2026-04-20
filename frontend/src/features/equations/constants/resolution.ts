@@ -23,8 +23,9 @@ const CODE_MESSAGES: Record<string, string> = {
     'Aún no registraste todas las soluciones del conjunto solución',
   [RESOLUTION_CODES.PENDING_FINISH]: 'Solución correcta. Podés ingresar otra si aún falta.',
   [RESOLUTION_CODES.RESOLUTION_FINISHED]: '¡Resolución terminada con éxito!',
-  [RESOLUTION_CODES.NO_SOLUTION]: '¡No hay ningún número real que sirva!',
-  [RESOLUTION_CODES.FIRST_WARNING]: '¿Mmm….Existirá algún número?',
+  [RESOLUTION_CODES.NO_SOLUTION]:
+    'La ecuación no tiene solución real. El conjunto solución es el conjunto vacío (∅).',
+  [RESOLUTION_CODES.FIRST_WARNING]: '¿La ecuación tendrá solución real?',
   [RESOLUTION_CODES.RESULT_REPEATED]: 'Otro número, no el mismo',
   [RESOLUTION_CODES.RESULT_INCORRECT]: '¿Mmm… ¿Estás segur@?',
   [RESOLUTION_CODES.STEP_INCORRECT]: 'El valor no es correcto para esta subecuación',

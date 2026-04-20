@@ -229,7 +229,8 @@ const INVALID_EQUATIONS: Array<{ equation: string; description: string }> = [
 ];
 
 
-const EQUATIONS_NO_SOLUTION: Array<{ equation: string; reason: string }> = [
+/** Conjunto solución vacío en ℝ: deben poder darse de alta (solutionValues []). */
+const EQUATIONS_EMPTY_REAL_SOLUTION: Array<{ equation: string; reason: string }> = [
   { equation: '((pot2(x)+9)/(5))=1', reason: '(x²+9)/5=1 → x²=-4 sin solución real' },
   { equation: 'pot2(x)=-9', reason: 'x² no puede ser negativo' },
   { equation: 'x^2=-1', reason: 'x² no puede ser negativo' },
@@ -250,6 +251,10 @@ const EQUATIONS_NO_SOLUTION: Array<{ equation: string; reason: string }> = [
   { equation: '1/x=0', reason: '1/x nunca es 0 en reales' },
   { equation: '5/(x+1)=0', reason: 'cociente constante/expr nunca es 0' },
   { equation: '((10)/(x))=0', reason: 'cociente constante/expr nunca es 0' },
+];
+
+const EQUATIONS_LITERAL_DIVISION_BY_ZERO: Array<{ equation: string; description: string }> = [
+  { equation: 'x=((5)/(0))', description: 'divisor constante cero' },
 ];
 
 describe('Equations API', () => {
@@ -320,13 +325,28 @@ describe('Equations API', () => {
       });
     });
 
-    describe('equations with no solution - must be rejected with 400', () => {
-      EQUATIONS_NO_SOLUTION.forEach(({ equation, reason }) => {
-        it(`rejects no solution: ${equation} (${reason})`, async () => {
+    describe('equations with empty real solution set - must be accepted with 201', () => {
+      EQUATIONS_EMPTY_REAL_SOLUTION.forEach(({ equation, reason }) => {
+        it(`creates empty-solution equation: ${equation} (${reason})`, async () => {
+          const response = await createEquation(app, token, equation);
+          expect(response.status).toBe(201);
+          expect(response.body).toMatchObject({
+            equation: infixToLatex(equation.trim()),
+            origin: 'CREATED',
+            status: 'NOT_STARTED',
+            isActive: true,
+          });
+        });
+      });
+    });
+
+    describe('literal division by zero - must be rejected with 400', () => {
+      EQUATIONS_LITERAL_DIVISION_BY_ZERO.forEach(({ equation, description }) => {
+        it(`rejects: ${description} (${equation})`, async () => {
           const response = await createEquation(app, token, equation);
           expect(response.status).toBe(400);
           expect(response.body).toHaveProperty('error');
-          expect(response.body.error).toBeTruthy();
+          expect(String(response.body.error)).toMatch(/divisi|infinit|indetermin|no válid/i);
         });
       });
     });
