@@ -1,17 +1,22 @@
+import type { TreeNode } from './types.js';
 import { ERROR_CODES, ERROR_MESSAGES } from './types.js';
 import { verifiedSolutions } from './verify-solutions.js';
+import { equationTreeHasLiteralDivisionByZero } from './literal-division-by-zero.js';
 
-export function hasInfiniteResult(solutions: number[]): boolean {
-  return solutions.some(
-    (v) => !Number.isFinite(v) || v === Infinity || v === -Infinity || Number.isNaN(v)
-  );
+export function hasInfinityInResults(solutions: number[]): boolean {
+  return solutions.some((v) => v === Infinity || v === -Infinity);
+}
+
+export function finiteSolutionCandidates(rawResults: number[]): number[] {
+  return rawResults.filter((v) => Number.isFinite(v) && !Number.isNaN(v));
 }
 
 export function checkSolutions(
   rawResults: number[],
-  infixEquation: string
+  infixEquation: string,
+  equationRoot?: TreeNode | null
 ): { ok: boolean; solutions: number[]; errorCode?: string; message?: string } {
-  if (hasInfiniteResult(rawResults)) {
+  if (equationRoot && equationTreeHasLiteralDivisionByZero(equationRoot)) {
     return {
       ok: false,
       solutions: [],
@@ -19,8 +24,7 @@ export function checkSolutions(
       message: ERROR_MESSAGES[ERROR_CODES.INFINITE_RESULT],
     };
   }
-  const verified = verifiedSolutions(rawResults, infixEquation);
-  if (rawResults.length > 0 && verified.length === 0) {
+  if (hasInfinityInResults(rawResults)) {
     return {
       ok: false,
       solutions: [],
@@ -28,13 +32,10 @@ export function checkSolutions(
       message: ERROR_MESSAGES[ERROR_CODES.INFINITE_RESULT],
     };
   }
+  const candidates = finiteSolutionCandidates(rawResults);
+  const verified = verifiedSolutions(candidates, infixEquation);
   if (verified.length === 0) {
-    return {
-      ok: false,
-      solutions: [],
-      errorCode: ERROR_CODES.NO_SOLUTION,
-      message: ERROR_MESSAGES[ERROR_CODES.NO_SOLUTION],
-    };
+    return { ok: true, solutions: [] };
   }
   return { ok: true, solutions: verified };
 }

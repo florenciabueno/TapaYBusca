@@ -28,6 +28,7 @@ vi.mock('../src/modules/equations/equation.repository.js', () => {
   const getDistinctLoggedSolutions = vi.fn();
   const getPreviousStep = vi.fn();
   const countStepsWithoutSolution = vi.fn();
+  const countEmptySolutionWrongNumericAttempts = vi.fn();
   const canUserModify = vi.fn();
   const deleteResolutionsByUserEquation = vi.fn();
   const getMaxResolutionSessionId = vi.fn();
@@ -41,6 +42,7 @@ vi.mock('../src/modules/equations/equation.repository.js', () => {
       getDistinctLoggedSolutions = getDistinctLoggedSolutions;
       getPreviousStep = getPreviousStep;
       countStepsWithoutSolution = countStepsWithoutSolution;
+      countEmptySolutionWrongNumericAttempts = countEmptySolutionWrongNumericAttempts;
       canUserModify = canUserModify;
       deleteResolutionsByUserEquation = deleteResolutionsByUserEquation;
       getMaxResolutionSessionId = getMaxResolutionSessionId;
@@ -53,6 +55,7 @@ vi.mock('../src/modules/equations/equation.repository.js', () => {
       getDistinctLoggedSolutions,
       getPreviousStep,
       countStepsWithoutSolution,
+      countEmptySolutionWrongNumericAttempts,
       canUserModify,
       deleteResolutionsByUserEquation,
       getMaxResolutionSessionId,
@@ -122,6 +125,23 @@ describe('Equation resolver API', () => {
     repoMocks.getDistinctLoggedSolutions.mockResolvedValue([]);
     repoMocks.getPreviousStep.mockResolvedValue(null);
     repoMocks.countStepsWithoutSolution.mockResolvedValue(0);
+    repoMocks.countEmptySolutionWrongNumericAttempts.mockImplementation(async () => {
+      const calls = repoMocks.createResolution.mock.calls as Array<
+        [
+          {
+            stepWithoutSolution?: boolean;
+            isCorrect?: boolean;
+            resolutionSide?: number;
+          },
+        ]
+      >;
+      return calls.filter(
+        (c) =>
+          c[0]?.stepWithoutSolution === true &&
+          c[0]?.isCorrect === false &&
+          c[0]?.resolutionSide === RESOLUTION_STEP_NO_BRANCH
+      ).length;
+    });
     repoMocks.canUserModify.mockResolvedValue(true);
     repoMocks.deleteResolutionsByUserEquation.mockResolvedValue(undefined);
     repoMocks.getMaxResolutionSessionId.mockResolvedValue(0);
@@ -484,6 +504,103 @@ describe('Equation resolver API', () => {
 
       expect(response.status).toBe(200);
       expect(response.body).toEqual({ code: RESOLUTION_CODES.RESOLUTION_FINISHED });
+    });
+
+    it('returns RT for empty-set with subequation when equation has no real solutions (any moment)', async () => {
+      repoMocks.findByIdWithEquation.mockResolvedValue(
+        makeUserEquation({
+          equation: {
+            infixExpression: 'pot2(x)+1=0',
+            postfixExpression: 'pot2(x)+1=0',
+            solutionValues: [],
+          },
+        })
+      );
+
+      const response = await request(app)
+        .post('/api/equations/ue-1/resolve')
+        .set(authHeader(token))
+        .send({
+          subEquationInfix: 'pot2(x)',
+          answer: EMPTY_SET,
+          resolutionStepStatus: RESOLUTION_STEP_NO_BRANCH,
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({ code: RESOLUTION_CODES.RESOLUTION_FINISHED });
+    });
+
+    it('empty-solution equation: six wrong numeric answers on x → PI, PI, PA, PI, PI, SS and session solved', async () => {
+      repoMocks.findByIdWithEquation.mockResolvedValue(
+        makeUserEquation({
+          equation: {
+            infixExpression: 'pot2(x)+1=0',
+            postfixExpression: 'pot2(x)+1=0',
+            solutionValues: [],
+          },
+        })
+      );
+      const codes: string[] = [];
+      for (let i = 0; i < 6; i++) {
+        const response = await request(app)
+          .post('/api/equations/ue-1/resolve')
+          .set(authHeader(token))
+          .send({
+            subEquationInfix: 'x',
+            answer: String(i + 2),
+            resolutionStepStatus: RESOLUTION_STEP_NO_BRANCH,
+          });
+        expect(response.status).toBe(200);
+        codes.push(response.body.code);
+      }
+      expect(codes).toEqual([
+        RESOLUTION_CODES.STEP_INCORRECT,
+        RESOLUTION_CODES.STEP_INCORRECT,
+        RESOLUTION_CODES.FIRST_WARNING,
+        RESOLUTION_CODES.STEP_INCORRECT,
+        RESOLUTION_CODES.STEP_INCORRECT,
+        RESOLUTION_CODES.NO_SOLUTION,
+      ]);
+      expect(repoMocks.updateResolutionState).toHaveBeenCalledWith(
+        'ue-1',
+        expect.objectContaining({ status: EquationStatus.SOLVED })
+      );
+      const lastCreate = repoMocks.createResolution.mock.calls.at(-1)?.[0] as {
+        isCorrect?: boolean;
+        proposedResult?: string;
+      };
+      expect(lastCreate).toMatchObject({ proposedResult: '7', isCorrect: false });
+    });
+
+    it('empty-solution equation: PA on 3rd wrong counts across subequations (pot2(x) vs x)', async () => {
+      repoMocks.findByIdWithEquation.mockResolvedValue(
+        makeUserEquation({
+          equation: {
+            infixExpression: 'pot2(x)+1=0',
+            postfixExpression: 'pot2(x)+1=0',
+            solutionValues: [],
+          },
+        })
+      );
+      const steps = [
+        { subEquationInfix: 'pot2(x)', answer: '3' },
+        { subEquationInfix: 'x', answer: '5' },
+        { subEquationInfix: 'pot2(x)', answer: '7' },
+      ];
+      const codes: string[] = [];
+      for (const step of steps) {
+        const response = await request(app)
+          .post('/api/equations/ue-1/resolve')
+          .set(authHeader(token))
+          .send({ ...step, resolutionStepStatus: RESOLUTION_STEP_NO_BRANCH });
+        expect(response.status).toBe(200);
+        codes.push(response.body.code);
+      }
+      expect(codes).toEqual([
+        RESOLUTION_CODES.STEP_INCORRECT,
+        RESOLUTION_CODES.STEP_INCORRECT,
+        RESOLUTION_CODES.FIRST_WARNING,
+      ]);
     });
 
     it('returns RI when empty-set without subequation but equation has known solutions', async () => {

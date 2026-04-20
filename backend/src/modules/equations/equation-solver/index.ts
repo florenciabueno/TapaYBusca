@@ -46,7 +46,7 @@ export function solveEquation(infixExpression: string): SolveResult {
   }
 
   const rawResults = evaluateTree(isolatedTree, false);
-  const result = checkSolutions(rawResults, trimmed);
+  const result = checkSolutions(rawResults, trimmed, tree);
   if (result.ok) {
     return { ok: true, solutions: result.solutions };
   }

@@ -15,7 +15,6 @@ import { DEFAULT_FLOAT_TOLERANCE } from './equation-solver/constants.js';
 import {
   validateSubEquation,
   parseAnswerValues,
-  checkStepHasSolution,
   isOnlyVariable,
   isQuadratic,
   matchAnswerAgainstKnownSolutions,
@@ -357,32 +356,26 @@ export class ResolutionService {
     stateUpdated: boolean;
     knownSolutions: number[];
   }): Promise<StepEvaluation> {
-    let resultCode: string = RESOLUTION_CODES.STEP_INCORRECT;
-    let isCorrect = false;
-    let stateUpdated = args.stateUpdated;
+    if (args.knownSolutions.length === 0) {
+      return {
+        resultCode: RESOLUTION_CODES.RESOLUTION_FINISHED,
+        isCorrect: true,
+        isVariable: isOnlyVariable(args.subEquationPostfix),
+        stepWithoutSolution: false,
+        correctResult: undefined,
+        selectedBranch: args.selectedBranch,
+        stateUpdated: args.stateUpdated,
+      };
+    }
+
     const loggedResolutions = await this.equationRepository.findResolutionsByUserEquation(
       args.userEquationId,
       args.currentResolutionId
     );
-    if (loggedResolutions.length === 0) {
-      if (args.knownSolutions.length > 0) {
-        resultCode = RESOLUTION_CODES.RESULT_INCORRECT;
-      } else {
-        const { hasSolution } = checkStepHasSolution(args.equationPostfixTokens, args.subEquationPostfix);
-        if (hasSolution) {
-          resultCode = RESOLUTION_CODES.RESULT_INCORRECT;
-        } else {
-          resultCode = RESOLUTION_CODES.RESOLUTION_FINISHED;
-          isCorrect = true;
-        }
-      }
-    } else {
-      resultCode = RESOLUTION_CODES.RESULT_INCORRECT;
-      stateUpdated = true;
-    }
+    const stateUpdated = loggedResolutions.length > 0 ? true : args.stateUpdated;
     return {
-      resultCode,
-      isCorrect,
+      resultCode: RESOLUTION_CODES.RESULT_INCORRECT,
+      isCorrect: false,
       isVariable: isOnlyVariable(args.subEquationPostfix),
       stepWithoutSolution: false,
       correctResult: undefined,
@@ -405,6 +398,16 @@ export class ResolutionService {
   }): Promise<StepEvaluation> {
     const parsedAnswers = parseAnswerValues(args.answer);
     const answerValue = parsedAnswers[0];
+    if (args.solutions.length === 0 && parsedAnswers.length > 0 && answerValue !== undefined) {
+      return this.evaluateNumericAttemptOnEmptySolutionEquation({
+        userEquationId: args.userEquationId,
+        currentResolutionId: args.currentResolutionId,
+        subEquationPostfix: args.subEquationPostfix,
+        selectedBranch: args.selectedBranch,
+        stateUpdated: args.stateUpdated,
+      });
+    }
+
     let resultCode: string = RESOLUTION_CODES.STEP_INCORRECT;
     let isCorrect = false;
     const isVariable = isOnlyVariable(args.subEquationPostfix);
@@ -440,6 +443,34 @@ export class ResolutionService {
       correctResult,
       selectedBranch,
       stateUpdated,
+    };
+  }
+
+  private async evaluateNumericAttemptOnEmptySolutionEquation(args: {
+    userEquationId: string;
+    currentResolutionId: number;
+    subEquationPostfix: string[];
+    selectedBranch: string;
+    stateUpdated: boolean;
+  }): Promise<StepEvaluation> {
+    const priorFailures = await this.equationRepository.countEmptySolutionWrongNumericAttempts(
+      args.userEquationId,
+      args.currentResolutionId
+    );
+    let resultCode: string = RESOLUTION_CODES.STEP_INCORRECT;
+    if (priorFailures >= 5) {
+      resultCode = RESOLUTION_CODES.NO_SOLUTION;
+    } else if (priorFailures === 2) {
+      resultCode = RESOLUTION_CODES.FIRST_WARNING;
+    }
+    return {
+      resultCode,
+      isCorrect: false,
+      isVariable: isOnlyVariable(args.subEquationPostfix),
+      stepWithoutSolution: true,
+      correctResult: undefined,
+      selectedBranch: args.selectedBranch,
+      stateUpdated: args.stateUpdated,
     };
   }
 
