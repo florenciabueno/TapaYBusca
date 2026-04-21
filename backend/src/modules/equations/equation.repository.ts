@@ -310,6 +310,15 @@ export class EquationRepository {
     });
   }
 
+  async findDefaultEquationById(equationId: string) {
+    return prisma.equation.findFirst({
+      where: {
+        id: equationId,
+        isDefault: true,
+      },
+    });
+  }
+
   async countDefaultEquations(fromDate?: Date, toDate?: Date): Promise<number> {
     const where = this.buildDefaultEquationWhere(fromDate, toDate);
     return prisma.equation.count({ where });

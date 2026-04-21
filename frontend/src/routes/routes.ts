@@ -48,7 +48,7 @@ export const routes: RouteConfig[] = [
   {
     path: ROUTES.RESOLVE_EQUATION,
     element: ResolveEquationPage,
-    isProtected: true,
+    isProtected: false,
   },
   {
     path: ROUTES.UPLOAD,

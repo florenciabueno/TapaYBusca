@@ -14,6 +14,8 @@ const VALID_ORIGINS = new Set<string>(Object.values(EquationOrigin));
 const VALID_STATUSES = new Set<string>(Object.values(EquationStatus));
 const LIST_STATUS_DELETED = 'DELETED';
 const PERMISSION_ERROR_KEYWORD = 'permisos';
+const GUEST_SESSION_ID_HEADER = 'x-guest-session-id';
+const GUEST_SESSION_ID_PATTERN = /^[a-zA-Z0-9_-]{16,120}$/;
 
 type QueryParams = Request['query'];
 type RouteParams = Request['params'];
@@ -126,6 +128,18 @@ export function parseUserEquationIdParam(params: RouteParams): string {
   const id = typeof params.id === 'string' ? params.id.trim() : '';
   if (!id) throw new Error('ID de ecuación inválido.');
   return id;
+}
+
+
+
+export function parseGuestSessionId(req: Request): string {
+  const headerValue = req.headers[GUEST_SESSION_ID_HEADER];
+  const raw = Array.isArray(headerValue) ? headerValue[0] : headerValue;
+  const guestSessionId = typeof raw === 'string' ? raw.trim() : '';
+  if (!guestSessionId || !GUEST_SESSION_ID_PATTERN.test(guestSessionId)) {
+    throw new Error('Sesión de invitado inválida.');
+  }
+  return guestSessionId;
 }
 
 export function parseCreateEquationBody(body: unknown, userId: string): CreateEquationDto {

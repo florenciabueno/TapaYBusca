@@ -31,6 +31,7 @@ vi.mock('../src/modules/equations/equation.repository.js', () => {
   const hardDeleteNotStartedUserEquation = vi.fn();
   const canUserModify = vi.fn();
   const findDefaultEquations = vi.fn();
+  const findDefaultEquationById = vi.fn();
   const countDefaultEquations = vi.fn();
   const findCreatedForUser = vi.fn();
   const getPublishedEquationIdsForUser = vi.fn();
@@ -53,6 +54,7 @@ vi.mock('../src/modules/equations/equation.repository.js', () => {
       hardDeleteNotStartedUserEquation = hardDeleteNotStartedUserEquation;
       canUserModify = canUserModify;
       findDefaultEquations = findDefaultEquations;
+      findDefaultEquationById = findDefaultEquationById;
       countDefaultEquations = countDefaultEquations;
       findCreatedForUser = findCreatedForUser;
       getPublishedEquationIdsForUser = getPublishedEquationIdsForUser;
@@ -73,6 +75,7 @@ vi.mock('../src/modules/equations/equation.repository.js', () => {
       hardDeleteNotStartedUserEquation,
       canUserModify,
       findDefaultEquations,
+      findDefaultEquationById,
       countDefaultEquations,
       findCreatedForUser,
       getPublishedEquationIdsForUser,
@@ -108,6 +111,10 @@ async function createEquation(app: Application, token: string, equation: string)
 
 function authHeader(token: string) {
   return { Authorization: `Bearer ${token}` };
+}
+
+function guestHeader(sessionId = 'guest-session-abc12345') {
+  return { 'x-guest-session-id': sessionId };
 }
 
 function makeUserEquationRow(overrides: Partial<{
@@ -711,6 +718,73 @@ describe('Equations API', () => {
         .send({ quantity: 5 });
       expect(response.status).toBe(200);
       expect(response.body).toMatchObject({ added: 2, totalRequested: 5 });
+    });
+  });
+
+  describe('Guest resolution endpoints', () => {
+    beforeEach(() => {
+      repoMocks.findDefaultEquationById.mockResolvedValue({
+        id: 'def-guest-1',
+        infixExpression: 'x=1',
+        postfixExpression: 'x=1',
+        latexExpression: 'x=1',
+        solutionValues: [1],
+        createdAt: new Date(),
+      });
+    });
+
+    it('requires guest session header for guest endpoints', async () => {
+      const response = await request(app).get('/api/equations/guest/def-guest-1');
+      expect(response.status).toBe(400);
+      expect(response.body.error).toContain('Sesión de invitado inválida');
+    });
+
+    it('resolves and persists guest steps across requests', async () => {
+      const session = guestHeader('guest-session-abc12345');
+
+      const detailResponse = await request(app).get('/api/equations/guest/def-guest-1').set(session);
+      expect(detailResponse.status).toBe(200);
+      expect(detailResponse.body).toMatchObject({
+        id: 'def-guest-1',
+        status: EquationStatus.NOT_STARTED,
+      });
+
+      const resolveResponse = await request(app)
+        .post('/api/equations/guest/def-guest-1/resolve')
+        .set(session)
+        .send({
+          subEquationInfix: 'x',
+          answer: '1',
+          resolutionStepStatus: 1,
+        });
+      expect(resolveResponse.status).toBe(200);
+      expect(resolveResponse.body.code).toBe('PF');
+
+      const resolutionResponse = await request(app)
+        .get('/api/equations/guest/def-guest-1/resolution')
+        .set(session);
+      expect(resolutionResponse.status).toBe(200);
+      expect(Array.isArray(resolutionResponse.body.steps)).toBe(true);
+      expect(resolutionResponse.body.steps).toHaveLength(1);
+      expect(resolutionResponse.body.solutionSet).toEqual([1]);
+
+      const finishResponse = await request(app)
+        .post('/api/equations/guest/def-guest-1/finish-resolution')
+        .set(session);
+      expect(finishResponse.status).toBe(200);
+      expect(finishResponse.body.code).toBe('RT');
+
+      const resetResponse = await request(app)
+        .post('/api/equations/guest/def-guest-1/reset-resolution')
+        .set(session);
+      expect(resetResponse.status).toBe(200);
+      expect(resetResponse.body.ok).toBe(true);
+
+      const resolutionAfterReset = await request(app)
+        .get('/api/equations/guest/def-guest-1/resolution')
+        .set(session);
+      expect(resolutionAfterReset.status).toBe(200);
+      expect(resolutionAfterReset.body.steps).toHaveLength(0);
     });
   });
 });

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '../../../shared/query-keys';
 import { useAuthStore } from '../../../stores';
@@ -8,11 +8,18 @@ import {
   RESOLUTION_NO_BRANCH_STEP,
 } from '../constants/resolution';
 import { equationService } from '../services/equation.service';
+import {
+  clearGuestResolutionHistory,
+  getOrCreateGuestSessionId,
+  upsertGuestResolutionHistory,
+} from '../storage/guestResolutionHistory.storage';
 import type { Equation, ResolutionStep } from '../types';
 
 export const useResolveEquation = (id?: string) => {
   const queryClient = useQueryClient();
   const token = useAuthStore((s) => s.token);
+  const mode = token ? 'auth' : 'guest';
+  const guestSessionId = useMemo(() => getOrCreateGuestSessionId(), []);
 
   const [subEquationInfix, setSubEquationInfix] = useState('');
   const [answer, setAnswer] = useState('');
@@ -21,15 +28,21 @@ export const useResolveEquation = (id?: string) => {
   const [finishedCode, setFinishedCode] = useState<string | null>(null);
 
   const equationQuery = useQuery({
-    queryKey: queryKeys.equations.detail(id ?? ''),
-    queryFn: () => equationService.getEquationById(id!, token),
-    enabled: Boolean(id && token),
+    queryKey: queryKeys.equations.detail(id ?? '', mode),
+    queryFn: () =>
+      token
+        ? equationService.getEquationById(id!, token)
+        : equationService.getGuestEquationById(id!, guestSessionId),
+    enabled: Boolean(id),
   });
 
   const resolutionQuery = useQuery({
-    queryKey: queryKeys.equations.resolution(id ?? ''),
-    queryFn: () => equationService.getResolution(id!, token),
-    enabled: Boolean(id && token),
+    queryKey: queryKeys.equations.resolution(id ?? '', mode),
+    queryFn: () =>
+      token
+        ? equationService.getResolution(id!, token)
+        : equationService.getGuestResolution(id!, guestSessionId),
+    enabled: Boolean(id),
   });
 
   const equation: Equation | null = equationQuery.data ?? null;
@@ -55,10 +68,10 @@ export const useResolveEquation = (id?: string) => {
 
   const invalidateEquationQueries = useCallback(async () => {
     if (!id) return;
-    await queryClient.invalidateQueries({ queryKey: queryKeys.equations.detail(id) });
-    await queryClient.invalidateQueries({ queryKey: queryKeys.equations.resolution(id) });
+    await queryClient.invalidateQueries({ queryKey: queryKeys.equations.detail(id, mode) });
+    await queryClient.invalidateQueries({ queryKey: queryKeys.equations.resolution(id, mode) });
     queryClient.invalidateQueries({ queryKey: queryKeys.equations.lists() });
-  }, [id, queryClient]);
+  }, [id, mode, queryClient]);
 
   const clearResolutionFormState = useCallback(() => {
     setFinished(false);
@@ -73,7 +86,10 @@ export const useResolveEquation = (id?: string) => {
       subEquationInfix: string | undefined;
       answer: string;
       resolutionStepStatus: number;
-    }) => equationService.resolveStep(id!, payload, token),
+    }) =>
+      token
+        ? equationService.resolveStep(id!, payload, token)
+        : equationService.guestResolveStep(id!, payload, guestSessionId),
     onSuccess: async (result) => {
       const fallback = getResolutionFeedbackMessage(result.code);
       const text =
@@ -86,7 +102,10 @@ export const useResolveEquation = (id?: string) => {
   });
 
   const resetResolutionMutation = useMutation({
-    mutationFn: () => equationService.resetResolution(id!, token),
+    mutationFn: () =>
+      token
+        ? equationService.resetResolution(id!, token)
+        : equationService.guestResetResolution(id!, guestSessionId),
     onSuccess: async () => {
       clearResolutionFormState();
       await invalidateEquationQueries();
@@ -97,14 +116,17 @@ export const useResolveEquation = (id?: string) => {
   });
 
   const finishResolutionMutation = useMutation({
-    mutationFn: () => equationService.finishResolution(id!, token),
+    mutationFn: () =>
+      token
+        ? equationService.finishResolution(id!, token)
+        : equationService.guestFinishResolution(id!, guestSessionId),
   });
 
   const resolveStepPending = resolveStepMutation.isPending;
   const finishResolutionPending = finishResolutionMutation.isPending;
   const submitting =
     resolveStepPending || resetResolutionMutation.isPending || finishResolutionPending;
-  const queriesEnabled = Boolean(id && token);
+  const queriesEnabled = Boolean(id);
   const loading =
     queriesEnabled && (equationQuery.isLoading || resolutionQuery.isLoading);
   const error =
@@ -125,7 +147,7 @@ export const useResolveEquation = (id?: string) => {
   };
 
   const handleValidate = async () => {
-    if (!id || !token) return;
+    if (!id) return;
     setMessage(null);
     try {
       const result = await resolveStepMutation.mutateAsync({
@@ -140,7 +162,7 @@ export const useResolveEquation = (id?: string) => {
   };
 
   const handleEmptySet = async () => {
-    if (!id || !token) return;
+    if (!id) return;
     setMessage(null);
     try {
       const result = await resolveStepMutation.mutateAsync({
@@ -155,7 +177,7 @@ export const useResolveEquation = (id?: string) => {
   };
 
   const handleReset = async () => {
-    if (!id || !token) return;
+    if (!id) return;
     setMessage(null);
     try {
       await resetResolutionMutation.mutateAsync();
@@ -165,7 +187,7 @@ export const useResolveEquation = (id?: string) => {
   };
 
   const handleFinishResolution = async () => {
-    if (!id || !token) return;
+    if (!id) return;
     setMessage(null);
     try {
       const result = await finishResolutionMutation.mutateAsync();
@@ -186,6 +208,25 @@ export const useResolveEquation = (id?: string) => {
       setMessage(e instanceof Error ? e.message : 'Error al finalizar');
     }
   };
+
+  useEffect(() => {
+    if (!id || token) return;
+    upsertGuestResolutionHistory({
+      equationId: id,
+      steps,
+      solutionSet,
+      updatedAt: new Date().toISOString(),
+      finished,
+      finishedCode,
+    });
+  }, [finished, finishedCode, id, solutionSet, steps, token]);
+
+  useEffect(() => {
+    if (!id || token || !resolutionQuery.data) return;
+    if ((resolutionQuery.data.steps?.length ?? 0) === 0) {
+      clearGuestResolutionHistory(id);
+    }
+  }, [id, resolutionQuery.data, token]);
 
   return {
     token,

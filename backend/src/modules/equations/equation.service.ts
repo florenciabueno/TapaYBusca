@@ -148,6 +148,19 @@ export class EquationService {
     return this.buildPaginatedResponse(data, total, p, l);
   }
 
+  async getPublicEquationById(
+    equationId: string,
+    options?: {
+      status?: EquationStatus;
+      steps?: number;
+      date?: Date;
+    }
+  ): Promise<EquationResponse | null> {
+    const equation = await this.equationRepository.findDefaultEquationById(equationId);
+    if (!equation) return null;
+    return this.toEquationResponseFromDefault(equation, options);
+  }
+
   async getEquationsForUpload(userId: string): Promise<{ data: UploadableEquationResponse[] }> {
     const [rows, publishedIds] = await Promise.all([
       this.equationRepository.findCreatedForUser(userId),
@@ -215,14 +228,21 @@ export class EquationService {
     };
   }
 
-  private toEquationResponseFromDefault(eq: DefaultEquationRow): EquationResponse {
+  private toEquationResponseFromDefault(
+    eq: DefaultEquationRow,
+    options?: {
+      status?: EquationStatus;
+      steps?: number;
+      date?: Date;
+    }
+  ): EquationResponse {
     return {
       id: eq.id,
       equation: this.getDisplayExpression(eq),
       origin: EquationOrigin.DEFAULT,
-      status: EquationStatus.NOT_STARTED,
-      steps: STEPS_DEFAULT,
-      date: this.formatDate(eq.createdAt),
+      status: options?.status ?? EquationStatus.NOT_STARTED,
+      steps: options?.steps ?? STEPS_DEFAULT,
+      date: this.formatDate(options?.date ?? eq.createdAt),
       isActive: true,
     };
   }

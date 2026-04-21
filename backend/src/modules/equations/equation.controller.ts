@@ -9,6 +9,7 @@ import {
   parseDownloadBody,
   parseOriginsQuery,
   parsePageAndLimit,
+  parseGuestSessionId,
   parseResolveStepBody,
   parseStatusesQuery,
   parseUpdateEquationBody,
@@ -16,6 +17,7 @@ import {
   parseUserEquationIdParam,
   parseUserListStatusesQuery,
 } from './equation.controller.helpers.js';
+import { GuestResolutionService } from './guest-resolution.service.js';
 
 const ERROR_GET_EQUATIONS = 'Error al obtener ecuaciones';
 const ERROR_EQUATION_NOT_FOUND = 'Ecuación no encontrada';
@@ -34,7 +36,8 @@ const ERROR_FINISH_RESOLUTION = 'Error al finalizar la resolucion';
 export class EquationController {
   constructor(
     private equationService: EquationService,
-    private resolutionService: ResolutionService
+    private resolutionService: ResolutionService,
+    private guestResolutionService: GuestResolutionService
   ) {}
 
   getPublicEquations = async (req: Request, res: Response): Promise<void> => {
@@ -146,6 +149,35 @@ export class EquationController {
     }
   };
 
+  getGuestEquationById = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const equationId = parseUserEquationIdParam(req.params);
+      const guestSessionId = parseGuestSessionId(req);
+      const guestProgress = await this.guestResolutionService.getGuestEquationById(
+        equationId,
+        guestSessionId
+      );
+      if (!guestProgress) {
+        res.status(404).json({ error: ERROR_EQUATION_NOT_FOUND });
+        return;
+      }
+      const equation = await this.equationService.getPublicEquationById(equationId, {
+        status: guestProgress.status,
+        steps: guestProgress.steps,
+        date: guestProgress.updatedAt,
+      });
+      if (!equation) {
+        res.status(404).json({ error: ERROR_EQUATION_NOT_FOUND });
+        return;
+      }
+      res.status(200).json(equation);
+    } catch (error: unknown) {
+      res.status(400).json({
+        error: getErrorMessage(error, ERROR_GET_EQUATION),
+      });
+    }
+  };
+
   createEquation = async (req: Request, res: Response): Promise<void> => {
     try {
       const userId = req.userId!;
@@ -202,11 +234,46 @@ export class EquationController {
     }
   };
 
+  guestResolveStep = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const equationId = parseUserEquationIdParam(req.params);
+      const guestSessionId = parseGuestSessionId(req);
+      const payload = parseResolveStepBody(req.body);
+      const result = await this.guestResolutionService.resolveStep(
+        equationId,
+        guestSessionId,
+        payload
+      );
+      res.status(200).json(result);
+    } catch (error: unknown) {
+      res.status(400).json({
+        error: getErrorMessage(error, ERROR_RESOLVE_STEP),
+      });
+    }
+  };
+
   getResolution = async (req: Request, res: Response): Promise<void> => {
     try {
       const userEquationId = parseUserEquationIdParam(req.params);
       const userId = req.userId!;
       const data = await this.resolutionService.getResolution(userEquationId, userId);
+      if (!data) {
+        res.status(404).json({ error: ERROR_EQUATION_NOT_FOUND });
+        return;
+      }
+      res.status(200).json(data);
+    } catch (error: unknown) {
+      res.status(500).json({
+        error: getErrorMessage(error, ERROR_GET_RESOLUTION),
+      });
+    }
+  };
+
+  guestGetResolution = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const equationId = parseUserEquationIdParam(req.params);
+      const guestSessionId = parseGuestSessionId(req);
+      const data = await this.guestResolutionService.getResolution(equationId, guestSessionId);
       if (!data) {
         res.status(404).json({ error: ERROR_EQUATION_NOT_FOUND });
         return;
@@ -236,11 +303,44 @@ export class EquationController {
     }
   };
 
+  guestResetResolution = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const equationId = parseUserEquationIdParam(req.params);
+      const guestSessionId = parseGuestSessionId(req);
+      const ok = await this.guestResolutionService.resetResolution(equationId, guestSessionId);
+      if (!ok) {
+        res.status(403).json({ error: 'No tienes permisos para reiniciar esta ecuacion' });
+        return;
+      }
+      res.status(200).json({ ok: true });
+    } catch (error: unknown) {
+      res.status(500).json({
+        error: getErrorMessage(error, ERROR_RESET_RESOLUTION),
+      });
+    }
+  };
+
   finishResolution = async (req: Request, res: Response): Promise<void> => {
     try {
       const userEquationId = parseUserEquationIdParam(req.params);
       const userId = req.userId!;
       const result = await this.resolutionService.finishResolution(userEquationId, userId);
+      res.status(200).json(result);
+    } catch (error: unknown) {
+      res.status(500).json({
+        error: getErrorMessage(error, ERROR_FINISH_RESOLUTION),
+      });
+    }
+  };
+
+  guestFinishResolution = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const equationId = parseUserEquationIdParam(req.params);
+      const guestSessionId = parseGuestSessionId(req);
+      const result = await this.guestResolutionService.finishResolution(
+        equationId,
+        guestSessionId
+      );
       res.status(200).json(result);
     } catch (error: unknown) {
       res.status(500).json({

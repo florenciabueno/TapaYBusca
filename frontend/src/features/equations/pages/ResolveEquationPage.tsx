@@ -11,7 +11,6 @@ export const ResolveEquationPage = () => {
   const navigate = useNavigate();
 
   const {
-    token,
     equation,
     steps,
     solutionSet,
@@ -51,18 +50,6 @@ export const ResolveEquationPage = () => {
         <EquationsMessageCard
           variant="error"
           message={error ?? 'Ecuación no encontrada'}
-          onBack={() => navigate(ROUTES.DASHBOARD)}
-        />
-      </EquationsLayout>
-    );
-  }
-
-  if (!token) {
-    return (
-      <EquationsLayout>
-        <EquationsMessageCard
-          variant="info"
-          message="Inicia sesión para resolver y guardar tu progreso."
           onBack={() => navigate(ROUTES.DASHBOARD)}
         />
       </EquationsLayout>

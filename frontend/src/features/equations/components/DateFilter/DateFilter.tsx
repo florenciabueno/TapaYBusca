@@ -36,6 +36,7 @@ export const DateFilter = ({ fromDate, toDate, onChange }: DateFilterProps) => {
           type="date"
           value={fromDate ?? ''}
           onChange={handleFromChange}
+          max={toDate}
           className="cursor-pointer rounded-lg border px-2 py-1.5 text-sm"
           style={{ borderColor: COLORS.gray[300] }}
           aria-label="Fecha desde"
@@ -56,6 +57,7 @@ export const DateFilter = ({ fromDate, toDate, onChange }: DateFilterProps) => {
           type="date"
           value={toDate ?? ''}
           onChange={handleToChange}
+          min={fromDate}
           className="cursor-pointer rounded-lg border px-2 py-1.5 text-sm"
           style={{ borderColor: COLORS.gray[300] }}
           aria-label="Fecha hasta"
