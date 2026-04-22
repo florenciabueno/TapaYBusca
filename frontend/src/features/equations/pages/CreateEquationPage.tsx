@@ -25,7 +25,7 @@ export const CreateEquationPage = () => {
       <div className="w-full flex-1 flex items-center justify-center">
         <FormPageCard
           title="Crear nueva ecuación"
-          description="Construye tu ecuación en la forma f(x) = k o k = f(x), con una sola incógnita."
+          description="Construye tu ecuación en la forma f(x) = k o k = f(x), con una sola incógnita, y una sola ocurrencia de la misma."
         >
           <form onSubmit={handleSubmit}>
             <div style={{ marginBottom: SPACING.lg }}>
@@ -34,7 +34,7 @@ export const CreateEquationPage = () => {
                 label="Tu ecuación:"
                 value={value}
                 {...inputHandlers}
-                placeholder="x*20 = 100"
+                placeholder="ej: x*20 = 100"
                 error={error}
                 helperText="Teclado: números, x, =, operadores (* + - /) y paréntesis"
                 disabled={isLoading}
