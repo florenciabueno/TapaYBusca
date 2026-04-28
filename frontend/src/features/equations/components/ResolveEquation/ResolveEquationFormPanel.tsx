@@ -67,7 +67,7 @@ export const ResolveEquationFormPanel = ({
               label=""
               value={subEquationInfix}
               {...subEquationInputHandlers}
-              placeholder="ej. x, 2*x, x+5"
+              placeholder="ej. x, 1/2, x+5"
               disabled={submitting}
               autoComplete="off"
               labelColor="secondary"
@@ -86,7 +86,7 @@ export const ResolveEquationFormPanel = ({
               label=""
               value={answer}
               {...answerInputHandlers}
-              placeholder="ej. 3, 1/2, 0,5"
+              placeholder="ej. 3, x*2, 0,5"
               disabled={submitting}
               autoComplete="off"
               labelColor="secondary"
