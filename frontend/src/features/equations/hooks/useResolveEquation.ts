@@ -181,8 +181,8 @@ export const useResolveEquation = (id?: string) => {
     setMessage(null);
     try {
       await resetResolutionMutation.mutateAsync();
-    } catch {
-      /* message set in onError */
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : 'Error al reiniciar');
     }
   };
 

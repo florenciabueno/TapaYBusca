@@ -59,8 +59,10 @@ function saveGuestResolutionHistory(entries: GuestHistoryEntry[]) {
   };
   try {
     window.localStorage.setItem(GUEST_HISTORY_STORAGE_KEY, JSON.stringify(payload));
-  } catch {
-    // Ignore storage failures to avoid blocking solve flow.
+  } catch (error){
+    if (import.meta.env.DEV) {
+      console.warn('No se pudo guardar historial guest', error);
+    }
   }
 }
 
