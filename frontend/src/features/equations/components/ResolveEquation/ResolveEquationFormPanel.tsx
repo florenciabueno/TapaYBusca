@@ -51,6 +51,7 @@ export const ResolveEquationFormPanel = ({
   return (
     <>
       <fieldset
+        translate="no"
         style={{ marginBottom: SPACING.lg }}
         className="min-w-0 border-0 p-0 m-0"
       >

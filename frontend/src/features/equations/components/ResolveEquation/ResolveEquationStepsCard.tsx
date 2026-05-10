@@ -15,6 +15,7 @@ export const ResolveEquationStepsCard = ({
 
   const list = (
     <div
+      translate="no"
       className={
         embedded
           ? 'min-h-0 overflow-x-hidden overflow-y-auto pr-1 max-h-[min(50vh,28rem)]'

@@ -11,7 +11,7 @@ export const MathExpression = ({
   className = '',
 }: MathExpressionProps) => {
   return (
-    <span className={className}>
+    <span className={className} translate="no">
       <InlineMath math={expression} {...KATEX_OPTIONS} />
     </span>
   );
