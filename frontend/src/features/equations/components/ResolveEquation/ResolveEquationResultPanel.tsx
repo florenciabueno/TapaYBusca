@@ -32,6 +32,7 @@ export const ResolveEquationResultPanel = ({
         </p>
       </div>
       <div
+        translate="no"
         className="rounded-xl p-4 flex-shrink-0"
         style={{
           backgroundColor: COLORS.gray[50],

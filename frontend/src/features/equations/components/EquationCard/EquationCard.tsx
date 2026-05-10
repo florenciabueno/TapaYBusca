@@ -40,7 +40,7 @@ export const EquationCard = ({
         ...(isDeleted ? { opacity: 0.92 } : {}),
       }}
     >
-      <div className="min-h-0 flex-1 overflow-y-auto mb-2">
+      <div className="min-h-0 flex-1 overflow-y-auto mb-2" translate="no">
         <MathExpression
           expression={equation.equation}
           className={`text-base ${isDeleted ? 'text-gray-500' : 'text-gray-800'}`}

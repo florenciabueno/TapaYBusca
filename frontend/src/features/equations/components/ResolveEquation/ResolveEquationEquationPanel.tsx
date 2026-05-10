@@ -9,6 +9,7 @@ export const ResolveEquationEquationPanel = ({ equationExpression }: ResolveEqua
   return (
     <div className="flex flex-col gap-4 min-h-0">
       <div
+        translate="no"
         className="rounded-xl p-4 flex-shrink-0"
         style={{
           backgroundColor: COLORS.gray[50],

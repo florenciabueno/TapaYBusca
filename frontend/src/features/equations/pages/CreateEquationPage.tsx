@@ -27,7 +27,7 @@ export const CreateEquationPage = () => {
           title="Crear nueva ecuación"
           description="Construye tu ecuación en la forma f(x) = k o k = f(x), con una sola incógnita, y una sola ocurrencia de la misma."
         >
-          <form onSubmit={handleSubmit}>
+          <form translate="no" onSubmit={handleSubmit}>
             <div style={{ marginBottom: SPACING.lg }}>
               <Input
                 ref={inputRef}

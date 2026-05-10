@@ -13,7 +13,7 @@ export const MathSymbolsPad = ({
   symbols = DEFAULT_MATH_SYMBOLS,
 }: MathSymbolsPadProps) => {
   return (
-    <div style={{ marginBottom: SPACING.lg }}>
+    <div translate="no" style={{ marginBottom: SPACING.lg }}>
       <label className="block text-sm font-medium mb-2" style={{ color: COLORS.accentSecondary }}>
         Símbolos matemáticos:
       </label>
