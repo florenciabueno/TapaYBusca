@@ -166,7 +166,7 @@ describe('Equation resolver API', () => {
       expect(response.status).toBe(200);
       expect(response.body).toMatchObject({
         code: RESOLUTION_CODES.SYNTAX_INCORRECT,
-        message: 'La subecuación es obligatoria',
+        message: 'La ecuación equivalente es obligatoria',
       });
     });
 
