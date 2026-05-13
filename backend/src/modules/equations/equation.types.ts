@@ -13,7 +13,6 @@ export enum EquationOrigin {
 export interface EquationResponse {
   id: string;
   equation: string;
-  /** Infija almacenada (p. ej. pot2(...)); para inputs de resolución en el cliente. */
   infixExpression?: string | null;
   origin: EquationOrigin;
   status: EquationStatus;

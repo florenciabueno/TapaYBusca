@@ -6,7 +6,6 @@ import logoImage from '../../../../assets/logo.png';
 export interface AuthLayoutProps {
   children: ReactNode;
   footer?: ReactNode;
-  /** Si se define, el logo enlaza al inicio público y se muestra “Volver al inicio”. */
   homeHref?: string;
 }
 
