@@ -19,7 +19,6 @@ export interface ResolveEquationWorkspaceProps {
   onSubEquationChange: Dispatch<SetStateAction<string>>;
   onAnswerChange: Dispatch<SetStateAction<string>>;
   onValidate: () => void;
-  onEmptySet: () => void;
   onFinishResolution: () => void;
   onReset: () => void;
 }
@@ -39,7 +38,6 @@ export const ResolveEquationWorkspace = ({
   onSubEquationChange,
   onAnswerChange,
   onValidate,
-  onEmptySet,
   onFinishResolution,
   onReset,
 }: ResolveEquationWorkspaceProps) => {
@@ -69,7 +67,6 @@ export const ResolveEquationWorkspace = ({
               onSubEquationChange={onSubEquationChange}
               onAnswerChange={onAnswerChange}
               onValidate={onValidate}
-              onEmptySet={onEmptySet}
               onFinishResolution={onFinishResolution}
               onReset={onReset}
             />

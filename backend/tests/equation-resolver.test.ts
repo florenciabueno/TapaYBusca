@@ -950,10 +950,20 @@ describe('Equation resolution lifecycle endpoints', () => {
       );
     });
 
-    it('MS desde NOT_STARTED guarda el intento en la misma sesión que el próximo resolveStep', async () => {
-      repoMocks.findByIdWithEquation.mockResolvedValue(makeUserEquation());
+    it('returns MS when at least one solution is already logged but another is missing (consistent session)', async () => {
+      repoMocks.findByIdWithEquation.mockResolvedValue(
+        makeUserEquation({
+          status: EquationStatus.IN_PROGRESS,
+          currentResolutionId: 1,
+          equation: {
+            infixExpression: DEFAULT_EQUATIONS.quadratic,
+            postfixExpression: DEFAULT_EQUATIONS.quadratic,
+            solutionValues: [2, -6],
+          },
+        })
+      );
       repoMocks.getMaxResolutionSessionId.mockResolvedValue(0);
-      repoMocks.getDistinctLoggedSolutions.mockResolvedValue([]);
+      repoMocks.getDistinctLoggedSolutions.mockResolvedValue([2]);
 
       const response = await request(app)
         .post('/api/equations/ue-1/finish-resolution')
@@ -972,6 +982,64 @@ describe('Equation resolution lifecycle endpoints', () => {
         currentResolutionId: 1,
         selectedBranch: '',
       });
+    });
+
+    it('returns RT and marks SOLVED when there are no logged steps and the equation has no real solutions (Finish = S={})', async () => {
+      repoMocks.findByIdWithEquation.mockResolvedValue(
+        makeUserEquation({
+          status: EquationStatus.NOT_STARTED,
+          currentResolutionId: 0,
+          equation: {
+            infixExpression: DEFAULT_EQUATIONS.noRealSolution,
+            postfixExpression: DEFAULT_EQUATIONS.noRealSolution,
+            solutionValues: [],
+          },
+        })
+      );
+      repoMocks.getMaxResolutionSessionId.mockResolvedValue(0);
+      repoMocks.getDistinctLoggedSolutions.mockResolvedValue([]);
+      repoMocks.findResolutionsByUserEquation.mockResolvedValue([]);
+
+      const response = await request(app)
+        .post('/api/equations/ue-1/finish-resolution')
+        .set(authHeader(token));
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({ code: RESOLUTION_CODES.RESOLUTION_FINISHED });
+      expect(repoMocks.createResolution).toHaveBeenCalledWith(
+        expect.objectContaining({
+          proposedResult: EMPTY_SET,
+          isCorrect: true,
+        })
+      );
+      expect(repoMocks.updateResolutionState).toHaveBeenCalledWith(
+        'ue-1',
+        expect.objectContaining({ status: EquationStatus.SOLVED })
+      );
+    });
+
+    it('returns RI when there are no logged steps but the equation has solutions (Finish = S={} is incorrect)', async () => {
+      repoMocks.findByIdWithEquation.mockResolvedValue(makeUserEquation());
+      repoMocks.getMaxResolutionSessionId.mockResolvedValue(0);
+      repoMocks.getDistinctLoggedSolutions.mockResolvedValue([]);
+      repoMocks.findResolutionsByUserEquation.mockResolvedValue([]);
+
+      const response = await request(app)
+        .post('/api/equations/ue-1/finish-resolution')
+        .set(authHeader(token));
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({ code: RESOLUTION_CODES.RESULT_INCORRECT });
+      expect(repoMocks.createResolution).toHaveBeenCalledWith(
+        expect.objectContaining({
+          proposedResult: EMPTY_SET,
+          isCorrect: false,
+        })
+      );
+      expect(repoMocks.updateResolutionState).toHaveBeenCalledWith(
+        'ue-1',
+        expect.objectContaining({ status: EquationStatus.IN_PROGRESS })
+      );
     });
 
     it('returns RT and marks SOLVED when todas las raíces están registradas', async () => {

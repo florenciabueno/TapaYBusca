@@ -16,7 +16,6 @@ interface ResolveEquationFormPanelProps {
   onSubEquationChange: Dispatch<SetStateAction<string>>;
   onAnswerChange: Dispatch<SetStateAction<string>>;
   onValidate: () => void;
-  onEmptySet: () => void;
   onFinishResolution: () => void;
   onReset: () => void;
 }
@@ -31,7 +30,6 @@ export const ResolveEquationFormPanel = ({
   onSubEquationChange,
   onAnswerChange,
   onValidate,
-  onEmptySet,
   onFinishResolution,
   onReset,
 }: ResolveEquationFormPanelProps) => {
@@ -112,9 +110,6 @@ export const ResolveEquationFormPanel = ({
         </Button>
         <Button type="button" variant="accent" disabled={submitting} onClick={onFinishResolution}>
           {finishResolutionPending ? 'Finalizando...' : 'Terminar resolución'}
-        </Button>
-        <Button type="button" variant="outline" disabled={submitting} onClick={onEmptySet}>
-          S = {'{}'}
         </Button>
         <Button type="button" variant="outline" disabled={submitting} onClick={onReset}>
           Reiniciar

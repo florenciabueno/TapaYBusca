@@ -804,6 +804,16 @@ export class ResolutionService {
       effectiveResolutionId
     );
 
+    // If the student hasn't registered any solution, interpret "Finish resolution"
+    // as asserting that the solution set is empty.
+    if (logged.length === 0) {
+      return this.resolveStep(userEquationId, userId, {
+        subEquationInfix: undefined,
+        answer: EMPTY_SET,
+        resolutionStepStatus: RESOLUTION_STEP_NO_BRANCH,
+      });
+    }
+
     const complete = this.isKnownSolutionSetComplete(knownSolutions, logged);
 
     if (!complete) {

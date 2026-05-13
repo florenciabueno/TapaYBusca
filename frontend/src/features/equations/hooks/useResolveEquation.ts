@@ -168,21 +168,6 @@ export const useResolveEquation = (id?: string) => {
     }
   };
 
-  const handleEmptySet = async () => {
-    if (!id || !token) return;
-    setMessage(null);
-    try {
-      const result = await resolveStepMutation.mutateAsync({
-        subEquationInfix: subEquationInfix.trim() || undefined,
-        answer: '{}',
-        resolutionStepStatus: RESOLUTION_NO_BRANCH_STEP,
-      });
-      applyResolveResult(result.code);
-    } catch (e) {
-      setMessage(e instanceof Error ? e.message : 'Error al validar');
-    }
-  };
-
   const handleReset = async () => {
     if (!id || !token) return;
     setMessage(null);
@@ -234,7 +219,6 @@ export const useResolveEquation = (id?: string) => {
     setSubEquationInfix,
     setAnswer,
     handleValidate,
-    handleEmptySet,
     handleFinishResolution,
     handleReset,
   };
