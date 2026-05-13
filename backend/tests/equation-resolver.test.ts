@@ -1278,3 +1278,15 @@ describe('computeEffectiveResolutionSessionId', () => {
     expect(computeEffectiveResolutionSessionId(0, 1, 1)).toBe(1);
   });
 });
+
+describe('resultToLatex', () => {
+  it('renders a positive simple fraction as \\frac{n}{d}', async () => {
+    const { resultToLatex } = await import('../src/modules/equations/infix-to-latex.js');
+    expect(resultToLatex('3/4')).toBe('\\frac{3}{4}');
+  });
+
+  it('renders a negative simple fraction with the minus outside the fraction', async () => {
+    const { resultToLatex } = await import('../src/modules/equations/infix-to-latex.js');
+    expect(resultToLatex('-1/2')).toBe('-\\frac{1}{2}');
+  });
+});
