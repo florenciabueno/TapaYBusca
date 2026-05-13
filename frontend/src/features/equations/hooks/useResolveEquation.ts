@@ -60,7 +60,7 @@ export const useResolveEquation = (id?: string) => {
     if (!equation || equation.id !== id) return;
     if (!equation.infixExpression?.trim()) return;
     if (!resolutionQuery.isSuccess) return;
-    if (equation.status === 'SOLVED') return;
+    if (equation.status !== 'NOT_STARTED') return;
     if (finished) return;
     const stepCount = resolutionQuery.data?.steps?.length ?? 0;
     if (stepCount > 0) return;
