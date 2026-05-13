@@ -2,6 +2,7 @@ import { COLORS, SHADOW } from '../../../../config/theme';
 import { Button } from '../../../../shared/components/ui/Button/Button';
 import { MathExpression } from '../../../../shared/components/ui/MathExpression';
 import { RESOLUTION_CODES } from '../../constants/resolution';
+import { formatSolutionSetLatex } from '../../utils/format-solution-set';
 
 interface ResolveEquationResultPanelProps {
   finishedCode: string | null;
@@ -15,7 +16,6 @@ export const ResolveEquationResultPanel = ({
   onReset,
 }: ResolveEquationResultPanelProps) => {
   const isNoSolution = finishedCode === RESOLUTION_CODES.NO_SOLUTION;
-  const solutionLatex = `\\{ ${solutionSet.map(formatSolutionValueLatex).join(', ')} \\}`;
 
   return (
     <>
@@ -44,11 +44,7 @@ export const ResolveEquationResultPanel = ({
           Conjunto solución
         </h3>
         <p className="text-lg" style={{ color: COLORS.gray[800] }}>
-          {solutionSet.length > 0 ? (
-            <MathExpression expression={`S = ${solutionLatex}`} />
-          ) : (
-            'S = ∅'
-          )}
+          <MathExpression expression={formatSolutionSetLatex(solutionSet)} />
         </p>
         <Button type="button" variant="accent" onClick={onReset} className="mt-4">
           Reiniciar y volver a resolver
@@ -56,24 +52,4 @@ export const ResolveEquationResultPanel = ({
       </div>
     </>
   );
-};
-
-const formatSolutionValueLatex = (value: number): string => {
-  const roundedInt = Math.round(value);
-  if (Math.abs(value - roundedInt) <= 1e-9) return String(roundedInt);
-
-  const sign = value < 0 ? '-' : '';
-  const abs = Math.abs(value);
-  const square = abs * abs;
-  const roundedSquare = Math.round(square);
-  const isPerfectSquare = Number.isInteger(Math.sqrt(roundedSquare));
-  if (
-    roundedSquare > 1 &&
-    Math.abs(square - roundedSquare) <= 1e-8 &&
-    !isPerfectSquare
-  ) {
-    return `${sign}\\sqrt{${roundedSquare}}`;
-  }
-
-  return String(Number(value.toFixed(6)));
 };
