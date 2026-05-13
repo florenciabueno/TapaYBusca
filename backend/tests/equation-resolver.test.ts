@@ -1207,6 +1207,36 @@ describe('ResolutionService internal branches (existing test file)', () => {
     expect(validateSubEquation(eq, sub)).toBe(true);
   });
 
+  it('normalizeInfix: -(2*x) and -2*x produce the same postfix (neg distributes over mul)', () => {
+    const a = infixToPostfix(tokenizeInfix('-(2*x)'));
+    const b = infixToPostfix(tokenizeInfix('-2*x'));
+    expect(a).toEqual(b);
+  });
+
+  it('validateSubEquation accepts -2*x+5 as subexpression of -(2*x)+5=20', () => {
+    const eq = infixToPostfix(tokenizeInfix('-(2*x)+5=20'))!;
+    const sub = infixToPostfix(tokenizeInfix('-2*x+5'))!;
+    expect(validateSubEquation(eq, sub)).toBe(true);
+  });
+
+  it('validateSubEquation accepts -2*x as subexpression of -(2*x)+5=20', () => {
+    const eq = infixToPostfix(tokenizeInfix('-(2*x)+5=20'))!;
+    const sub = infixToPostfix(tokenizeInfix('-2*x'))!;
+    expect(validateSubEquation(eq, sub)).toBe(true);
+  });
+
+  it('validateSubEquation does NOT accept -x+1*2 as subexpression of -(x+1)*2=10 (sum inside parens)', () => {
+    const eq = infixToPostfix(tokenizeInfix('-(x+1)*2=10'))!;
+    const sub = infixToPostfix(tokenizeInfix('-x+1*2'))!;
+    expect(validateSubEquation(eq, sub)).toBe(false);
+  });
+
+  it('validateSubEquation does NOT accept -2/x+1 as subexpression of -(2/x)+1=5 (division inside parens)', () => {
+    const eq = infixToPostfix(tokenizeInfix('-(2/x)+1=5'))!;
+    const sub = infixToPostfix(tokenizeInfix('-2/x+1'))!;
+    expect(validateSubEquation(eq, sub)).toBe(false);
+  });
+
   it('normalizeInfix: nested ((x+1)^3)^2 parses to postfix containing pot', () => {
     const p = infixToPostfix(tokenizeInfix('((x+1)^3)^2'));
     expect(p).not.toBeNull();
