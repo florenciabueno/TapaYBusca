@@ -37,3 +37,13 @@ export function getResolutionFeedbackMessage(code: string): string | null {
   const msg = CODE_MESSAGES[code];
   return msg != null && msg !== '' ? msg : null;
 }
+
+export function deriveResolutionFeedbackMessage(result: {
+  code: string;
+  message?: string;
+}): string | null {
+  if (result.code === RESOLUTION_CODES.SYNTAX_INCORRECT && result.message?.trim()) {
+    return result.message.trim();
+  }
+  return getResolutionFeedbackMessage(result.code);
+}
