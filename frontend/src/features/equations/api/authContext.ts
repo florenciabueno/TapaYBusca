@@ -2,6 +2,8 @@ export type AuthContext =
   | { kind: 'auth'; token: string }
   | { kind: 'guest'; guestSessionId: string };
 
+export type AuthMode = AuthContext['kind'];
+
 export const buildAuthHeaders = (ctx: AuthContext | null): HeadersInit => {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   if (!ctx) return headers;

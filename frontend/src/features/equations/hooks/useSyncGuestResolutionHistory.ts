@@ -1,10 +1,10 @@
 import { useEffect } from 'react';
+import type { AuthMode } from '../api/authContext';
 import {
   clearGuestResolutionHistory,
   upsertGuestResolutionHistory,
 } from '../storage/guestResolutionHistory';
 import type { ResolutionStep } from '../types';
-import type { AuthMode } from './useAuthContext';
 
 interface UseSyncGuestResolutionHistoryArgs {
   id: string | undefined;

@@ -1,38 +1,30 @@
-import type { Dispatch, SetStateAction } from 'react';
 import { COLORS, SPACING } from '../../../../config/theme';
 import { FormMessage } from '../../../../shared/components/ui/FormMessage';
 import { Input } from '../../../../shared/components/ui/Input/Input';
 import { Button } from '../../../../shared/components/ui/Button/Button';
 import { MathSymbolsPad, DEFAULT_MATH_SYMBOLS } from '../MathSymbolsPad';
 import { useResolveEquationFormInputs } from '../../hooks/useResolveEquationFormInputs';
+import type {
+  ResolutionActions,
+  ResolutionFormState,
+  ResolutionMutationStatus,
+} from '../../types';
 
 interface ResolveEquationFormPanelProps {
-  subEquationInfix: string;
-  answer: string;
-  submitting: boolean;
-  resolveStepPending: boolean;
-  finishResolutionPending: boolean;
-  message: string | null;
-  onSubEquationChange: Dispatch<SetStateAction<string>>;
-  onAnswerChange: Dispatch<SetStateAction<string>>;
-  onValidate: () => void;
-  onFinishResolution: () => void;
-  onReset: () => void;
+  form: ResolutionFormState;
+  status: ResolutionMutationStatus;
+  actions: ResolutionActions;
 }
 
 export const ResolveEquationFormPanel = ({
-  subEquationInfix,
-  answer,
-  submitting,
-  resolveStepPending,
-  finishResolutionPending,
-  message,
-  onSubEquationChange,
-  onAnswerChange,
-  onValidate,
-  onFinishResolution,
-  onReset,
+  form,
+  status,
+  actions,
 }: ResolveEquationFormPanelProps) => {
+  const { subEquationInfix, answer, message } = form;
+  const { submitting, resolveStepPending, finishResolutionPending } = status;
+  const { onSubEquationChange, onAnswerChange, onValidate, onFinishResolution, onReset } = actions;
+
   const {
     subInputRef,
     answerInputRef,

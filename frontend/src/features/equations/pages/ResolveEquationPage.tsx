@@ -16,19 +16,10 @@ export const ResolveEquationPage = () => {
     solutionSet,
     loading,
     error,
-    subEquationInfix,
-    answer,
-    submitting,
-    resolveStepPending,
-    finishResolutionPending,
-    message,
-    finished,
-    finishedCode,
-    setSubEquationInfix,
-    setAnswer,
-    handleValidate,
-    handleFinishResolution,
-    handleReset,
+    form,
+    status,
+    outcome,
+    actions,
   } = useResolveEquation(id);
 
   if (loading || !id) {
@@ -55,28 +46,17 @@ export const ResolveEquationPage = () => {
     );
   }
 
-  const isDeletedEquation = equation.isActive === false;
-
   return (
     <EquationsLayout>
       <ResolveEquationContent
         equationExpression={equation.equation}
         steps={steps}
         solutionSet={solutionSet}
-        subEquationInfix={subEquationInfix}
-        answer={answer}
-        submitting={submitting}
-        resolveStepPending={resolveStepPending}
-        finishResolutionPending={finishResolutionPending}
-        message={message}
-        finished={finished}
-        finishedCode={finishedCode}
-        isReadOnly={isDeletedEquation}
-        onSubEquationChange={setSubEquationInfix}
-        onAnswerChange={setAnswer}
-        onValidate={handleValidate}
-        onFinishResolution={handleFinishResolution}
-        onReset={handleReset}
+        form={form}
+        status={status}
+        outcome={outcome}
+        actions={actions}
+        isReadOnly={equation.isActive === false}
       />
     </EquationsLayout>
   );

@@ -1,9 +1,7 @@
 import { useMemo } from 'react';
 import { useAuthStore } from '../../../stores';
-import type { AuthContext } from '../api/authContext';
+import type { AuthContext, AuthMode } from '../api/authContext';
 import { getOrCreateGuestSessionId } from '../storage/guestSession';
-
-export type AuthMode = 'auth' | 'guest';
 
 export interface AuthSnapshot {
   ctx: AuthContext;

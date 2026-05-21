@@ -8,7 +8,14 @@ import {
   RESOLUTION_CODES,
   RESOLUTION_NO_BRANCH_STEP,
 } from '../constants/resolution';
-import type { Equation, ResolutionStep } from '../types';
+import type {
+  Equation,
+  ResolutionActions,
+  ResolutionFormState,
+  ResolutionMutationStatus,
+  ResolutionOutcome,
+  ResolutionStep,
+} from '../types';
 import { useAuthContext } from './useAuthContext';
 import { usePrefillResolutionInputs } from './usePrefillResolutionInputs';
 import { useSyncGuestResolutionHistory } from './useSyncGuestResolutionHistory';
@@ -182,24 +189,30 @@ export const useResolveEquation = (id?: string) => {
         ? resolutionQuery.error.message
         : null;
 
+  const form: ResolutionFormState = { subEquationInfix, answer, message };
+  const status: ResolutionMutationStatus = {
+    submitting,
+    resolveStepPending,
+    finishResolutionPending,
+  };
+  const outcome: ResolutionOutcome = { finished, finishedCode };
+  const actions: ResolutionActions = {
+    onSubEquationChange: setSubEquationInfix,
+    onAnswerChange: setAnswer,
+    onValidate: handleValidate,
+    onFinishResolution: handleFinishResolution,
+    onReset: handleReset,
+  };
+
   return {
     equation,
     steps,
     solutionSet,
     loading,
     error,
-    subEquationInfix,
-    answer,
-    submitting,
-    resolveStepPending,
-    finishResolutionPending,
-    message,
-    finished,
-    finishedCode,
-    setSubEquationInfix,
-    setAnswer,
-    handleValidate,
-    handleFinishResolution,
-    handleReset,
+    form,
+    status,
+    outcome,
+    actions,
   };
 };

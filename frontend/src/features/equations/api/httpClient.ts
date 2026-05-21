@@ -20,9 +20,11 @@ export interface RequestJsonOptions {
 const buildUrl = (path: string): string =>
   path.startsWith('http') ? path : `${API_URL}${path}`;
 
-const readJsonSafely = async (response: Response): Promise<unknown> => {
+const parseResponseBody = async (response: Response): Promise<unknown> => {
+  const text = await response.text();
+  if (!text) return {};
   try {
-    return await response.json();
+    return JSON.parse(text);
   } catch {
     return {};
   }
@@ -61,7 +63,7 @@ export async function requestJson<T>(options: RequestJsonOptions): Promise<T | n
   if (treat404AsNull && response.status === 404) return null;
 
   if (errorStyle === 'simple') {
-    const data = await readJsonSafely(response);
+    const data = await parseResponseBody(response);
     if (!response.ok) {
       throw new Error(extractErrorString(data, fallbackErrorMessage));
     }
@@ -73,5 +75,5 @@ export async function requestJson<T>(options: RequestJsonOptions): Promise<T | n
     throw new Error(message);
   }
 
-  return (await response.json()) as T;
+  return (await parseResponseBody(response)) as T;
 }
