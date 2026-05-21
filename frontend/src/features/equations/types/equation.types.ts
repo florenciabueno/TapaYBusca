@@ -7,7 +7,7 @@ export type EquationListStatusFilter = EquationStatus | typeof EQUATION_LIST_STA
 export interface Equation {
   id: string;
   equation: string;
-  /** Infija del servidor (p. ej. pot2(...)); para rellenar inputs sin usar LaTeX. */
+  /** Server-side infix expression (e.g. pot2(...)); used to prefill inputs without going through LaTeX. */
   infixExpression?: string | null;
   origin: EquationOrigin;
   status: EquationStatus;
