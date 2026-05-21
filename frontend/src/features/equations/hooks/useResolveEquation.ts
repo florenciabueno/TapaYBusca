@@ -14,6 +14,7 @@ import {
   upsertGuestResolutionHistory,
 } from '../storage/guestResolutionHistory.storage';
 import type { Equation, ResolutionStep } from '../types';
+import { infixToUserFacingForInput, splitInfixAtEquals } from '../utils/equation-input-guards';
 
 export const useResolveEquation = (id?: string) => {
   const queryClient = useQueryClient();
@@ -48,6 +49,7 @@ export const useResolveEquation = (id?: string) => {
   const equation: Equation | null = equationQuery.data ?? null;
   const steps: ResolutionStep[] = resolutionQuery.data?.steps ?? [];
   const solutionSet: number[] = resolutionQuery.data?.solutionSet ?? [];
+  const queriesEnabled = Boolean(id);
 
   useEffect(() => {
     setSubEquationInfix('');
@@ -65,6 +67,34 @@ export const useResolveEquation = (id?: string) => {
       emptySolution ? RESOLUTION_CODES.NO_SOLUTION : RESOLUTION_CODES.RESOLUTION_FINISHED
     );
   }, [equation?.id, equation?.status, solutionSet.length]);
+
+  useEffect(() => {
+    if (!queriesEnabled || !id) return;
+    if (!equation || equation.id !== id) return;
+    if (!equation.infixExpression?.trim()) return;
+    if (!resolutionQuery.isSuccess) return;
+    if (equation.status !== 'NOT_STARTED') return;
+    if (finished) return;
+    const stepCount = resolutionQuery.data?.steps?.length ?? 0;
+    if (stepCount > 0) return;
+
+    const userFacing = infixToUserFacingForInput(equation.infixExpression);
+    const parts = splitInfixAtEquals(userFacing);
+    if (!parts) return;
+    const [left, right] = parts;
+    setSubEquationInfix(left);
+    setAnswer(right);
+  }, [
+    id,
+    queriesEnabled,
+    equation?.id,
+    equation?.infixExpression,
+    equation?.status,
+    resolutionQuery.isSuccess,
+    resolutionQuery.data?.steps?.length,
+    finished,
+  ]);
+
 
   const invalidateEquationQueries = useCallback(async () => {
     if (!id) return;
@@ -126,7 +156,6 @@ export const useResolveEquation = (id?: string) => {
   const finishResolutionPending = finishResolutionMutation.isPending;
   const submitting =
     resolveStepPending || resetResolutionMutation.isPending || finishResolutionPending;
-  const queriesEnabled = Boolean(id);
   const loading =
     queriesEnabled && (equationQuery.isLoading || resolutionQuery.isLoading);
   const error =
@@ -153,21 +182,6 @@ export const useResolveEquation = (id?: string) => {
       const result = await resolveStepMutation.mutateAsync({
         subEquationInfix: subEquationInfix.trim() || undefined,
         answer: answer.trim(),
-        resolutionStepStatus: RESOLUTION_NO_BRANCH_STEP,
-      });
-      applyResolveResult(result.code);
-    } catch (e) {
-      setMessage(e instanceof Error ? e.message : 'Error al validar');
-    }
-  };
-
-  const handleEmptySet = async () => {
-    if (!id) return;
-    setMessage(null);
-    try {
-      const result = await resolveStepMutation.mutateAsync({
-        subEquationInfix: subEquationInfix.trim() || undefined,
-        answer: '{}',
         resolutionStepStatus: RESOLUTION_NO_BRANCH_STEP,
       });
       applyResolveResult(result.code);
@@ -246,7 +260,6 @@ export const useResolveEquation = (id?: string) => {
     setSubEquationInfix,
     setAnswer,
     handleValidate,
-    handleEmptySet,
     handleFinishResolution,
     handleReset,
   };

@@ -21,7 +21,6 @@ interface ResolveEquationContentProps {
   onSubEquationChange: Dispatch<SetStateAction<string>>;
   onAnswerChange: Dispatch<SetStateAction<string>>;
   onValidate: () => void;
-  onEmptySet: () => void;
   onFinishResolution: () => void;
   onReset: () => void;
 }
@@ -42,7 +41,6 @@ export const ResolveEquationContent = ({
   onSubEquationChange,
   onAnswerChange,
   onValidate,
-  onEmptySet,
   onFinishResolution,
   onReset,
 }: ResolveEquationContentProps) => {
@@ -79,7 +77,6 @@ export const ResolveEquationContent = ({
       onSubEquationChange={onSubEquationChange}
       onAnswerChange={onAnswerChange}
       onValidate={onValidate}
-      onEmptySet={onEmptySet}
       onFinishResolution={onFinishResolution}
       onReset={onReset}
     />

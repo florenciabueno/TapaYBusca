@@ -13,10 +13,11 @@ for (const envPath of envPaths) {
   if (result.parsed && Object.keys(result.parsed).length > 0) break;
 }
 
-function parseBoolean(value: string | undefined, fallback: boolean): boolean {
-  if (value === undefined) return fallback;
-  return value === 'true' || value === '1';
-}
+/** Google OAuth2 token endpoint (exchanges refresh tokens for access tokens). */
+export const GOOGLE_OAUTH_TOKEN_URL = 'https://oauth2.googleapis.com/token' as const;
+
+/** Gmail API endpoint used to send messages on behalf of the authenticated user. */
+export const GMAIL_SEND_URL = 'https://gmail.googleapis.com/gmail/v1/users/me/messages/send' as const;
 
 export const config = {
   port: parseInt(process.env.PORT || '3001', 10),
@@ -29,12 +30,16 @@ export const config = {
   frontendBaseUrl: process.env.FRONTEND_BASE_URL || 'http://localhost:5173',
   passwordResetTokenTtlMinutes: parseInt(process.env.PASSWORD_RESET_TOKEN_TTL_MINUTES || '60', 10),
 
-  smtp: {
-    host: process.env.SMTP_HOST,
-    port: parseInt(process.env.SMTP_PORT || '587', 10),
-    secure: parseBoolean(process.env.SMTP_SECURE, false),
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-    from: process.env.MAIL_FROM,
+  /**
+   * Sender shown to recipients. The email part MUST equal the Gmail account
+   * that issued the OAuth refresh token, otherwise Gmail rewrites or rejects.
+   */
+  mailFrom: process.env.MAIL_FROM,
+
+  /** Gmail HTTPS API credentials (used instead of SMTP, which Render blocks). */
+  google: {
+    oauthClientId: process.env.GMAIL_OAUTH_CLIENT_ID,
+    oauthClientSecret: process.env.GMAIL_OAUTH_CLIENT_SECRET,
+    oauthRefreshToken: process.env.GMAIL_OAUTH_REFRESH_TOKEN,
   },
 };

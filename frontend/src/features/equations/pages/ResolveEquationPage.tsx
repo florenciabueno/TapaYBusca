@@ -27,7 +27,6 @@ export const ResolveEquationPage = () => {
     setSubEquationInfix,
     setAnswer,
     handleValidate,
-    handleEmptySet,
     handleFinishResolution,
     handleReset,
   } = useResolveEquation(id);
@@ -76,7 +75,6 @@ export const ResolveEquationPage = () => {
         onSubEquationChange={setSubEquationInfix}
         onAnswerChange={setAnswer}
         onValidate={handleValidate}
-        onEmptySet={handleEmptySet}
         onFinishResolution={handleFinishResolution}
         onReset={handleReset}
       />

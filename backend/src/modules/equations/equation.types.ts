@@ -13,6 +13,7 @@ export enum EquationOrigin {
 export interface EquationResponse {
   id: string;
   equation: string;
+  infixExpression?: string | null;
   origin: EquationOrigin;
   status: EquationStatus;
   steps: number;

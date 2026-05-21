@@ -220,6 +220,7 @@ export class EquationService {
     return {
       id: row.id,
       equation: this.getDisplayExpression(row.equation),
+      infixExpression: row.equation.infixExpression?.trim() || null,
       origin: row.origin as EquationOrigin,
       status: row.status as EquationStatus,
       steps,
@@ -239,6 +240,7 @@ export class EquationService {
     return {
       id: eq.id,
       equation: this.getDisplayExpression(eq),
+      infixExpression: eq.infixExpression?.trim() || null,
       origin: EquationOrigin.DEFAULT,
       status: options?.status ?? EquationStatus.NOT_STARTED,
       steps: options?.steps ?? STEPS_DEFAULT,

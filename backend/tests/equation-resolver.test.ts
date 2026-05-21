@@ -166,7 +166,7 @@ describe('Equation resolver API', () => {
       expect(response.status).toBe(200);
       expect(response.body).toMatchObject({
         code: RESOLUTION_CODES.SYNTAX_INCORRECT,
-        message: 'La subecuación es obligatoria',
+        message: 'La ecuación equivalente es obligatoria',
       });
     });
 
@@ -950,10 +950,20 @@ describe('Equation resolution lifecycle endpoints', () => {
       );
     });
 
-    it('MS desde NOT_STARTED guarda el intento en la misma sesión que el próximo resolveStep', async () => {
-      repoMocks.findByIdWithEquation.mockResolvedValue(makeUserEquation());
+    it('returns MS when at least one solution is already logged but another is missing (consistent session)', async () => {
+      repoMocks.findByIdWithEquation.mockResolvedValue(
+        makeUserEquation({
+          status: EquationStatus.IN_PROGRESS,
+          currentResolutionId: 1,
+          equation: {
+            infixExpression: DEFAULT_EQUATIONS.quadratic,
+            postfixExpression: DEFAULT_EQUATIONS.quadratic,
+            solutionValues: [2, -6],
+          },
+        })
+      );
       repoMocks.getMaxResolutionSessionId.mockResolvedValue(0);
-      repoMocks.getDistinctLoggedSolutions.mockResolvedValue([]);
+      repoMocks.getDistinctLoggedSolutions.mockResolvedValue([2]);
 
       const response = await request(app)
         .post('/api/equations/ue-1/finish-resolution')
@@ -972,6 +982,64 @@ describe('Equation resolution lifecycle endpoints', () => {
         currentResolutionId: 1,
         selectedBranch: '',
       });
+    });
+
+    it('returns RT and marks SOLVED when there are no logged steps and the equation has no real solutions (Finish = S={})', async () => {
+      repoMocks.findByIdWithEquation.mockResolvedValue(
+        makeUserEquation({
+          status: EquationStatus.NOT_STARTED,
+          currentResolutionId: 0,
+          equation: {
+            infixExpression: DEFAULT_EQUATIONS.noRealSolution,
+            postfixExpression: DEFAULT_EQUATIONS.noRealSolution,
+            solutionValues: [],
+          },
+        })
+      );
+      repoMocks.getMaxResolutionSessionId.mockResolvedValue(0);
+      repoMocks.getDistinctLoggedSolutions.mockResolvedValue([]);
+      repoMocks.findResolutionsByUserEquation.mockResolvedValue([]);
+
+      const response = await request(app)
+        .post('/api/equations/ue-1/finish-resolution')
+        .set(authHeader(token));
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({ code: RESOLUTION_CODES.RESOLUTION_FINISHED });
+      expect(repoMocks.createResolution).toHaveBeenCalledWith(
+        expect.objectContaining({
+          proposedResult: EMPTY_SET,
+          isCorrect: true,
+        })
+      );
+      expect(repoMocks.updateResolutionState).toHaveBeenCalledWith(
+        'ue-1',
+        expect.objectContaining({ status: EquationStatus.SOLVED })
+      );
+    });
+
+    it('returns RI when there are no logged steps but the equation has solutions (Finish = S={} is incorrect)', async () => {
+      repoMocks.findByIdWithEquation.mockResolvedValue(makeUserEquation());
+      repoMocks.getMaxResolutionSessionId.mockResolvedValue(0);
+      repoMocks.getDistinctLoggedSolutions.mockResolvedValue([]);
+      repoMocks.findResolutionsByUserEquation.mockResolvedValue([]);
+
+      const response = await request(app)
+        .post('/api/equations/ue-1/finish-resolution')
+        .set(authHeader(token));
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({ code: RESOLUTION_CODES.RESULT_INCORRECT });
+      expect(repoMocks.createResolution).toHaveBeenCalledWith(
+        expect.objectContaining({
+          proposedResult: EMPTY_SET,
+          isCorrect: false,
+        })
+      );
+      expect(repoMocks.updateResolutionState).toHaveBeenCalledWith(
+        'ue-1',
+        expect.objectContaining({ status: EquationStatus.IN_PROGRESS })
+      );
     });
 
     it('returns RT and marks SOLVED when todas las raíces están registradas', async () => {
@@ -1207,6 +1275,36 @@ describe('ResolutionService internal branches (existing test file)', () => {
     expect(validateSubEquation(eq, sub)).toBe(true);
   });
 
+  it('normalizeInfix: -(2*x) and -2*x produce the same postfix (neg distributes over mul)', () => {
+    const a = infixToPostfix(tokenizeInfix('-(2*x)'));
+    const b = infixToPostfix(tokenizeInfix('-2*x'));
+    expect(a).toEqual(b);
+  });
+
+  it('validateSubEquation accepts -2*x+5 as subexpression of -(2*x)+5=20', () => {
+    const eq = infixToPostfix(tokenizeInfix('-(2*x)+5=20'))!;
+    const sub = infixToPostfix(tokenizeInfix('-2*x+5'))!;
+    expect(validateSubEquation(eq, sub)).toBe(true);
+  });
+
+  it('validateSubEquation accepts -2*x as subexpression of -(2*x)+5=20', () => {
+    const eq = infixToPostfix(tokenizeInfix('-(2*x)+5=20'))!;
+    const sub = infixToPostfix(tokenizeInfix('-2*x'))!;
+    expect(validateSubEquation(eq, sub)).toBe(true);
+  });
+
+  it('validateSubEquation does NOT accept -x+1*2 as subexpression of -(x+1)*2=10 (sum inside parens)', () => {
+    const eq = infixToPostfix(tokenizeInfix('-(x+1)*2=10'))!;
+    const sub = infixToPostfix(tokenizeInfix('-x+1*2'))!;
+    expect(validateSubEquation(eq, sub)).toBe(false);
+  });
+
+  it('validateSubEquation does NOT accept -2/x+1 as subexpression of -(2/x)+1=5 (division inside parens)', () => {
+    const eq = infixToPostfix(tokenizeInfix('-(2/x)+1=5'))!;
+    const sub = infixToPostfix(tokenizeInfix('-2/x+1'))!;
+    expect(validateSubEquation(eq, sub)).toBe(false);
+  });
+
   it('normalizeInfix: nested ((x+1)^3)^2 parses to postfix containing pot', () => {
     const p = infixToPostfix(tokenizeInfix('((x+1)^3)^2'));
     expect(p).not.toBeNull();
@@ -1246,5 +1344,17 @@ describe('computeEffectiveResolutionSessionId', () => {
     expect(computeEffectiveResolutionSessionId(1, 0, 0)).toBe(1);
     expect(computeEffectiveResolutionSessionId(0, 0, 2)).toBe(2);
     expect(computeEffectiveResolutionSessionId(0, 1, 1)).toBe(1);
+  });
+});
+
+describe('resultToLatex', () => {
+  it('renders a positive simple fraction as \\frac{n}{d}', async () => {
+    const { resultToLatex } = await import('../src/modules/equations/infix-to-latex.js');
+    expect(resultToLatex('3/4')).toBe('\\frac{3}{4}');
+  });
+
+  it('renders a negative simple fraction with the minus outside the fraction', async () => {
+    const { resultToLatex } = await import('../src/modules/equations/infix-to-latex.js');
+    expect(resultToLatex('-1/2')).toBe('-\\frac{1}{2}');
   });
 });

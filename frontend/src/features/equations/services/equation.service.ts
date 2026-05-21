@@ -28,6 +28,7 @@ const getGuestHeaders = (guestSessionId: string) => ({
 function mapItem(eq: {
   id: string;
   equation: string;
+  infixExpression?: string | null;
   origin: string;
   status: string;
   steps: number;
@@ -37,6 +38,9 @@ function mapItem(eq: {
   return {
     id: eq.id,
     equation: eq.equation,
+    ...(eq.infixExpression !== undefined && eq.infixExpression !== null
+      ? { infixExpression: eq.infixExpression }
+      : {}),
     origin: eq.origin as Equation['origin'],
     status: eq.status as Equation['status'],
     steps: eq.steps,

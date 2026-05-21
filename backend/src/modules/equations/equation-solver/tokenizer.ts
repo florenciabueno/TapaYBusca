@@ -28,6 +28,23 @@ function expandNumericLiteralPowers(s: string): string {
   return out;
 }
 
+/**
+ * Matches a unary minus followed by `(...)` where the parenthesised content is
+ * a product chain. We treat `-(a*b)` as equivalent to `-a*b`.
+ * The leading group ensures `-` is unary (start of string or after an operator).
+ */
+const UNARY_NEG_MUL_CHAIN_PARENS = /(^|[(+\-*/=^])-\(([\d.x]+(?:\*[\d.x]+)+)\)/g;
+
+function unwrapUnaryNegMulChainParens(s: string): string {
+  let out = s;
+  for (let guard = 0; guard < 16; guard++) {
+    const next = out.replace(UNARY_NEG_MUL_CHAIN_PARENS, '$1-$2');
+    if (next === out) break;
+    out = next;
+  }
+  return out;
+}
+
 function normalizeParenPowers(s: string): string {
   let out = s;
   for (const [suffix, fn] of [
@@ -65,6 +82,7 @@ export function normalizeInfix(equation: string): string {
   s = s.replace(/x\^3/g, 'pot3(x)');
   s = s.replace(/x\^2/g, 'pot2(x)');
   s = normalizeParenPowers(s);
+  s = unwrapUnaryNegMulChainParens(s);
   return s;
 }
 

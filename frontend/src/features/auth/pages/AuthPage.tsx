@@ -12,6 +12,7 @@ export const AuthPage = () => {
 
   return (
     <AuthLayout
+      homeHref={ROUTES.DASHBOARD}
       footer={
         isRegister ? (
           <AuthFooter

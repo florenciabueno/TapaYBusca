@@ -21,6 +21,7 @@ export const UploadableEquationRow = ({
   if (displayOnly) {
     return (
       <div
+        translate="no"
         className="flex items-center gap-3 rounded-lg border bg-white p-4 transition-shadow"
         style={{
           borderRadius: RADIUS.lg,
@@ -37,6 +38,7 @@ export const UploadableEquationRow = ({
 
   return (
     <label
+      translate="no"
       className="flex cursor-pointer items-start gap-3 rounded-lg border bg-white p-4 transition-shadow hover:shadow-md"
       style={{
         borderRadius: RADIUS.lg,

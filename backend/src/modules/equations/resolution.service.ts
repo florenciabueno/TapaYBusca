@@ -27,7 +27,7 @@ import { listContainsList } from './equation-solver/evaluate-tree.js';
 import { infixToLatex, resultToLatex } from './infix-to-latex.js';
 
 const RESULT_VALUE_SEPARATOR = ';';
-const MESSAGE_RESOLVE_SUBEQUATION_REQUIRED = 'La subecuación es obligatoria';
+const MESSAGE_RESOLVE_SUBEQUATION_REQUIRED = 'La ecuación equivalente es obligatoria';
 const MESSAGE_RESOLVE_EQUATION_NOT_FOUND = 'Ecuación no encontrada.';
 const MESSAGE_RESOLVE_NO_PERMISSIONS = 'No tienes permisos para resolver esta ecuación.';
 const MESSAGE_RESOLVE_INVALID_EQUATION = 'La ecuación almacenada es inválida.';
@@ -803,6 +803,16 @@ export class ResolutionService {
       userEquationId,
       effectiveResolutionId
     );
+
+    // If the student hasn't registered any solution, interpret "Finish resolution"
+    // as asserting that the solution set is empty.
+    if (logged.length === 0) {
+      return this.resolveStep(userEquationId, userId, {
+        subEquationInfix: undefined,
+        answer: EMPTY_SET,
+        resolutionStepStatus: RESOLUTION_STEP_NO_BRANCH,
+      });
+    }
 
     const complete = this.isKnownSolutionSetComplete(knownSolutions, logged);
 

@@ -21,7 +21,9 @@ export function resultToLatex(result: string): string {
   const simpleFrac = s.match(/^(-?\d+)\/(\d+)$/);
   if (simpleFrac) {
     const [, num, den] = simpleFrac;
-    return `\\frac{${num}}{${den}}`;
+    const isNegative = num!.startsWith('-');
+    const absNum = isNegative ? num!.slice(1) : num!;
+    return `${isNegative ? '-' : ''}\\frac{${absNum}}{${den}}`;
   }
   try {
     return infixToLatex(s);

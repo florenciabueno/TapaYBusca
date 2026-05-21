@@ -16,7 +16,6 @@ interface ResolveEquationFormPanelProps {
   onSubEquationChange: Dispatch<SetStateAction<string>>;
   onAnswerChange: Dispatch<SetStateAction<string>>;
   onValidate: () => void;
-  onEmptySet: () => void;
   onFinishResolution: () => void;
   onReset: () => void;
 }
@@ -31,7 +30,6 @@ export const ResolveEquationFormPanel = ({
   onSubEquationChange,
   onAnswerChange,
   onValidate,
-  onEmptySet,
   onFinishResolution,
   onReset,
 }: ResolveEquationFormPanelProps) => {
@@ -51,6 +49,7 @@ export const ResolveEquationFormPanel = ({
   return (
     <>
       <fieldset
+        translate="no"
         style={{ marginBottom: SPACING.lg }}
         className="min-w-0 border-0 p-0 m-0"
       >
@@ -58,7 +57,7 @@ export const ResolveEquationFormPanel = ({
           className="block text-sm font-medium mb-2 px-0"
           style={{ color: COLORS.accentSecondary }}
         >
-          Ingresa la subecuación de un lado y del otro tu respuesta
+          Ingresa la nueva ecuación equivalente de un lado y del otro tu respuesta
         </legend>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
           <div className="flex-1 min-w-0">
@@ -111,9 +110,6 @@ export const ResolveEquationFormPanel = ({
         </Button>
         <Button type="button" variant="accent" disabled={submitting} onClick={onFinishResolution}>
           {finishResolutionPending ? 'Finalizando...' : 'Terminar resolución'}
-        </Button>
-        <Button type="button" variant="outline" disabled={submitting} onClick={onEmptySet}>
-          S = {'{}'}
         </Button>
         <Button type="button" variant="outline" disabled={submitting} onClick={onReset}>
           Reiniciar

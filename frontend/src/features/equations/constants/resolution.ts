@@ -28,8 +28,8 @@ const CODE_MESSAGES: Record<string, string> = {
   [RESOLUTION_CODES.FIRST_WARNING]: '¿La ecuación tendrá solución real?',
   [RESOLUTION_CODES.RESULT_REPEATED]: 'Otro número, no el mismo',
   [RESOLUTION_CODES.RESULT_INCORRECT]: '¿Mmm… ¿Estás segur@?',
-  [RESOLUTION_CODES.STEP_INCORRECT]: 'El valor no es correcto para esta subecuación',
-  [RESOLUTION_CODES.SYNTAX_INCORRECT]: 'La subecuación seleccionada no es válida',
+  [RESOLUTION_CODES.STEP_INCORRECT]: 'El valor no es correcto para esta ecuación equivalente',
+  [RESOLUTION_CODES.SYNTAX_INCORRECT]: 'La ecuación equivalente seleccionada no es válida',
   [RESOLUTION_CODES.STEP_REPEATED]: 'Ya ingresaste este paso',
 };
 

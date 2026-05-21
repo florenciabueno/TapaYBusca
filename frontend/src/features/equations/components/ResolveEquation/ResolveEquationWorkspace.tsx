@@ -19,7 +19,6 @@ export interface ResolveEquationWorkspaceProps {
   onSubEquationChange: Dispatch<SetStateAction<string>>;
   onAnswerChange: Dispatch<SetStateAction<string>>;
   onValidate: () => void;
-  onEmptySet: () => void;
   onFinishResolution: () => void;
   onReset: () => void;
 }
@@ -39,7 +38,6 @@ export const ResolveEquationWorkspace = ({
   onSubEquationChange,
   onAnswerChange,
   onValidate,
-  onEmptySet,
   onFinishResolution,
   onReset,
 }: ResolveEquationWorkspaceProps) => {
@@ -50,7 +48,10 @@ export const ResolveEquationWorkspace = ({
       maxWidth={hasSteps ? 'full' : 'wide'}
     >
       <div className="grid grid-cols-1 lg:grid-cols-[2fr_3fr] gap-6 lg:gap-8">
-        <ResolveEquationEquationPanel equationExpression={equationExpression} />
+        <ResolveEquationEquationPanel
+          equationExpression={equationExpression}
+          partialSolutionSet={finished ? undefined : solutionSet}
+        />
         <div className="flex flex-col min-h-0">
           {finished ? (
             <ResolveEquationResultPanel
@@ -69,7 +70,6 @@ export const ResolveEquationWorkspace = ({
               onSubEquationChange={onSubEquationChange}
               onAnswerChange={onAnswerChange}
               onValidate={onValidate}
-              onEmptySet={onEmptySet}
               onFinishResolution={onFinishResolution}
               onReset={onReset}
             />

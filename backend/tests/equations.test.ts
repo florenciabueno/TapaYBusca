@@ -542,6 +542,7 @@ describe('Equations API', () => {
       expect(response.body).toMatchObject({
         id: 'ue-1',
         equation: 'x+1=5',
+        infixExpression: 'x+1=5',
         origin: EquationOrigin.CREATED,
         status: EquationStatus.NOT_STARTED,
         isActive: true,

@@ -25,6 +25,7 @@ export const UploadFormPanel = ({
 }: UploadFormPanelProps) => {
   return (
     <form
+      translate="no"
       id="tabpanel-can-upload"
       role="tabpanel"
       aria-labelledby="tab-can-upload"

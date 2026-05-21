@@ -90,7 +90,7 @@ export class PasswordResetService {
       .catch((error) => {
         const message = error?.message ?? String(error);
         const response = error?.response ?? '';
-        console.error('Error enviando email de reset password:', message, response ? `\n  Respuesta SMTP: ${response}` : '');
+        console.error('Error enviando email de reset password:', message, response ? `\n  Detail: ${response}` : '');
       });
   }
 }
