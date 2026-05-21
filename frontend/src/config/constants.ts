@@ -7,12 +7,12 @@ export const ROUTES = {
   FORGOT_PASSWORD: '/forgot-password',
   RESET_PASSWORD: '/reset-password/:token',
   DASHBOARD: '/dashboard',
-  CREATE_EQUATION: '/crear-ecuacion',
-  UPLOAD: '/subir',
-  DOWNLOAD: '/descargar',
-  RESOLVE_EQUATION: '/ecuacion/:id/resolver',
+  CREATE_EQUATION: '/create-equation',
+  UPLOAD: '/upload',
+  DOWNLOAD: '/download',
+  RESOLVE_EQUATION: '/resolve-equation/:id',
 } as const;
 
-export const resolveEquationPath = (id: string) => `/ecuacion/${id}/resolver`;
+export const resolveEquationPath = (id: string) => `/resolve-equation/${id}`;
 
 export const EQUATIONS_PAGE_SIZE = 12;
