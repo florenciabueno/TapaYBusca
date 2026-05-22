@@ -19,6 +19,10 @@ import {
   validateSubEquation,
 } from '../src/modules/equations/equation-solver/resolve-helpers.js';
 import { ResolutionService } from '../src/modules/equations/resolution.service.js';
+import {
+  hasRepeatedBranchResult,
+  isPreviousStepValid,
+} from '../src/modules/equations/resolution-step-evaluation.js';
 
 vi.mock('../src/modules/equations/equation.repository.js', () => {
   const findByIdWithEquation = vi.fn();
@@ -1120,9 +1124,9 @@ describe('Equation resolution lifecycle endpoints', () => {
   });
 });
 
-describe('ResolutionService internal branches (existing test file)', () => {
-  function createService(repoOverrides: Record<string, unknown> = {}) {
-    const repo = {
+describe('Resolution step evaluation', () => {
+  function createRepo(repoOverrides: Record<string, unknown> = {}) {
+    return {
       getPreviousStep: vi.fn().mockResolvedValue(null),
       findByIdWithEquation: vi.fn().mockResolvedValue(
         makeUserEquation({
@@ -1135,16 +1139,12 @@ describe('ResolutionService internal branches (existing test file)', () => {
       ),
       ...repoOverrides,
     };
-
-    return {
-      service: new ResolutionService(repo as never),
-      repo,
-    };
   }
 
   it('isPreviousStepValid returns true when no previous step exists', async () => {
-    const { service } = createService();
-    const valid = await (service as any).isPreviousStepValid(
+    const repo = createRepo();
+    const valid = await isPreviousStepValid(
+      repo as never,
       'ue-1',
       1,
       toPostfixTokens('x+5'),
@@ -1155,12 +1155,13 @@ describe('ResolutionService internal branches (existing test file)', () => {
   });
 
   it('isPreviousStepValid returns true when equation is missing in repository row', async () => {
-    const { service } = createService({
+    const repo = createRepo({
       getPreviousStep: vi.fn().mockResolvedValue({ resultValue: '7' }),
       findByIdWithEquation: vi.fn().mockResolvedValue({ id: 'ue-1' }),
     });
 
-    const valid = await (service as any).isPreviousStepValid(
+    const valid = await isPreviousStepValid(
+      repo as never,
       'ue-1',
       1,
       toPostfixTokens('x+5'),
@@ -1171,11 +1172,12 @@ describe('ResolutionService internal branches (existing test file)', () => {
   });
 
   it('isPreviousStepValid returns true when subEquation cannot be replaced', async () => {
-    const { service } = createService({
+    const repo = createRepo({
       getPreviousStep: vi.fn().mockResolvedValue({ resultValue: '7' }),
     });
 
-    const valid = await (service as any).isPreviousStepValid(
+    const valid = await isPreviousStepValid(
+      repo as never,
       'ue-1',
       1,
       toPostfixTokens('x+99'),
@@ -1186,7 +1188,7 @@ describe('ResolutionService internal branches (existing test file)', () => {
   });
 
   it('isPreviousStepValid returns true when replaced tree is not a binary equality', async () => {
-    const { service } = createService({
+    const repo = createRepo({
       getPreviousStep: vi.fn().mockResolvedValue({ resultValue: '7' }),
       findByIdWithEquation: vi.fn().mockResolvedValue(
         makeUserEquation({
@@ -1199,7 +1201,8 @@ describe('ResolutionService internal branches (existing test file)', () => {
       ),
     });
 
-    const valid = await (service as any).isPreviousStepValid(
+    const valid = await isPreviousStepValid(
+      repo as never,
       'ue-1',
       1,
       toPostfixTokens('x+5'),
@@ -1210,11 +1213,12 @@ describe('ResolutionService internal branches (existing test file)', () => {
   });
 
   it('isPreviousStepValid returns true when previous result appears in evaluated sides', async () => {
-    const { service } = createService({
+    const repo = createRepo({
       getPreviousStep: vi.fn().mockResolvedValue({ resultValue: '7;foo' }),
     });
 
-    const valid = await (service as any).isPreviousStepValid(
+    const valid = await isPreviousStepValid(
+      repo as never,
       'ue-1',
       1,
       toPostfixTokens('x+5'),
@@ -1225,11 +1229,12 @@ describe('ResolutionService internal branches (existing test file)', () => {
   });
 
   it('isPreviousStepValid returns false when previous values do not match evaluated sides', async () => {
-    const { service } = createService({
+    const repo = createRepo({
       getPreviousStep: vi.fn().mockResolvedValue({ resultValue: '9;11' }),
     });
 
-    const valid = await (service as any).isPreviousStepValid(
+    const valid = await isPreviousStepValid(
+      repo as never,
       'ue-1',
       1,
       toPostfixTokens('x+5'),
@@ -1240,7 +1245,7 @@ describe('ResolutionService internal branches (existing test file)', () => {
   });
 
   it('isPreviousStepValid accepts sqrt-chain step when sides balance at a known solution', async () => {
-    const { service } = createService({
+    const repo = createRepo({
       getPreviousStep: vi.fn().mockResolvedValue({ resultValue: '1' }),
       findByIdWithEquation: vi.fn().mockResolvedValue(
         makeUserEquation({
@@ -1253,7 +1258,8 @@ describe('ResolutionService internal branches (existing test file)', () => {
       ),
     });
 
-    const valid = await (service as any).isPreviousStepValid(
+    const valid = await isPreviousStepValid(
+      repo as never,
       'ue-1',
       1,
       toPostfixTokens('1+sqrt(x)'),
@@ -1326,15 +1332,15 @@ describe('ResolutionService internal branches (existing test file)', () => {
     const getPreviousStep = vi.fn().mockResolvedValueOnce(null).mockResolvedValueOnce({
       resultValue: '4;5',
     });
-    const { service } = createService({ getPreviousStep });
+    const repo = createRepo({ getPreviousStep });
 
-    const noBranch = await (service as any).hasRepeatedBranchResult('ue-1', 1, RESOLUTION_STEP_NO_BRANCH, 4);
+    const noBranch = await hasRepeatedBranchResult(repo as never, 'ue-1', 1, RESOLUTION_STEP_NO_BRANCH, 4);
     expect(noBranch).toBe(false);
 
-    const noPrevious = await (service as any).hasRepeatedBranchResult('ue-1', 1, 2, 4);
+    const noPrevious = await hasRepeatedBranchResult(repo as never, 'ue-1', 1, 2, 4);
     expect(noPrevious).toBe(false);
 
-    const repeated = await (service as any).hasRepeatedBranchResult('ue-1', 1, 2, 5);
+    const repeated = await hasRepeatedBranchResult(repo as never, 'ue-1', 1, 2, 5);
     expect(repeated).toBe(true);
   });
 });

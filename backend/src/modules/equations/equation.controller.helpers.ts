@@ -14,8 +14,10 @@ const VALID_ORIGINS = new Set<string>(Object.values(EquationOrigin));
 const VALID_STATUSES = new Set<string>(Object.values(EquationStatus));
 const LIST_STATUS_DELETED = 'DELETED';
 const PERMISSION_ERROR_KEYWORD = 'permisos';
+const VALIDATION_ERROR_KEYWORDS = ['inválido', 'inválida', 'obligatoria'] as const;
 const GUEST_SESSION_ID_HEADER = 'x-guest-session-id';
 const GUEST_SESSION_ID_PATTERN = /^[a-zA-Z0-9_-]{16,120}$/;
+const MESSAGE_INVALID_EQUATION_ID = 'ID de ecuación inválido.';
 
 type QueryParams = Request['query'];
 type RouteParams = Request['params'];
@@ -111,12 +113,11 @@ export function parseDownloadBody(body: unknown): DownloadEquationsDto {
 }
 
 export function parseResolveStepBody(body: unknown): ResolveStepDto {
-  const b = asObject(body);
-  const subEquationInfix = typeof b.subEquationInfix === 'string' ? b.subEquationInfix : undefined;
-  const answer = typeof b.answer === 'string' ? b.answer : '';
+  const bodyObject = asObject(body);
+  const subEquationInfix = typeof bodyObject.subEquationInfix === 'string' ? bodyObject.subEquationInfix : undefined;
+  const answer = typeof bodyObject.answer === 'string' ? bodyObject.answer : '';
   const resolutionStepStatus =
-    typeof b.resolutionStepStatus === 'number' ? b.resolutionStepStatus : undefined;
-
+    typeof bodyObject.resolutionStepStatus === 'number' ? bodyObject.resolutionStepStatus : undefined;
   return {
     subEquationInfix,
     answer,
@@ -124,13 +125,11 @@ export function parseResolveStepBody(body: unknown): ResolveStepDto {
   };
 }
 
-export function parseUserEquationIdParam(params: RouteParams): string {
+export function parseRequiredIdParam(params: RouteParams): string {
   const id = typeof params.id === 'string' ? params.id.trim() : '';
-  if (!id) throw new Error('ID de ecuación inválido.');
+  if (!id) throw new Error(MESSAGE_INVALID_EQUATION_ID);
   return id;
 }
-
-
 
 export function parseGuestSessionId(req: Request): string {
   const headerValue = req.headers[GUEST_SESSION_ID_HEADER];
@@ -193,4 +192,9 @@ export function getErrorMessage(error: unknown, fallback: string): string {
 
 export function isPermissionError(error: unknown): boolean {
   return error instanceof Error && error.message.includes(PERMISSION_ERROR_KEYWORD);
+}
+
+export function isValidationError(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  return VALIDATION_ERROR_KEYWORDS.some((keyword) => error.message.includes(keyword));
 }

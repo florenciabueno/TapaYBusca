@@ -4,17 +4,18 @@ import { ResolutionService } from './resolution.service.js';
 import {
   getErrorMessage,
   isPermissionError,
+  isValidationError,
   parseCreateEquationBody,
   parseDateFilters,
   parseDownloadBody,
   parseOriginsQuery,
   parsePageAndLimit,
   parseGuestSessionId,
+  parseRequiredIdParam,
   parseResolveStepBody,
   parseStatusesQuery,
   parseUpdateEquationBody,
   parseUploadEquationsBody,
-  parseUserEquationIdParam,
   parseUserListStatusesQuery,
 } from './equation.controller.helpers.js';
 import { GuestResolutionService } from './guest-resolution.service.js';
@@ -135,7 +136,7 @@ export class EquationController {
 
   getEquationById = async (req: Request, res: Response): Promise<void> => {
     try {
-      const id = parseUserEquationIdParam(req.params);
+      const id = parseRequiredIdParam(req.params);
       const equation = await this.equationService.getEquationById(id);
       if (!equation) {
         res.status(404).json({ error: ERROR_EQUATION_NOT_FOUND });
@@ -151,7 +152,7 @@ export class EquationController {
 
   getGuestEquationById = async (req: Request, res: Response): Promise<void> => {
     try {
-      const equationId = parseUserEquationIdParam(req.params);
+      const equationId = parseRequiredIdParam(req.params);
       const guestSessionId = parseGuestSessionId(req);
       const guestProgress = await this.guestResolutionService.getGuestEquationById(
         equationId,
@@ -172,7 +173,8 @@ export class EquationController {
       }
       res.status(200).json(equation);
     } catch (error: unknown) {
-      res.status(400).json({
+      const status = isValidationError(error) ? 400 : 500;
+      res.status(status).json({
         error: getErrorMessage(error, ERROR_GET_EQUATION),
       });
     }
@@ -193,7 +195,7 @@ export class EquationController {
 
   updateEquation = async (req: Request, res: Response): Promise<void> => {
     try {
-      const id = parseUserEquationIdParam(req.params);
+      const id = parseRequiredIdParam(req.params);
       const userId = req.userId!;
       const data = parseUpdateEquationBody(req.body);
       const equation = await this.equationService.updateEquation(id, data, userId);
@@ -208,7 +210,7 @@ export class EquationController {
 
   deleteEquation = async (req: Request, res: Response): Promise<void> => {
     try {
-      const id = parseUserEquationIdParam(req.params);
+      const id = parseRequiredIdParam(req.params);
       const userId = req.userId!;
       await this.equationService.deleteEquation(id, userId);
       res.status(204).send();
@@ -222,7 +224,7 @@ export class EquationController {
 
   resolveStep = async (req: Request, res: Response): Promise<void> => {
     try {
-      const userEquationId = parseUserEquationIdParam(req.params);
+      const userEquationId = parseRequiredIdParam(req.params);
       const userId = req.userId!;
       const payload = parseResolveStepBody(req.body);
       const result = await this.resolutionService.resolveStep(userEquationId, userId, payload);
@@ -236,7 +238,7 @@ export class EquationController {
 
   guestResolveStep = async (req: Request, res: Response): Promise<void> => {
     try {
-      const equationId = parseUserEquationIdParam(req.params);
+      const equationId = parseRequiredIdParam(req.params);
       const guestSessionId = parseGuestSessionId(req);
       const payload = parseResolveStepBody(req.body);
       const result = await this.guestResolutionService.resolveStep(
@@ -246,7 +248,8 @@ export class EquationController {
       );
       res.status(200).json(result);
     } catch (error: unknown) {
-      res.status(400).json({
+      const status = isValidationError(error) ? 400 : 500;
+      res.status(status).json({
         error: getErrorMessage(error, ERROR_RESOLVE_STEP),
       });
     }
@@ -254,7 +257,7 @@ export class EquationController {
 
   getResolution = async (req: Request, res: Response): Promise<void> => {
     try {
-      const userEquationId = parseUserEquationIdParam(req.params);
+      const userEquationId = parseRequiredIdParam(req.params);
       const userId = req.userId!;
       const data = await this.resolutionService.getResolution(userEquationId, userId);
       if (!data) {
@@ -271,7 +274,7 @@ export class EquationController {
 
   guestGetResolution = async (req: Request, res: Response): Promise<void> => {
     try {
-      const equationId = parseUserEquationIdParam(req.params);
+      const equationId = parseRequiredIdParam(req.params);
       const guestSessionId = parseGuestSessionId(req);
       const data = await this.guestResolutionService.getResolution(equationId, guestSessionId);
       if (!data) {
@@ -280,7 +283,8 @@ export class EquationController {
       }
       res.status(200).json(data);
     } catch (error: unknown) {
-      res.status(500).json({
+      const status = isValidationError(error) ? 400 : 500;
+      res.status(status).json({
         error: getErrorMessage(error, ERROR_GET_RESOLUTION),
       });
     }
@@ -288,7 +292,7 @@ export class EquationController {
 
   resetResolution = async (req: Request, res: Response): Promise<void> => {
     try {
-      const userEquationId = parseUserEquationIdParam(req.params);
+      const userEquationId = parseRequiredIdParam(req.params);
       const userId = req.userId!;
       const ok = await this.resolutionService.resetResolution(userEquationId, userId);
       if (!ok) {
@@ -305,7 +309,7 @@ export class EquationController {
 
   guestResetResolution = async (req: Request, res: Response): Promise<void> => {
     try {
-      const equationId = parseUserEquationIdParam(req.params);
+      const equationId = parseRequiredIdParam(req.params);
       const guestSessionId = parseGuestSessionId(req);
       const ok = await this.guestResolutionService.resetResolution(equationId, guestSessionId);
       if (!ok) {
@@ -314,7 +318,8 @@ export class EquationController {
       }
       res.status(200).json({ ok: true });
     } catch (error: unknown) {
-      res.status(500).json({
+      const status = isValidationError(error) ? 400 : 500;
+      res.status(status).json({
         error: getErrorMessage(error, ERROR_RESET_RESOLUTION),
       });
     }
@@ -322,7 +327,7 @@ export class EquationController {
 
   finishResolution = async (req: Request, res: Response): Promise<void> => {
     try {
-      const userEquationId = parseUserEquationIdParam(req.params);
+      const userEquationId = parseRequiredIdParam(req.params);
       const userId = req.userId!;
       const result = await this.resolutionService.finishResolution(userEquationId, userId);
       res.status(200).json(result);
@@ -335,7 +340,7 @@ export class EquationController {
 
   guestFinishResolution = async (req: Request, res: Response): Promise<void> => {
     try {
-      const equationId = parseUserEquationIdParam(req.params);
+      const equationId = parseRequiredIdParam(req.params);
       const guestSessionId = parseGuestSessionId(req);
       const result = await this.guestResolutionService.finishResolution(
         equationId,
@@ -343,7 +348,8 @@ export class EquationController {
       );
       res.status(200).json(result);
     } catch (error: unknown) {
-      res.status(500).json({
+      const status = isValidationError(error) ? 400 : 500;
+      res.status(status).json({
         error: getErrorMessage(error, ERROR_FINISH_RESOLUTION),
       });
     }

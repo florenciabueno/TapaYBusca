@@ -2,11 +2,16 @@ import type { Prisma } from '@prisma/client';
 import { prisma } from '../../config/database.js';
 import {
   CreateEquationDto,
+  CreateResolutionInput,
+  ResolutionStateUpdate,
   UpdateEquationUserDto,
   EquationStatus,
   EquationOrigin,
 } from './equation.types.js';
-import { RESOLUTION_STEP_NO_BRANCH } from './equation-solver/resolution-constants.js';
+import {
+  RESOLUTION_STEP_BRANCH,
+  RESOLUTION_STEP_NO_BRANCH,
+} from './equation-solver/resolution-constants.js';
 
 type TxClient = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
 
@@ -80,10 +85,7 @@ export class EquationRepository {
     });
   }
 
-  async updateResolutionState(
-    userEquationId: string,
-    data: { status?: EquationStatus; currentResolutionId?: number; selectedBranch?: string }
-  ) {
+  async updateResolutionState(userEquationId: string, data: ResolutionStateUpdate) {
     return prisma.userEquation.update({
       where: { id: userEquationId },
       data: { ...data, updatedAt: new Date() },
@@ -91,18 +93,7 @@ export class EquationRepository {
     });
   }
 
-  async createResolution(data: {
-    userEquationId: string;
-    resolutionSessionId: number;
-    subEquation: string;
-    subEquationInfix?: string | null;
-    proposedResult: string;
-    resultValue: string;
-    stepWithoutSolution: boolean;
-    isCorrect: boolean;
-    isVariable: boolean;
-    resolutionSide: number;
-  }) {
+  async createResolution(data: CreateResolutionInput) {
     return prisma.resolution.create({
       data: {
         ...data,
@@ -149,19 +140,22 @@ export class EquationRepository {
     bifurcoResolucion: boolean,
     statusResolucion: number
   ) {
-    const BIFURCO = 2;
-    const NO_BIFURCO = 1;
     const where: { userEquationId: string; resolutionSessionId: number; isCorrect: boolean; isVariable?: boolean; resolutionSide?: number } = {
       userEquationId,
       resolutionSessionId,
       isCorrect: true,
     };
     if (bifurcoResolucion) {
-      where.resolutionSide = BIFURCO;
+      where.resolutionSide = RESOLUTION_STEP_BRANCH;
     } else {
-      if (statusResolucion === BIFURCO) {
+      if (statusResolucion === RESOLUTION_STEP_BRANCH) {
         const bifurcoStep = await prisma.resolution.findFirst({
-          where: { userEquationId, resolutionSessionId, isCorrect: true, resolutionSide: BIFURCO },
+          where: {
+            userEquationId,
+            resolutionSessionId,
+            isCorrect: true,
+            resolutionSide: RESOLUTION_STEP_BRANCH,
+          },
           orderBy: { id: 'desc' },
           select: { id: true },
         });
@@ -172,7 +166,7 @@ export class EquationRepository {
             resolutionSessionId,
             isCorrect: true,
             isVariable: false,
-            resolutionSide: NO_BIFURCO,
+            resolutionSide: RESOLUTION_STEP_NO_BRANCH,
             id: { lt: bifurcoStep.id },
           },
           orderBy: { id: 'desc' },

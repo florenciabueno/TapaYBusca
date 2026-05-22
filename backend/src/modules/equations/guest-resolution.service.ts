@@ -30,7 +30,7 @@ export class GuestResolutionService {
   ): Promise<{ status: EquationStatus; steps: number; updatedAt: Date } | null> {
     const userEquationId = await this.ensureGuestEquationSession(equationId, guestSessionId);
     if (!userEquationId) return null;
-    const sessionState = this.guestResolutionStore.findByIdWithEquation(userEquationId);
+    const sessionState = await this.guestResolutionStore.findByIdWithEquation(userEquationId);
     if (!sessionState) return null;
     const steps = await this.guestResolutionStore.findResolutionsByUserEquation(
       userEquationId,

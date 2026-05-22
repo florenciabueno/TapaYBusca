@@ -21,25 +21,25 @@ export interface EquationResponse {
   isActive: boolean;
 }
 
+export interface EquationExpressions {
+  latexExpression?: string | null;
+  infixExpression?: string | null;
+  postfixExpression?: string | null;
+}
+
 export interface UserEquationRow {
   id: string;
   origin: string;
   status: string;
   updatedAt: Date;
   isActive: boolean;
-  equation: {
-    latexExpression?: string | null;
-    infixExpression?: string | null;
-    postfixExpression?: string | null;
-  };
+  equation: EquationExpressions;
 }
 
-export interface DefaultEquationRow {
+export interface DefaultEquationRow extends EquationExpressions {
   id: string;
   createdAt: Date;
-  latexExpression?: string | null;
-  infixExpression?: string | null;
-  postfixExpression?: string | null;
+  solutionValues?: unknown;
 }
 
 export interface CreateEquationDto {
@@ -65,6 +65,27 @@ export interface UpdateEquationUserDto {
   isActive?: boolean;
   currentResolutionId?: number;
   selectedBranch?: string;
+}
+
+export type ResolutionStateUpdate = Pick<
+  UpdateEquationUserDto,
+  'status' | 'currentResolutionId' | 'selectedBranch'
+>;
+
+/** Equation payload stored in guest RAM. */
+export type StoredEquationSnapshot = Omit<DefaultEquationRow, 'id' | 'createdAt'>;
+
+export interface CreateResolutionInput {
+  userEquationId: string;
+  resolutionSessionId: number;
+  subEquation: string;
+  subEquationInfix?: string | null;
+  proposedResult: string;
+  resultValue: string;
+  stepWithoutSolution: boolean;
+  isCorrect: boolean;
+  isVariable: boolean;
+  resolutionSide: number;
 }
 
 export interface PaginatedEquationsResponse {
