@@ -23,7 +23,7 @@ export const EquationsPage = () => {
 
   return (
     <EquationsLayout>
-      <div className="w-full">
+      <div className="w-full pb-6">
         {!user && <SignUpPromoBanner />}
 
         <h1 className="text-2xl font-bold mb-1" style={{ color: COLORS.accentSecondary }}>
