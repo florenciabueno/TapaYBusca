@@ -75,6 +75,8 @@ const navItems = [
   { path: ROUTES.DOWNLOAD, label: 'Descargar', icon: DownloadIcon },
 ];
 
+const navItemClass = 'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors duration-150';
+
 export const Sidebar = () => {
   return (
     <aside
@@ -111,9 +113,7 @@ export const Sidebar = () => {
                 : undefined
             }
             className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-150 ${
-                isActive ? '' : 'text-gray-600 hover:bg-white/60 hover:text-gray-800'
-              }`
+              `${navItemClass} ${isActive ? '' : 'text-gray-600 hover:bg-white/60 hover:text-gray-800'}`
             }
           >
             <Icon className="w-5 h-5 shrink-0" />
