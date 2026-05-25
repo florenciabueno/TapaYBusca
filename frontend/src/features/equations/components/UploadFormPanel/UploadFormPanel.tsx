@@ -31,7 +31,10 @@ export const UploadFormPanel = ({
       aria-labelledby="tab-can-upload"
       onSubmit={onSubmit}
     >
-      <div className="space-y-3" style={{ marginBottom: SPACING.lg }}>
+      <div
+        className="min-h-0 space-y-3 overflow-x-hidden overflow-y-auto pr-1 max-h-[min(50vh,28rem)]"
+        style={{ marginBottom: SPACING.lg }}
+      >
         {canUploadList.length === 0 ? (
           <p className="py-6 text-center text-sm" style={{ color: COLORS.gray[600] }}>
             No tienes más ecuaciones por subir. Todas las creadas ya están compartidas.

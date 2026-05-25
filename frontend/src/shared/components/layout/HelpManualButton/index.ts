@@ -1,0 +1,1 @@
+export { HelpManualButton } from './HelpManualButton';
