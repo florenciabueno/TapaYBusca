@@ -15,12 +15,19 @@ import { tokenizeInfix } from '../src/modules/equations/equation-solver/tokenize
 import { infixToPostfix } from '../src/modules/equations/equation-solver/infix-to-postfix.js';
 import { postfixToTree } from '../src/modules/equations/equation-solver/postfix-to-tree.js';
 import {
+  checkStepHasSolution,
   computeEffectiveResolutionSessionId,
+  infixContainsVariable,
+  isQuadratic,
+  matchAnswerAgainstKnownSolutions,
+  parseAnswerValues,
+  pickExpressionAndAnswer,
   replaceSubListInPostfix,
   validateSubEquation,
 } from '../src/modules/equations/equation-solver/resolve-helpers.js';
 import { ResolutionService } from '../src/modules/equations/resolution.service.js';
 import {
+  evaluateStep,
   hasRepeatedBranchResult,
   isPreviousStepValid,
   isRepeatedSubmittedStep,
@@ -1556,6 +1563,214 @@ describe('Resolution step evaluation', () => {
 
     const repeated = await hasRepeatedBranchResult(repo as never, 'ue-1', 1, 2, 5);
     expect(repeated).toBe(true);
+  });
+
+  it('isPreviousStepValid matches previous numeric results when equation has no precalculated solutions', async () => {
+    const repo = createRepo({
+      getPreviousStep: vi.fn().mockResolvedValue({ resultValue: '12' }),
+      findByIdWithEquation: vi.fn().mockResolvedValue(
+        makeUserEquation({
+          equation: {
+            infixExpression: 'x+5=12',
+            postfixExpression: 'x+5=12',
+            solutionValues: [],
+          },
+        })
+      ),
+    });
+
+    const valid = await isPreviousStepValid(
+      repo as never,
+      'ue-1',
+      1,
+      toPostfixTokens('x+5'),
+      5,
+      RESOLUTION_STEP_NO_BRANCH
+    );
+    expect(valid).toBe(true);
+  });
+
+  it('isPreviousStepValid returns false without precalculated solutions when sides omit previous values', async () => {
+    const repo = createRepo({
+      getPreviousStep: vi.fn().mockResolvedValue({ resultValue: '99' }),
+      findByIdWithEquation: vi.fn().mockResolvedValue(
+        makeUserEquation({
+          equation: {
+            infixExpression: 'x+5=12',
+            postfixExpression: 'x+5=12',
+            solutionValues: [],
+          },
+        })
+      ),
+    });
+
+    const valid = await isPreviousStepValid(
+      repo as never,
+      'ue-1',
+      1,
+      toPostfixTokens('x+5'),
+      5,
+      RESOLUTION_STEP_NO_BRANCH
+    );
+    expect(valid).toBe(false);
+  });
+
+  const linearEqPostfix = infixToPostfix(tokenizeInfix('x+5=12'))!;
+
+  function baseArgs(
+    overrides: Partial<{
+      answer: string;
+      subEquationInfix: string;
+      solutions: number[];
+      selectedBranch: string;
+      stateUpdated: boolean;
+    }> = {}
+  ) {
+    const subInfix = overrides.subEquationInfix ?? 'x+5';
+    const subPostfix = toPostfixTokens(subInfix);
+    return {
+      userEquationId: 'ue-1',
+      answer: overrides.answer ?? '7',
+      resolutionStepStatus: RESOLUTION_STEP_NO_BRANCH,
+      equationPostfixTokens: linearEqPostfix,
+      subEquationPostfix: subPostfix,
+      subEquation: subPostfix.join(''),
+      currentResolutionId: 1,
+      selectedBranch: overrides.selectedBranch ?? '',
+      stateUpdated: overrides.stateUpdated ?? false,
+      solutions: overrides.solutions ?? [7],
+    };
+  }
+
+  it('returns RI for an incorrect isolated variable answer', async () => {
+    const repo = createRepo();
+    const subPostfix = toPostfixTokens('x');
+    const result = await evaluateStep(repo as never, {
+      ...baseArgs({ answer: '99', subEquationInfix: 'x' }),
+      subEquationPostfix: subPostfix,
+      subEquation: subPostfix.join(''),
+    });
+    expect(result).toMatchObject({
+      resultCode: RESOLUTION_CODES.RESULT_INCORRECT,
+      isCorrect: false,
+      isVariable: true,
+    });
+  });
+
+  it('returns PI when the numeric answer is valid but incoherent with the previous step', async () => {
+    const repo = createRepo({
+      getPreviousStep: vi.fn().mockResolvedValue({ resultValue: '99' }),
+    });
+    const result = await evaluateStep(repo as never, baseArgs());
+    expect(result).toMatchObject({
+      resultCode: RESOLUTION_CODES.STEP_INCORRECT,
+      isCorrect: false,
+      isVariable: false,
+    });
+  });
+
+  it('returns PG when the answer is valid but the subexpression regresses in complexity', async () => {
+    const eqInfix = 'pot2(x+7)+10=74';
+    const eqPostfix = infixToPostfix(tokenizeInfix(eqInfix))!;
+    const subPostfix = toPostfixTokens('(x+7)^2');
+    const repo = createRepo({
+      getPreviousStep: vi.fn().mockResolvedValue({
+        subEquation: toPostfixTokens('x+7').join(''),
+        resultValue: '8',
+      }),
+      findByIdWithEquation: vi.fn().mockResolvedValue(
+        makeUserEquation({
+          equation: {
+            infixExpression: eqInfix,
+            postfixExpression: eqInfix,
+            solutionValues: [1, -15],
+          },
+        })
+      ),
+    });
+
+    const result = await evaluateStep(repo as never, {
+      userEquationId: 'ue-1',
+      answer: '64',
+      resolutionStepStatus: RESOLUTION_STEP_NO_BRANCH,
+      equationPostfixTokens: eqPostfix,
+      subEquationPostfix: subPostfix,
+      subEquation: subPostfix.join(''),
+      currentResolutionId: 1,
+      selectedBranch: toPostfixTokens('x+7').join(''),
+      stateUpdated: true,
+      solutions: [1, -15],
+    });
+
+    expect(result).toMatchObject({
+      resultCode: RESOLUTION_CODES.STEP_REGRESSION,
+      isCorrect: false,
+    });
+  });
+
+  it('returns RI for empty-set when the equation already has known solutions and prior steps', async () => {
+    const repo = createRepo({
+      findResolutionsByUserEquation: vi.fn().mockResolvedValue([{ id: 1 }]),
+    });
+    const subPostfix = toPostfixTokens('x');
+    const result = await evaluateStep(repo as never, {
+      ...baseArgs({ answer: EMPTY_SET, subEquationInfix: 'x' }),
+      subEquationPostfix: subPostfix,
+      subEquation: subPostfix.join(''),
+    });
+    expect(result).toMatchObject({
+      resultCode: RESOLUTION_CODES.RESULT_INCORRECT,
+      isCorrect: false,
+    });
+  });
+});
+
+describe('resolve-helpers', () => {
+  it('pickExpressionAndAnswer swaps fields when only the second contains x', () => {
+    expect(pickExpressionAndAnswer('12', 'x+5')).toEqual({
+      expressionInfix: 'x+5',
+      answerContent: '12',
+    });
+  });
+
+  it('pickExpressionAndAnswer keeps order when both sides include x', () => {
+    expect(pickExpressionAndAnswer('x+1', 'x+2')).toEqual({
+      expressionInfix: 'x+1',
+      answerContent: 'x+2',
+    });
+  });
+
+  it('parseAnswerValues returns empty for blank or invalid input', () => {
+    expect(parseAnswerValues('')).toEqual([]);
+    expect(parseAnswerValues('(((')).toEqual([]);
+    expect(parseAnswerValues('1,5')).toEqual([1.5]);
+  });
+
+  it('infixContainsVariable returns false for invalid infix', () => {
+    expect(infixContainsVariable('(((')).toBe(false);
+    expect(infixContainsVariable('x+5')).toBe(true);
+  });
+
+  it('matchAnswerAgainstKnownSolutions rejects undefined answers', () => {
+    expect(matchAnswerAgainstKnownSolutions(toPostfixTokens('x+5'), [7], undefined)).toEqual({
+      isCorrect: false,
+    });
+  });
+
+  it('checkStepHasSolution reports whether isolating x yields values', () => {
+    const eq = infixToPostfix(tokenizeInfix('x+5=12'))!;
+    expect(checkStepHasSolution(eq, toPostfixTokens('x+5'))).toEqual({ hasSolution: true });
+    expect(checkStepHasSolution(eq, toPostfixTokens('x+99'))).toEqual({ hasSolution: false });
+  });
+
+  it('isQuadratic is false for a linear subexpression', () => {
+    const eq = infixToPostfix(tokenizeInfix('x+5=12'))!;
+    expect(isQuadratic(eq, toPostfixTokens('x+5'))).toBe(false);
+  });
+
+  it('isQuadratic is true when isolating x leaves a squared term in the equation', () => {
+    const eq = infixToPostfix(tokenizeInfix(DEFAULT_EQUATIONS.quadratic))!;
+    expect(isQuadratic(eq, toPostfixTokens('x+2'))).toBe(true);
   });
 });
 

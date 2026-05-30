@@ -5,6 +5,10 @@ node_modules
 # build
 dist
 
+# test coverage (Vitest v8 — backend)
+backend/coverage/
+coverage/
+
 # OS / editor
 .DS_Store
 .vscode
