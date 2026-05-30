@@ -7,6 +7,7 @@ import {
   EMPTY_SET,
   RESOLUTION_CODES,
   RESOLUTION_STEP_NO_BRANCH,
+  RESOLUTION_STEP_BRANCH,
   RESOLUTION_STEP_FINISH_ATTEMPT,
   RESOLUTION_STEP_INVALID_SUBEQUATION_ATTEMPT,
 } from '../src/modules/equations/equation-solver/resolution-constants.js';
@@ -22,6 +23,8 @@ import { ResolutionService } from '../src/modules/equations/resolution.service.j
 import {
   hasRepeatedBranchResult,
   isPreviousStepValid,
+  isRepeatedSubmittedStep,
+  isSubEquationSimplerThanPrevious,
 } from '../src/modules/equations/resolution-step-evaluation.js';
 
 vi.mock('../src/modules/equations/equation.repository.js', () => {
@@ -277,10 +280,10 @@ describe('Equation resolver API', () => {
       );
     });
 
-    it('returns PR when invalid subequation attempt is repeated', async () => {
+    it('re-logs invalid subequation when an earlier incorrect attempt matches (no PR)', async () => {
       const subEquationPostfix = toPostfixTokens('x+99');
       repoMocks.findResolutionsByUserEquation.mockResolvedValue([
-        { subEquation: subEquationPostfix.join(''), proposedResult: '7' },
+        { subEquation: subEquationPostfix.join(''), proposedResult: '7', isCorrect: false },
       ]);
 
       const response = await request(app)
@@ -293,8 +296,8 @@ describe('Equation resolver API', () => {
         });
 
       expect(response.status).toBe(200);
-      expect(response.body.code).toBe(RESOLUTION_CODES.STEP_REPEATED);
-      expect(repoMocks.createResolution).not.toHaveBeenCalled();
+      expect(response.body).toEqual({ code: RESOLUTION_CODES.SYNTAX_INCORRECT });
+      expect(repoMocks.createResolution).toHaveBeenCalled();
     });
 
     it('logs invalid subequation in the same session when currentResolutionId lags behind stored steps', async () => {
@@ -338,7 +341,7 @@ describe('Equation resolver API', () => {
       const subEquationInfix = 'x+5';
       const subEquationPostfix = toPostfixTokens(subEquationInfix);
       repoMocks.findResolutionsByUserEquation.mockResolvedValue([
-        { subEquation: subEquationPostfix.join(''), proposedResult: '7' },
+        { subEquation: subEquationPostfix.join(''), proposedResult: '7', isCorrect: true },
       ]);
 
       const response = await request(app)
@@ -353,6 +356,139 @@ describe('Equation resolver API', () => {
       expect(response.status).toBe(200);
       expect(response.body).toEqual({ code: RESOLUTION_CODES.STEP_REPEATED });
       expect(repoMocks.createResolution).not.toHaveBeenCalled();
+    });
+
+    it('returns PR when the step matches an earlier entry, not only the last one', async () => {
+      const repeatedInfix = '(x+7)^2';
+      const repeatedPostfix = toPostfixTokens(repeatedInfix);
+      const intermediateInfix = 'x+7';
+      const intermediatePostfix = toPostfixTokens(intermediateInfix);
+      repoMocks.findResolutionsByUserEquation.mockResolvedValue([
+        { subEquation: repeatedPostfix.join(''), proposedResult: '64', isCorrect: true },
+        { subEquation: intermediatePostfix.join(''), proposedResult: '8', isCorrect: true },
+      ]);
+
+      const response = await request(app)
+        .post('/api/equations/ue-1/resolve')
+        .set(authHeader(token))
+        .send({
+          subEquationInfix: repeatedInfix,
+          answer: '64',
+          resolutionStepStatus: RESOLUTION_STEP_NO_BRANCH,
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({ code: RESOLUTION_CODES.STEP_REPEATED });
+      expect(repoMocks.createResolution).not.toHaveBeenCalled();
+    });
+
+    it('allows retrying a step that was only logged as incorrect', async () => {
+      const subInfix = 'x+7';
+      const subPostfix = toPostfixTokens(subInfix);
+      repoMocks.findByIdWithEquation.mockResolvedValue(
+        makeUserEquation({
+          equation: {
+            infixExpression: 'pot2(x+7)+10=74',
+            postfixExpression: 'pot2(x+7)+10=74',
+            solutionValues: [1, -15],
+          },
+          selectedBranch: subPostfix.join(''),
+          stateUpdated: true,
+        })
+      );
+      repoMocks.findResolutionsByUserEquation.mockResolvedValue([
+        {
+          subEquation: subPostfix.join(''),
+          proposedResult: '-8',
+          isCorrect: false,
+        },
+      ]);
+      repoMocks.getPreviousStep.mockResolvedValue({
+        subEquation: subPostfix.join(''),
+        resultValue: '8',
+      });
+
+      const response = await request(app)
+        .post('/api/equations/ue-1/resolve')
+        .set(authHeader(token))
+        .send({
+          subEquationInfix: subInfix,
+          answer: '-8',
+          resolutionStepStatus: RESOLUTION_STEP_NO_BRANCH,
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({ code: RESOLUTION_CODES.STEP_CORRECT });
+      expect(repoMocks.createResolution).toHaveBeenCalled();
+    });
+
+    it('returns PC for the alternate quadratic root on the same subexpression', async () => {
+      const subInfix = 'x+7';
+      const subPostfix = toPostfixTokens(subInfix);
+      repoMocks.findByIdWithEquation.mockResolvedValue(
+        makeUserEquation({
+          equation: {
+            infixExpression: 'pot2(x+7)+10=74',
+            postfixExpression: 'pot2(x+7)+10=74',
+            solutionValues: [1, -15],
+          },
+          selectedBranch: subPostfix.join(''),
+          stateUpdated: true,
+        })
+      );
+      repoMocks.getPreviousStep.mockResolvedValue({
+        subEquation: subPostfix.join(''),
+        resultValue: '8',
+      });
+
+      const response = await request(app)
+        .post('/api/equations/ue-1/resolve')
+        .set(authHeader(token))
+        .send({
+          subEquationInfix: subInfix,
+          answer: '-8',
+          resolutionStepStatus: RESOLUTION_STEP_NO_BRANCH,
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({ code: RESOLUTION_CODES.STEP_CORRECT });
+    });
+
+    it('returns PG when a correct answer regresses to a longer x subexpression', async () => {
+      const eqInfix = 'pot2(x+7)+10=74';
+      repoMocks.findByIdWithEquation.mockResolvedValue(
+        makeUserEquation({
+          equation: {
+            infixExpression: eqInfix,
+            postfixExpression: eqInfix,
+            solutionValues: [1, -15],
+          },
+        })
+      );
+      const previousSub = toPostfixTokens('x+7').join('');
+      repoMocks.getPreviousStep.mockResolvedValue({
+        subEquation: previousSub,
+        resultValue: '8',
+      });
+
+      const response = await request(app)
+        .post('/api/equations/ue-1/resolve')
+        .set(authHeader(token))
+        .send({
+          subEquationInfix: '(x+7)^2',
+          answer: '64',
+          resolutionStepStatus: RESOLUTION_STEP_NO_BRANCH,
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({ code: RESOLUTION_CODES.STEP_REGRESSION });
+      expect(repoMocks.createResolution).toHaveBeenCalledWith(
+        expect.objectContaining({
+          isCorrect: false,
+          subEquation: toPostfixTokens('(x+7)^2').join(''),
+          proposedResult: '64',
+        })
+      );
     });
 
     it('persists correct step in max resolution session when currentResolutionId lags in DB', async () => {
@@ -649,7 +785,7 @@ describe('Equation resolver API', () => {
       });
     });
 
-    it('returns PC for quadratic branch when there is a previous correct step', async () => {
+    it('returns PC for quadratic branch when there is a previous correct step with a longer subexpression', async () => {
       repoMocks.findByIdWithEquation.mockResolvedValue(
         makeUserEquation({
           equation: {
@@ -659,9 +795,11 @@ describe('Equation resolver API', () => {
           },
         })
       );
-      repoMocks.getPreviousStep
-        .mockResolvedValueOnce(null)
-        .mockResolvedValueOnce({ id: 10, resultValue: '4' });
+      repoMocks.getPreviousStep.mockResolvedValue({
+        id: 10,
+        resultValue: '16',
+        subEquation: toPostfixTokens('(x+2)^2').join(''),
+      });
 
       const response = await request(app)
         .post('/api/equations/ue-1/resolve')
@@ -741,9 +879,11 @@ describe('Equation resolver API', () => {
           },
         })
       );
-      repoMocks.getPreviousStep
-        .mockResolvedValueOnce(null)
-        .mockResolvedValueOnce({ id: 99, resultValue: '4' });
+      repoMocks.getPreviousStep.mockResolvedValue({
+        id: 99,
+        resultValue: '4',
+        subEquation: toPostfixTokens('x+2').join(''),
+      });
 
       const response = await request(app)
         .post('/api/equations/ue-1/resolve')
@@ -1242,6 +1382,80 @@ describe('Resolution step evaluation', () => {
       RESOLUTION_STEP_NO_BRANCH
     );
     expect(valid).toBe(false);
+  });
+
+  it('isRepeatedSubmittedStep returns true when any prior correct step matches', async () => {
+    const repo = {
+      findResolutionsByUserEquation: vi.fn().mockResolvedValue([
+        { subEquation: 'x7+pot2', proposedResult: '64', isCorrect: true },
+        { subEquation: 'x7+', proposedResult: '8', isCorrect: true },
+      ]),
+    };
+    const repeated = await isRepeatedSubmittedStep(repo as never, 'ue-1', 1, 'x7+pot2', '64');
+    expect(repeated).toBe(true);
+  });
+
+  it('isRepeatedSubmittedStep returns false when only a prior incorrect step matches', async () => {
+    const repo = {
+      findResolutionsByUserEquation: vi.fn().mockResolvedValue([
+        { subEquation: 'x7+', proposedResult: '-8', isCorrect: false },
+      ]),
+    };
+    const repeated = await isRepeatedSubmittedStep(repo as never, 'ue-1', 1, 'x7+', '-8');
+    expect(repeated).toBe(false);
+  });
+
+  it('isSubEquationSimplerThanPrevious returns true when there is no prior correct step', async () => {
+    const repo = { getPreviousStep: vi.fn().mockResolvedValue(null) };
+    const ok = await isSubEquationSimplerThanPrevious(repo as never, 'ue-1', 1, 'x7+pot2', 1);
+    expect(ok).toBe(true);
+  });
+
+  it('isSubEquationSimplerThanPrevious returns false when subexpression is longer than the previous step', async () => {
+    const repo = {
+      getPreviousStep: vi.fn().mockResolvedValue({ subEquation: 'x7+' }),
+    };
+    const ok = await isSubEquationSimplerThanPrevious(repo as never, 'ue-1', 1, 'x7+pot2', 1);
+    expect(ok).toBe(false);
+  });
+
+  it('isSubEquationSimplerThanPrevious returns true when subexpression is strictly shorter', async () => {
+    const repo = {
+      getPreviousStep: vi.fn().mockResolvedValue({ subEquation: 'x7+pot2' }),
+    };
+    const ok = await isSubEquationSimplerThanPrevious(repo as never, 'ue-1', 1, 'x7+', 1);
+    expect(ok).toBe(true);
+  });
+
+  it('isSubEquationSimplerThanPrevious allows the same subexpression with another valid root', async () => {
+    const repo = {
+      getPreviousStep: vi.fn().mockResolvedValue({ subEquation: 'x7+' }),
+    };
+    const ok = await isSubEquationSimplerThanPrevious(repo as never, 'ue-1', 1, 'x7+', 1);
+    expect(ok).toBe(true);
+  });
+
+  it('isSubEquationSimplerThanPrevious rejects same-length but different subexpression', async () => {
+    const repo = {
+      getPreviousStep: vi.fn().mockResolvedValue({ subEquation: 'x7+' }),
+    };
+    const ok = await isSubEquationSimplerThanPrevious(repo as never, 'ue-1', 1, 'x2+', 1);
+    expect(ok).toBe(false);
+  });
+
+  it('isSubEquationSimplerThanPrevious skips length check on branch steps', async () => {
+    const repo = {
+      getPreviousStep: vi.fn().mockResolvedValue({ subEquation: 'x7+' }),
+    };
+    const ok = await isSubEquationSimplerThanPrevious(
+      repo as never,
+      'ue-1',
+      1,
+      'x7+pot2',
+      RESOLUTION_STEP_BRANCH
+    );
+    expect(ok).toBe(true);
+    expect(repo.getPreviousStep).not.toHaveBeenCalled();
   });
 
   it('isPreviousStepValid accepts sqrt-chain step when sides balance at a known solution', async () => {

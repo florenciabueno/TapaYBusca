@@ -14,6 +14,7 @@ export const RESOLUTION_CODES = {
   NO_SOLUTION: 'SS',
   FIRST_WARNING: 'PA',
   STEP_REPEATED: 'PR',
+  STEP_REGRESSION: 'PG',
 } as const;
 
 const CODE_MESSAGES: Record<string, string> = {
@@ -31,6 +32,8 @@ const CODE_MESSAGES: Record<string, string> = {
   [RESOLUTION_CODES.STEP_INCORRECT]: 'El valor no es correcto para esta ecuación equivalente',
   [RESOLUTION_CODES.SYNTAX_INCORRECT]: 'La ecuación equivalente seleccionada no es válida',
   [RESOLUTION_CODES.STEP_REPEATED]: 'Ya ingresaste este paso',
+  [RESOLUTION_CODES.STEP_REGRESSION]:
+    'No es posible regresar a una forma anterior de la expresión. Continúa desde el último paso correcto.',
 };
 
 export function getResolutionFeedbackMessage(code: string): string | null {

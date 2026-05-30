@@ -11,6 +11,8 @@ export const RESOLUTION_CODES = {
   NO_SOLUTION: 'SS',
   FIRST_WARNING: 'PA',
   STEP_REPEATED: 'PR',
+  /** Answer may be valid, but the x-bearing subexpression is not simpler than the last correct step. */
+  STEP_REGRESSION: 'PG',
 } as const;
 
 export type ResolutionCode = (typeof RESOLUTION_CODES)[keyof typeof RESOLUTION_CODES];

@@ -6,6 +6,7 @@ import { postfixToTree } from './equation-solver/postfix-to-tree.js';
 import {
   RESOLUTION_CODES,
   RESOLUTION_STEP_NO_BRANCH,
+  RESOLUTION_STEP_BRANCH,
   EMPTY_SET,
 } from './equation-solver/resolution-constants.js';
 import {
@@ -34,9 +35,40 @@ export async function isRepeatedSubmittedStep(
   answer: string
 ): Promise<boolean> {
   const loggedSteps = await repo.findResolutionsByUserEquation(userEquationId, currentResolutionId);
-  if (loggedSteps.length === 0) return false;
-  const last = loggedSteps[loggedSteps.length - 1]!;
-  return last.subEquation === subEquation && last.proposedResult === answer;
+  return loggedSteps.some(
+    (step) =>
+      step.isCorrect &&
+      step.subEquation === subEquation &&
+      step.proposedResult === answer
+  );
+}
+
+/**
+ * True when the step does not use a more developed x-bearing subexpression than the last
+ * correct non-variable step. Equal length is allowed for the same subexpression (e.g. x+7=8 then x+7=-8).
+ */
+export async function isSubEquationSimplerThanPrevious(
+  repo: EquationRepository,
+  userEquationId: string,
+  resolutionSessionId: number,
+  subEquation: string,
+  resolutionStatus: number
+): Promise<boolean> {
+  if (resolutionStatus === RESOLUTION_STEP_BRANCH) return true;
+
+  const previousStep = await repo.getPreviousStep(
+    userEquationId,
+    resolutionSessionId,
+    false,
+    resolutionStatus
+  );
+  if (!previousStep?.subEquation) return true;
+
+  const previousLen = previousStep.subEquation.length;
+  const currentLen = subEquation.length;
+  if (currentLen > previousLen) return false;
+  if (currentLen < previousLen) return true;
+  return subEquation === previousStep.subEquation;
 }
 
 export async function evaluateStep(
@@ -211,6 +243,7 @@ async function evaluateWhenSolutionsAreKnown(
     args.answerValue
   );
   let isCorrect = matchedIsCorrect;
+  let incorrectResultCode: string | undefined;
 
   if (isCorrect && !args.isVariable) {
     const previousStepIsValid = await isPreviousStepValid(
@@ -221,7 +254,21 @@ async function evaluateWhenSolutionsAreKnown(
       args.answerValue ?? 0,
       args.resolutionStepStatus
     );
-    if (!previousStepIsValid) isCorrect = false;
+    if (!previousStepIsValid) {
+      isCorrect = false;
+    } else {
+      const subEquationSimpler = await isSubEquationSimplerThanPrevious(
+        repo,
+        args.userEquationId,
+        args.currentResolutionId,
+        args.subEquation,
+        args.resolutionStepStatus
+      );
+      if (!subEquationSimpler) {
+        isCorrect = false;
+        incorrectResultCode = RESOLUTION_CODES.STEP_REGRESSION;
+      }
+    }
   }
 
   const stepDecision: KnownStepDecision = args.isVariable
@@ -244,6 +291,7 @@ async function evaluateWhenSolutionsAreKnown(
         subEquation: args.subEquation,
         answerValue: args.answerValue ?? 0,
         isCorrect,
+        incorrectResultCode,
         selectedBranch: args.selectedBranch,
         stateUpdated: args.stateUpdated,
       });
@@ -306,13 +354,14 @@ async function decideKnownNonVariableResult(
     subEquation: string;
     answerValue: number;
     isCorrect: boolean;
+    incorrectResultCode?: string;
     selectedBranch: string;
     stateUpdated: boolean;
   }
 ): Promise<KnownStepDecision> {
   if (!args.isCorrect) {
     return makeKnownStepDecision(
-      RESOLUTION_CODES.STEP_INCORRECT,
+      args.incorrectResultCode ?? RESOLUTION_CODES.STEP_INCORRECT,
       false,
       args.selectedBranch,
       args.stateUpdated
