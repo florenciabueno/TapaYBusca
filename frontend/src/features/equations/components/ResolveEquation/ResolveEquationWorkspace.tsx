@@ -13,6 +13,7 @@ export interface ResolveEquationWorkspaceProps {
   equationExpression: string;
   hasSteps: boolean;
   solutionSet: number[];
+  solutionSetLatex?: string[];
   form: ResolutionFormState;
   status: ResolutionMutationStatus;
   outcome: ResolutionOutcome;
@@ -23,6 +24,7 @@ export const ResolveEquationWorkspace = ({
   equationExpression,
   hasSteps,
   solutionSet,
+  solutionSetLatex,
   form,
   status,
   outcome,
@@ -38,12 +40,14 @@ export const ResolveEquationWorkspace = ({
         <ResolveEquationEquationPanel
           equationExpression={equationExpression}
           partialSolutionSet={outcome.finished ? undefined : solutionSet}
+          partialSolutionSetLatex={outcome.finished ? undefined : solutionSetLatex}
         />
         <div className="flex flex-col min-h-0">
           {outcome.finished ? (
             <ResolveEquationResultPanel
               finishedCode={outcome.finishedCode}
               solutionSet={solutionSet}
+              solutionSetLatex={solutionSetLatex}
               onReset={actions.onReset}
             />
           ) : (

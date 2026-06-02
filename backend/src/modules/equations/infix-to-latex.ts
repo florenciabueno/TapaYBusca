@@ -109,6 +109,18 @@ function convertInfixPart(expr: string): string {
       continue;
     }
 
+    const numSlashParenFrac = findNumSlashParenFraction(out);
+    if (numSlashParenFrac) {
+      const numLatex = convertInfixPart(numSlashParenFrac.numInner);
+      const denLatex = convertInfixPart(numSlashParenFrac.denInner);
+      out =
+        out.slice(0, numSlashParenFrac.start) +
+        `\\frac{${numLatex}}{${denLatex}}` +
+        out.slice(numSlashParenFrac.end);
+      changed = true;
+      continue;
+    }
+
     const doubleOpen = out.indexOf('((');
     if (doubleOpen !== -1) {
       const slashParen = out.indexOf(')/(', doubleOpen);
@@ -154,6 +166,41 @@ function findParenSlashFraction(
     };
   }
   return null;
+}
+
+function findNumSlashParenFraction(
+  expr: string
+): { start: number; end: number; numInner: string; denInner: string } | null {
+  for (let i = 0; i < expr.length - 1; i++) {
+    if (expr[i] !== '/' || expr[i + 1] !== '(') continue;
+    const denOpen = i + 1;
+    const denInner = takeBalancedParen(expr, denOpen);
+    if (denInner === null) continue;
+    const num = takeSimpleFractionNumerator(expr, i);
+    if (!num) continue;
+    return {
+      start: num.start,
+      end: denOpen + 1 + denInner.length + 1,
+      numInner: num.inner,
+      denInner,
+    };
+  }
+  return null;
+}
+
+function takeSimpleFractionNumerator(
+  expr: string,
+  slashIndex: number
+): { inner: string; start: number } | null {
+  if (slashIndex <= 0) return null;
+  const prefix = expr.slice(0, slashIndex);
+  if (prefix.endsWith(')')) return null;
+  const match = prefix.match(/(-?\d+|[xX])$/);
+  if (!match?.[1]) return null;
+  const inner = match[1];
+  const start = slashIndex - inner.length;
+  if (start > 0 && /[a-zA-Z0-9_]/.test(expr[start - 1]!)) return null;
+  return { inner, start };
 }
 
 function takeFractionDenominator(

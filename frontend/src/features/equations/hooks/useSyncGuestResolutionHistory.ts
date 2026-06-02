@@ -11,6 +11,7 @@ interface UseSyncGuestResolutionHistoryArgs {
   mode: AuthMode;
   steps: ResolutionStep[];
   solutionSet: number[];
+  solutionSetLatex?: string[];
   finished: boolean;
   finishedCode: string | null;
   resolutionData: { steps?: ResolutionStep[] } | null | undefined;
@@ -21,6 +22,7 @@ export const useSyncGuestResolutionHistory = ({
   mode,
   steps,
   solutionSet,
+  solutionSetLatex,
   finished,
   finishedCode,
   resolutionData,
@@ -31,11 +33,12 @@ export const useSyncGuestResolutionHistory = ({
       equationId: id,
       steps,
       solutionSet,
+      solutionSetLatex,
       updatedAt: new Date().toISOString(),
       finished,
       finishedCode,
     });
-  }, [id, mode, steps, solutionSet, finished, finishedCode]);
+  }, [id, mode, steps, solutionSet, solutionSetLatex, finished, finishedCode]);
 
   useEffect(() => {
     if (!id || mode !== 'guest' || !resolutionData) return;

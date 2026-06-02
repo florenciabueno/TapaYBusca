@@ -35,3 +35,18 @@ export const formatSolutionSetLatex = (solutionSet: number[]): string => {
   if (solutionSet.length === 0) return 'S = \\emptyset';
   return `S = \\{ ${solutionSet.map(formatSolutionValueLatex).join(', ')} \\}`;
 };
+
+export const formatSolutionSetLatexFromItems = (items: string[]): string => {
+  if (items.length === 0) return 'S = \\emptyset';
+  return `S = \\{ ${items.join(', ')} \\}`;
+};
+
+export const formatSolutionSetExpression = (
+  numeric: number[],
+  latexItems?: string[]
+): string => {
+  if (latexItems && latexItems.length > 0) {
+    return formatSolutionSetLatexFromItems(latexItems);
+  }
+  return formatSolutionSetLatex(numeric);
+};

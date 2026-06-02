@@ -2,17 +2,19 @@ import { COLORS, SHADOW } from '../../../../config/theme';
 import { Button } from '../../../../shared/components/ui/Button/Button';
 import { MathExpression } from '../../../../shared/components/ui/MathExpression';
 import { RESOLUTION_CODES } from '../../constants/resolution';
-import { formatSolutionSetLatex } from '../../utils/format-solution-set';
+import { formatSolutionSetExpression } from '../../utils/format-solution-set';
 
 interface ResolveEquationResultPanelProps {
   finishedCode: string | null;
   solutionSet: number[];
+  solutionSetLatex?: string[];
   onReset: () => void;
 }
 
 export const ResolveEquationResultPanel = ({
   finishedCode,
   solutionSet,
+  solutionSetLatex,
   onReset,
 }: ResolveEquationResultPanelProps) => {
   const isNoSolution = finishedCode === RESOLUTION_CODES.NO_SOLUTION;
@@ -44,7 +46,9 @@ export const ResolveEquationResultPanel = ({
           Conjunto solución
         </h3>
         <p className="text-lg" style={{ color: COLORS.gray[800] }}>
-          <MathExpression expression={formatSolutionSetLatex(solutionSet)} />
+          <MathExpression
+            expression={formatSolutionSetExpression(solutionSet, solutionSetLatex)}
+          />
         </p>
         <Button type="button" variant="accent" onClick={onReset} className="mt-4">
           Reiniciar y volver a resolver

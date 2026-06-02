@@ -1,15 +1,17 @@
 import { COLORS, SHADOW } from '../../../../config/theme';
 import { MathExpression } from '../../../../shared/components/ui/MathExpression';
-import { formatSolutionSetLatex } from '../../utils/format-solution-set';
+import { formatSolutionSetExpression } from '../../utils/format-solution-set';
 
 interface ResolveEquationEquationPanelProps {
   equationExpression: string;
   partialSolutionSet?: number[];
+  partialSolutionSetLatex?: string[];
 }
 
 export const ResolveEquationEquationPanel = ({
   equationExpression,
   partialSolutionSet,
+  partialSolutionSetLatex,
 }: ResolveEquationEquationPanelProps) => {
   return (
     <div className="flex flex-col gap-4 min-h-0">
@@ -41,7 +43,10 @@ export const ResolveEquationEquationPanel = ({
             Conjunto solución parcial
           </h2>
           <MathExpression
-            expression={formatSolutionSetLatex(partialSolutionSet)}
+            expression={formatSolutionSetExpression(
+              partialSolutionSet,
+              partialSolutionSetLatex
+            )}
             className="text-lg"
           />
         </div>

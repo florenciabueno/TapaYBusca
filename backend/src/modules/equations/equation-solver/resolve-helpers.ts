@@ -4,7 +4,8 @@ import { infixToPostfix } from './infix-to-postfix.js';
 import { postfixToTree } from './postfix-to-tree.js';
 import { isolateVariable } from './isolate-variable.js';
 import { evaluateTree, listContainsElement } from './evaluate-tree.js';
-import { VARIABLE } from './constants.js';
+import { DEFAULT_FLOAT_TOLERANCE, VARIABLE } from './constants.js';
+import { equationSidesShareNumericValue } from '../resolution.service.helpers.js';
 
 export function infixContainsVariable(infix: string): boolean {
   const trimmed = (infix ?? '').trim();
@@ -29,6 +30,16 @@ export function pickExpressionAndAnswer(
   return { expressionInfix: a, answerContent: b };
 }
 
+export function loggedSolutionDisplayInfix(leftInfix: string, rightInfix: string): string {
+  const left = (leftInfix ?? '').trim();
+  const right = (rightInfix ?? '').trim();
+  const leftVar = infixContainsVariable(left);
+  const rightVar = infixContainsVariable(right);
+  if (leftVar && !rightVar) return right;
+  if (!leftVar && rightVar) return left;
+  return right;
+}
+
 export function validateSubEquation(
   equationPostfixTokens: string[],
   subEquationPostfix: string[]
@@ -39,6 +50,83 @@ export function validateSubEquation(
   if (!eqStr.includes(subStr)) return false;
   const tree = postfixToTree([...subEquationPostfix]);
   return tree !== null;
+}
+
+function primaryEvalValue(values: number[]): number | undefined {
+  return values.find((v) => Number.isFinite(v));
+}
+
+function sidesScaledBySameFactor(
+  originalLeft: number[],
+  originalRight: number[],
+  proposedLeft: number[],
+  proposedRight: number[]
+): boolean {
+  const a0 = primaryEvalValue(originalLeft);
+  const b0 = primaryEvalValue(originalRight);
+  const a1 = primaryEvalValue(proposedLeft);
+  const b1 = primaryEvalValue(proposedRight);
+  if (a0 === undefined || b0 === undefined || a1 === undefined || b1 === undefined) {
+    return false;
+  }
+  if (Math.abs(a0) <= DEFAULT_FLOAT_TOLERANCE && Math.abs(b0) <= DEFAULT_FLOAT_TOLERANCE) {
+    return Math.abs(a1 - b1) <= DEFAULT_FLOAT_TOLERANCE;
+  }
+  if (Math.abs(a0) <= DEFAULT_FLOAT_TOLERANCE || Math.abs(b0) <= DEFAULT_FLOAT_TOLERANCE) {
+    return false;
+  }
+  return Math.abs(a1 / a0 - b1 / b0) <= DEFAULT_FLOAT_TOLERANCE;
+}
+
+export function validateEquivalentEquationStep(
+  leftInfix: string,
+  rightInfix: string,
+  equationPostfixTokens: string[],
+  solutions: number[]
+): boolean {
+  const left = (leftInfix ?? '').trim();
+  const right = (rightInfix ?? '').trim();
+  if (!left || !right) return false;
+
+  let leftPost: string[] | null;
+  let rightPost: string[] | null;
+  try {
+    leftPost = infixToPostfix(tokenizeInfix(normalizeUserInfix(left)));
+    rightPost = infixToPostfix(tokenizeInfix(normalizeUserInfix(right)));
+  } catch {
+    return false;
+  }
+  if (!leftPost || !rightPost) return false;
+  if (!equationPostfixTokens.includes('=')) return false;
+
+  const equationTree = postfixToTree(equationPostfixTokens);
+  if (
+    !equationTree ||
+    equationTree.type !== 'OPERATOR_BINARY' ||
+    equationTree.value !== '=' ||
+    !equationTree.left ||
+    !equationTree.right
+  ) {
+    return false;
+  }
+
+  const lhsTree = equationTree.left;
+  const rhsTree = equationTree.right;
+  const leftTree = postfixToTree(leftPost);
+  const rightTree = postfixToTree(rightPost);
+  if (!leftTree || !rightTree) return false;
+
+  const probes = solutions.length > 0 ? solutions : [0, 1, 2, -1];
+  for (const s of probes) {
+    const l0 = evaluateTree(lhsTree, false, s);
+    const r0 = evaluateTree(rhsTree, false, s);
+    const l1 = evaluateTree(leftTree, false, s);
+    const r1 = evaluateTree(rightTree, false, s);
+    if (!equationSidesShareNumericValue(l0, r0)) return false;
+    if (!equationSidesShareNumericValue(l1, r1)) return false;
+    if (!sidesScaledBySameFactor(l0, r0, l1, r1)) return false;
+  }
+  return true;
 }
 
 function normalizeMathAliases(input: string): string {

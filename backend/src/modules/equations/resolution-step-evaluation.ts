@@ -30,13 +30,17 @@ export async function isRepeatedSubmittedStep(
   repo: EquationRepository,
   userEquationId: string,
   currentResolutionId: number,
-  subEquation: string,
-  answer: string
+  rawLeft: string,
+  rawRight: string
 ): Promise<boolean> {
   const loggedSteps = await repo.findResolutionsByUserEquation(userEquationId, currentResolutionId);
   if (loggedSteps.length === 0) return false;
   const last = loggedSteps[loggedSteps.length - 1]!;
-  return last.subEquation === subEquation && last.proposedResult === answer;
+  const left = (rawLeft ?? '').trim();
+  const right = (rawRight ?? '').trim();
+  return (
+    (last.subEquationInfix?.trim() ?? '') === left && last.proposedResult.trim() === right
+  );
 }
 
 export async function evaluateStep(
@@ -284,8 +288,15 @@ async function decideKnownVariableResult(
   let stateUpdated = args.stateUpdated;
 
   if (listContainsElement(loggedSolutions, answerValue)) {
-    resultCode = RESOLUTION_CODES.RESULT_REPEATED;
-  } else if (loggedSolutions.length + 1 === solutionSet.length) {
+    return makeKnownStepDecision(
+      RESOLUTION_CODES.RESULT_REPEATED,
+      false,
+      selectedBranch,
+      stateUpdated
+    );
+  }
+
+  if (loggedSolutions.length + 1 === solutionSet.length) {
     resultCode = RESOLUTION_CODES.PENDING_FINISH;
   } else if (selectedBranch.length === 0) {
     selectedBranch = args.subEquation;

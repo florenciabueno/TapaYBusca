@@ -22,6 +22,7 @@ export interface ResolutionData {
   userEquation: unknown;
   steps: ResolutionStep[];
   solutionSet: number[];
+  solutionSetLatex?: string[];
   expectedDistinctSolutionCount: number;
   currentResolutionId: number;
 }

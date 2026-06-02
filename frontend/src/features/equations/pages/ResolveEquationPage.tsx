@@ -14,6 +14,7 @@ export const ResolveEquationPage = () => {
     equation,
     steps,
     solutionSet,
+    solutionSetLatex,
     loading,
     error,
     form,
@@ -52,6 +53,7 @@ export const ResolveEquationPage = () => {
         equationExpression={equation.equation}
         steps={steps}
         solutionSet={solutionSet}
+        solutionSetLatex={solutionSetLatex}
         form={form}
         status={status}
         outcome={outcome}

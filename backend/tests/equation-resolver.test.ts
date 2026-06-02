@@ -18,6 +18,8 @@ import {
   computeEffectiveResolutionSessionId,
   replaceSubListInPostfix,
   validateSubEquation,
+  validateEquivalentEquationStep,
+  loggedSolutionDisplayInfix,
 } from '../src/modules/equations/equation-solver/resolve-helpers.js';
 import { ResolutionService } from '../src/modules/equations/resolution.service.js';
 import {
@@ -189,6 +191,37 @@ describe('Equation resolver API', () => {
       expect([RESOLUTION_CODES.RESULT_CORRECT, RESOLUTION_CODES.PENDING_FINISH]).toContain(response.body.code);
     });
 
+    it('accepts an equivalent equation after multiplying both sides by -1', async () => {
+      repoMocks.findByIdWithEquation.mockResolvedValue(
+        makeUserEquation({
+          equation: {
+            infixExpression: 'x+5=10',
+            postfixExpression: 'x+5=10',
+            solutionValues: [5],
+          },
+        })
+      );
+
+      const response = await request(app)
+        .post('/api/equations/ue-1/resolve')
+        .set(authHeader(token))
+        .send({
+          subEquationInfix: '-x-5',
+          answer: '-10',
+          resolutionStepStatus: RESOLUTION_STEP_NO_BRANCH,
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body.code).toBe(RESOLUTION_CODES.STEP_CORRECT);
+      expect(repoMocks.createResolution).toHaveBeenCalledWith(
+        expect.objectContaining({
+          subEquationInfix: '-x-5',
+          proposedResult: '-10',
+          isCorrect: true,
+        })
+      );
+    });
+
     it('returns SI when equation does not exist', async () => {
       repoMocks.findByIdWithEquation.mockResolvedValue(null);
 
@@ -281,7 +314,11 @@ describe('Equation resolver API', () => {
     it('returns PR when invalid subequation attempt is repeated', async () => {
       const subEquationPostfix = toPostfixTokens('x+99');
       repoMocks.findResolutionsByUserEquation.mockResolvedValue([
-        { subEquation: subEquationPostfix.join(''), proposedResult: '7' },
+        {
+          subEquation: subEquationPostfix.join(''),
+          subEquationInfix: 'x+99',
+          proposedResult: '7',
+        },
       ]);
 
       const response = await request(app)
@@ -339,7 +376,11 @@ describe('Equation resolver API', () => {
       const subEquationInfix = 'x+5';
       const subEquationPostfix = toPostfixTokens(subEquationInfix);
       repoMocks.findResolutionsByUserEquation.mockResolvedValue([
-        { subEquation: subEquationPostfix.join(''), proposedResult: '7' },
+        {
+          subEquation: subEquationPostfix.join(''),
+          subEquationInfix,
+          proposedResult: '7',
+        },
       ]);
 
       const response = await request(app)
@@ -730,6 +771,49 @@ describe('Equation resolver API', () => {
 
       expect(response.status).toBe(200);
       expect(response.body).toEqual({ code: RESOLUTION_CODES.RESULT_REPEATED });
+      expect(repoMocks.createResolution).toHaveBeenCalledWith(
+        expect.objectContaining({ isCorrect: false, isVariable: true })
+      );
+    });
+
+    it('returns RR and rejects step when -7 repeats a logged 9-16 solution', async () => {
+      repoMocks.findByIdWithEquation.mockResolvedValue(
+        makeUserEquation({
+          equation: {
+            infixExpression: 'x+16=9',
+            postfixExpression: 'x+16=9',
+            solutionValues: [-7],
+          },
+        })
+      );
+      repoMocks.getDistinctLoggedSolutions.mockResolvedValueOnce([]).mockResolvedValueOnce([-7]);
+
+      const first = await request(app)
+        .post('/api/equations/ue-1/resolve')
+        .set(authHeader(token))
+        .send({
+          subEquationInfix: 'x',
+          answer: '9-16',
+          resolutionStepStatus: RESOLUTION_STEP_NO_BRANCH,
+        });
+
+      expect(first.status).toBe(200);
+      expect(first.body.code).toBe(RESOLUTION_CODES.PENDING_FINISH);
+
+      const second = await request(app)
+        .post('/api/equations/ue-1/resolve')
+        .set(authHeader(token))
+        .send({
+          subEquationInfix: 'x',
+          answer: '-7',
+          resolutionStepStatus: RESOLUTION_STEP_NO_BRANCH,
+        });
+
+      expect(second.status).toBe(200);
+      expect(second.body).toEqual({ code: RESOLUTION_CODES.RESULT_REPEATED });
+      expect(repoMocks.createResolution).toHaveBeenLastCalledWith(
+        expect.objectContaining({ isCorrect: false, isVariable: true, proposedResult: '-7' })
+      );
     });
 
     it('returns RR on repeated branch answer for non-variable step', async () => {
@@ -934,6 +1018,29 @@ describe('Equation resolution lifecycle endpoints', () => {
         subEquationLatex: '100',
         resultLatex: 'x*20',
       });
+    });
+
+    it('returns solutionSetLatex using logged infix values', async () => {
+      repoMocks.findResolutionsByUserEquation.mockResolvedValue([
+        {
+          subEquation: 'x',
+          subEquationInfix: '-1/2',
+          proposedResult: 'x',
+          resultValue: '-0.5',
+          isVariable: true,
+          isCorrect: true,
+          resolutionSide: RESOLUTION_STEP_NO_BRANCH,
+        },
+      ]);
+      repoMocks.getDistinctLoggedSolutions.mockResolvedValue([-0.5]);
+
+      const response = await request(app)
+        .get('/api/equations/ue-1/resolution')
+        .set(authHeader(token));
+
+      expect(response.status).toBe(200);
+      expect(response.body.solutionSet).toEqual([-0.5]);
+      expect(response.body.solutionSetLatex).toEqual(['-\\frac{1}{2}']);
     });
   });
 
@@ -1397,6 +1504,34 @@ describe('resultToLatex', () => {
     const { resultToLatex } = await import('../src/modules/equations/infix-to-latex.js');
     expect(resultToLatex('(8*x^2+3)/5')).toBe('\\frac{8*x^2+3}{5}');
     expect(resultToLatex('(8*x^2+3)/5=1')).toBe('\\frac{8*x^2+3}{5}=1');
+  });
+
+  it('renders parenthesized denominator fractions', async () => {
+    const { resultToLatex } = await import('../src/modules/equations/infix-to-latex.js');
+    expect(resultToLatex('55/(41-30)')).toBe('\\frac{55}{41-30}');
+    expect(resultToLatex('55/(41-30)=x')).toBe('\\frac{55}{41-30}=x');
+  });
+});
+
+describe('loggedSolutionDisplayInfix', () => {
+  it('returns the non-x side when x is on the right', () => {
+    expect(loggedSolutionDisplayInfix('-1/2', 'x')).toBe('-1/2');
+  });
+
+  it('returns the non-x side when x is on the left', () => {
+    expect(loggedSolutionDisplayInfix('x', '-1/2')).toBe('-1/2');
+  });
+});
+
+describe('validateEquivalentEquationStep', () => {
+  it('accepts multiply both sides by -1 on x+5=10', () => {
+    const eq = infixToPostfix(tokenizeInfix('x+5=10'))!;
+    expect(validateEquivalentEquationStep('-x-5', '-10', eq, [5])).toBe(true);
+  });
+
+  it('rejects unrelated equation', () => {
+    const eq = infixToPostfix(tokenizeInfix('x+5=10'))!;
+    expect(validateEquivalentEquationStep('x', '99', eq, [5])).toBe(false);
   });
 });
 

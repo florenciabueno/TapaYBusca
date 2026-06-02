@@ -8,6 +8,7 @@ export interface GuestResolutionHistoryEntry {
   equationId: string;
   steps: ResolutionStep[];
   solutionSet: number[];
+  solutionSetLatex?: string[];
   updatedAt: string;
   finished: boolean;
   finishedCode: string | null;

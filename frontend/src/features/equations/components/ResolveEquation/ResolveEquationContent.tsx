@@ -40,6 +40,7 @@ interface ResolveEquationContentProps {
   equationExpression: string;
   steps: ResolutionStep[];
   solutionSet: number[];
+  solutionSetLatex?: string[];
   form: ResolutionFormState;
   status: ResolutionMutationStatus;
   outcome: ResolutionOutcome;
@@ -51,6 +52,7 @@ export const ResolveEquationContent = ({
   equationExpression,
   steps,
   solutionSet,
+  solutionSetLatex,
   form,
   status,
   outcome,
@@ -70,6 +72,7 @@ export const ResolveEquationContent = ({
       equationExpression={equationExpression}
       hasSteps={hasSteps}
       solutionSet={solutionSet}
+      solutionSetLatex={solutionSetLatex}
       form={form}
       status={status}
       outcome={outcome}

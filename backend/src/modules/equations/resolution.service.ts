@@ -9,8 +9,10 @@ import {
 } from './equation-solver/resolution-constants.js';
 import {
   validateSubEquation,
+  validateEquivalentEquationStep,
   pickExpressionAndAnswer,
   computeEffectiveResolutionSessionId,
+  loggedSolutionDisplayInfix,
 } from './equation-solver/resolve-helpers.js';
 import { resultToLatex } from './infix-to-latex.js';
 import {
@@ -27,6 +29,7 @@ import {
   parseEquationPostfix,
   parseSolutionValues,
   parseSubEquationPostfix,
+  parseStoredResultValues,
   type ResolutionSessionState,
   type StepEvaluation,
 } from './resolution.service.helpers.js';
@@ -81,9 +84,17 @@ export class ResolutionService {
       userEq
     );
 
+    const knownSolutions = parseSolutionValues(userEq.equation.solutionValues);
+
     const skipSubequationValidation = isEmptySetAnswer && subEquationPostfix.length === 0;
     const subEquationInfixForStep = skipSubequationValidation ? '\\emptyset' : rawSub;
-    if (!skipSubequationValidation && !validateSubEquation(equationPostfixTokens, subEquationPostfix)) {
+    const subEquationValid = validateSubEquation(equationPostfixTokens, subEquationPostfix);
+    const equivalentEquationStep =
+      !skipSubequationValidation &&
+      !subEquationValid &&
+      validateEquivalentEquationStep(rawSub, rawAnswer, equationPostfixTokens, knownSolutions);
+
+    if (!skipSubequationValidation && !subEquationValid && !equivalentEquationStep) {
       return this.persistInvalidSubequationAttempt({
         userEquationId,
         userEq,
@@ -95,14 +106,12 @@ export class ResolutionService {
       });
     }
 
-    const knownSolutions = parseSolutionValues(userEq.equation.solutionValues);
-
     if (
       await isRepeatedSubmittedStep(
         this.equationRepository,
         userEquationId,
         effectiveResolutionId,
-        subEquation,
+        rawSub,
         rawAnswer
       )
     ) {
@@ -185,7 +194,7 @@ export class ResolutionService {
         this.equationRepository,
         userEquationId,
         effectiveResolutionId,
-        subEquation,
+        subEquationInfix,
         proposedResult
       )
     ) {
@@ -204,7 +213,7 @@ export class ResolutionService {
       userEquationId,
       resolutionSessionId: effectiveResolutionId,
       subEquation,
-      subEquationInfix: subEquationInfix,
+      subEquationInfix,
       proposedResult,
       resultValue: '',
       stepWithoutSolution: false,
@@ -277,14 +286,39 @@ export class ResolutionService {
       userEquationId,
       currentResolutionId
     );
+    const solutionSetLatex = this.buildSolutionSetLatex(rawSteps);
     const expectedDistinctSolutionCount = [...new Set(parseSolutionValues(userEq.equation.solutionValues))].length;
     return {
       userEquation: userEq,
       steps,
       solutionSet,
+      solutionSetLatex,
       expectedDistinctSolutionCount,
       currentResolutionId,
     };
+  }
+
+  private buildSolutionSetLatex(
+    steps: Array<{
+      subEquationInfix?: string | null;
+      proposedResult: string;
+      resultValue: string;
+      isVariable: boolean;
+      isCorrect: boolean;
+    }>
+  ): string[] {
+    const seen = new Set<number>();
+    const out: string[] = [];
+    for (const step of steps) {
+      if (!step.isVariable || !step.isCorrect) continue;
+      const nums = parseStoredResultValues(step.resultValue);
+      const num = nums[0];
+      if (num === undefined || seen.has(num)) continue;
+      seen.add(num);
+      const infix = loggedSolutionDisplayInfix(step.subEquationInfix ?? '', step.proposedResult);
+      out.push(resultToLatex(infix));
+    }
+    return out;
   }
 
   async finishResolution(userEquationId: string, userId: string): Promise<{ code: string; message?: string }> {

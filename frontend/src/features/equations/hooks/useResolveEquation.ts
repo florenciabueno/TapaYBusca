@@ -48,6 +48,7 @@ export const useResolveEquation = (id?: string) => {
   const equation: Equation | null = equationQuery.data ?? null;
   const steps: ResolutionStep[] = resolutionQuery.data?.steps ?? [];
   const solutionSet: number[] = resolutionQuery.data?.solutionSet ?? [];
+  const solutionSetLatex: string[] | undefined = resolutionQuery.data?.solutionSetLatex;
 
   useEffect(() => {
     setSubEquationInfix('');
@@ -172,6 +173,7 @@ export const useResolveEquation = (id?: string) => {
     mode,
     steps,
     solutionSet,
+    solutionSetLatex,
     finished,
     finishedCode,
     resolutionData: resolutionQuery.data,
@@ -208,6 +210,7 @@ export const useResolveEquation = (id?: string) => {
     equation,
     steps,
     solutionSet,
+    solutionSetLatex,
     loading,
     error,
     form,
