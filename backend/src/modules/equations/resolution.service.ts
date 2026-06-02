@@ -87,7 +87,7 @@ export class ResolutionService {
     const knownSolutions = parseSolutionValues(userEq.equation.solutionValues);
 
     const skipSubequationValidation = isEmptySetAnswer && subEquationPostfix.length === 0;
-    const subEquationInfixForStep = skipSubequationValidation ? '\\emptyset' : rawSub;
+    const subEquationInfixForStep = skipSubequationValidation ? EMPTY_SET : rawSub;
     const subEquationValid = validateSubEquation(equationPostfixTokens, subEquationPostfix);
     const equivalentEquationStep =
       !skipSubequationValidation &&

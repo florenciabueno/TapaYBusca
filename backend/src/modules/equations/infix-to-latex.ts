@@ -12,7 +12,7 @@ export function infixToLatex(expression: string): string {
 export function resultToLatex(result: string): string {
   const s = (result ?? '').trim();
   if (!s) return s;
-  if (s === '{}') return '\\emptyset';
+  if (s === '{}') return '\\{\\}';
   const negMatch = s.match(/^neg\((.+)\)$/i);
   if (negMatch) {
     const inner = negMatch[1] ?? '';

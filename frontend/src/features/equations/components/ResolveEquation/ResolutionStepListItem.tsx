@@ -31,7 +31,7 @@ export const ResolutionStepListItem = ({ step, stepNumber }: ResolutionStepListI
         ) : step.proposedResult === '{}' ? (
           <>
             <span>S = </span>
-            <MathExpression expression="\emptyset" />
+            <MathExpression expression="\\{\\}" />
           </>
         ) : (
           <>

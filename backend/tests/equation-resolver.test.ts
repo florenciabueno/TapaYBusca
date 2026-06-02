@@ -11,7 +11,7 @@ import {
   RESOLUTION_STEP_INVALID_SUBEQUATION_ATTEMPT,
 } from '../src/modules/equations/equation-solver/resolution-constants.js';
 import { tokenizeInfix } from '../src/modules/equations/equation-solver/tokenizer.js';
-import { normalizeUserInfix } from '../src/modules/equations/equation-solver/user-infix-normalize.js';
+import { normalizeUserInfix, stripUnaryPlus } from '../src/modules/equations/equation-solver/user-infix-normalize.js';
 import { infixToPostfix } from '../src/modules/equations/equation-solver/infix-to-postfix.js';
 import { postfixToTree } from '../src/modules/equations/equation-solver/postfix-to-tree.js';
 import {
@@ -776,6 +776,34 @@ describe('Equation resolver API', () => {
       );
     });
 
+    it('accepts explicit positive answer +7 for x-3=4', async () => {
+      repoMocks.findByIdWithEquation.mockResolvedValue(
+        makeUserEquation({
+          equation: {
+            infixExpression: 'x-3=4',
+            postfixExpression: 'x-3=4',
+            solutionValues: [7],
+          },
+        })
+      );
+      repoMocks.getDistinctLoggedSolutions.mockResolvedValue([]);
+
+      const response = await request(app)
+        .post('/api/equations/ue-1/resolve')
+        .set(authHeader(token))
+        .send({
+          subEquationInfix: 'x',
+          answer: '+7',
+          resolutionStepStatus: RESOLUTION_STEP_NO_BRANCH,
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body.code).toBe(RESOLUTION_CODES.PENDING_FINISH);
+      expect(repoMocks.createResolution).toHaveBeenCalledWith(
+        expect.objectContaining({ isCorrect: true, isVariable: true, proposedResult: '+7' })
+      );
+    });
+
     it('returns RR and rejects step when -7 repeats a logged 9-16 solution', async () => {
       repoMocks.findByIdWithEquation.mockResolvedValue(
         makeUserEquation({
@@ -987,7 +1015,7 @@ describe('Equation resolution lifecycle endpoints', () => {
         subEquation: 'x',
         isCorrect: false,
         subEquationLatex: '\\sqrt{x+5}',
-        resultLatex: '\\emptyset',
+        resultLatex: '\\{\\}',
       });
       expect(response.body.steps[1]).toMatchObject({
         subEquationLatex: 'x+2',
@@ -1041,6 +1069,32 @@ describe('Equation resolution lifecycle endpoints', () => {
       expect(response.status).toBe(200);
       expect(response.body.solutionSet).toEqual([-0.5]);
       expect(response.body.solutionSetLatex).toEqual(['-\\frac{1}{2}']);
+    });
+
+    it('returns solutionSetLatex preserving explicit unary plus', async () => {
+      repoMocks.findResolutionsByUserEquation.mockResolvedValue([
+        {
+          subEquation: 'x',
+          subEquationInfix: 'x',
+          proposedResult: '+7',
+          resultValue: '7',
+          isVariable: true,
+          isCorrect: true,
+          resolutionSide: RESOLUTION_STEP_NO_BRANCH,
+        },
+      ]);
+      repoMocks.getDistinctLoggedSolutions.mockResolvedValue([7]);
+
+      const response = await request(app)
+        .get('/api/equations/ue-1/resolution')
+        .set(authHeader(token));
+
+      expect(response.status).toBe(200);
+      expect(response.body.solutionSetLatex).toEqual(['+7']);
+      expect(response.body.steps[0]).toMatchObject({
+        subEquationLatex: 'x',
+        resultLatex: '+7',
+      });
     });
   });
 
@@ -1511,6 +1565,11 @@ describe('resultToLatex', () => {
     expect(resultToLatex('55/(41-30)')).toBe('\\frac{55}{41-30}');
     expect(resultToLatex('55/(41-30)=x')).toBe('\\frac{55}{41-30}=x');
   });
+
+  it('preserves explicit unary plus in display', async () => {
+    const { resultToLatex } = await import('../src/modules/equations/infix-to-latex.js');
+    expect(resultToLatex('+7')).toBe('+7');
+  });
 });
 
 describe('loggedSolutionDisplayInfix', () => {
@@ -1557,5 +1616,26 @@ describe('normalizeUserInfix', () => {
     expect(infixToPostfix(tokenizeInfix('3x+2'))).toEqual(
       infixToPostfix(tokenizeInfix('3*x+2'))
     );
+  });
+});
+
+describe('stripUnaryPlus', () => {
+  it('removes unary plus before numbers', () => {
+    expect(stripUnaryPlus('+7')).toBe('7');
+    expect(stripUnaryPlus('x=+7')).toBe('x=7');
+  });
+
+  it('keeps binary plus between operands', () => {
+    expect(stripUnaryPlus('4+5')).toBe('4+5');
+    expect(stripUnaryPlus('x+5')).toBe('x+5');
+  });
+});
+
+describe('parseAnswerValues with unary plus', () => {
+  it('parses +7 as 7', async () => {
+    const { parseAnswerValues } = await import(
+      '../src/modules/equations/equation-solver/resolve-helpers.js'
+    );
+    expect(parseAnswerValues('+7')).toEqual([7]);
   });
 });

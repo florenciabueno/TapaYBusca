@@ -2,6 +2,19 @@ function normalizeDecimalCommas(s: string): string {
   return s.replace(/(\d+),(\d+)/g, '$1.$2');
 }
 
+const UNARY_PLUS_AFTER = new Set(['=', '(', '+', '-', '*', '/']);
+
+/** Removes unary + for parsing; raw user input is kept elsewhere for display. */
+export function stripUnaryPlus(s: string): string {
+  let out = '';
+  for (let i = 0; i < s.length; i++) {
+    const c = s[i]!;
+    if (c === '+' && (i === 0 || UNARY_PLUS_AFTER.has(s[i - 1]!))) continue;
+    out += c;
+  }
+  return out;
+}
+
 function insertImplicitMultiplication(s: string): string {
   let out = s.replace(/X/g, 'x');
   out = out.replace(/(?<![a-zA-Z_])(\d)([x(])/g, '$1*$2');

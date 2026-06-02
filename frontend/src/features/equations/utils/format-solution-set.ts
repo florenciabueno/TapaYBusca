@@ -29,15 +29,15 @@ export const formatSolutionValueLatex = (value: number): string => {
 
 /**
  * Renders the LaTeX expression "S = \{ v1, v2, ... \}" for a set of solutions,
- * or "S = \emptyset" when the list is empty.
+ * or "S = {}" when the list is empty.
  */
 export const formatSolutionSetLatex = (solutionSet: number[]): string => {
-  if (solutionSet.length === 0) return 'S = \\emptyset';
+  if (solutionSet.length === 0) return 'S = \\{\\}';
   return `S = \\{ ${solutionSet.map(formatSolutionValueLatex).join(', ')} \\}`;
 };
 
 export const formatSolutionSetLatexFromItems = (items: string[]): string => {
-  if (items.length === 0) return 'S = \\emptyset';
+  if (items.length === 0) return 'S = \\{\\}';
   return `S = \\{ ${items.join(', ')} \\}`;
 };
 
