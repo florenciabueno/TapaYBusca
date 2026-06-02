@@ -1,3 +1,7 @@
+export function formatDecimalCommaForDisplay(s: string): string {
+  return s.replace(/(\d+)\.(\d+)/g, '$1,$2');
+}
+
 /**
  * Formats a numeric solution value as a LaTeX string. Integer-rounded values
  * render as plain integers; values whose square is a non-perfect integer render
@@ -20,7 +24,7 @@ export const formatSolutionValueLatex = (value: number): string => {
     return `${sign}\\sqrt{${roundedSquare}}`;
   }
 
-  return String(Number(value.toFixed(6)));
+  return formatDecimalCommaForDisplay(String(Number(value.toFixed(6))));
 };
 
 /**

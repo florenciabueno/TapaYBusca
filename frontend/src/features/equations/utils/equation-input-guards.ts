@@ -1,4 +1,5 @@
 import type { KeyboardEvent } from 'react';
+import { formatDecimalCommaForDisplay } from './format-solution-set';
 
 const PRINTABLE_EQUATION_KEYS = [
   '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
@@ -153,9 +154,5 @@ export function infixToUserFacingForInput(infix: string): string {
     const pick = hits[0];
     out = out.slice(0, pick.start) + pick.replacement + out.slice(pick.endExclusive);
   }
-  return formatDecimalCommasForDisplay(unwrapStorageFractions(out));
-}
-
-function formatDecimalCommasForDisplay(s: string): string {
-  return s.replace(/(\d+)\.(\d+)/g, '$1,$2');
+  return formatDecimalCommaForDisplay(unwrapStorageFractions(out));
 }
