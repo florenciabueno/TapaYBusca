@@ -97,6 +97,18 @@ function convertInfixPart(expr: string): string {
       }
     }
 
+    const parenFrac = findParenSlashFraction(out);
+    if (parenFrac) {
+      const numLatex = convertInfixPart(parenFrac.numInner);
+      const denLatex = convertInfixPart(parenFrac.denInner);
+      out =
+        out.slice(0, parenFrac.start) +
+        `\\frac{${numLatex}}{${denLatex}}` +
+        out.slice(parenFrac.end);
+      changed = true;
+      continue;
+    }
+
     const doubleOpen = out.indexOf('((');
     if (doubleOpen !== -1) {
       const slashParen = out.indexOf(')/(', doubleOpen);
@@ -120,7 +132,57 @@ function convertInfixPart(expr: string): string {
 
   }
 
-  return out;
+  return replaceSimpleInlineFractions(out);
+}
+
+function findParenSlashFraction(
+  expr: string
+): { start: number; end: number; numInner: string; denInner: string } | null {
+  for (let i = 0; i < expr.length; i++) {
+    if (expr[i] !== '(') continue;
+    const numInner = takeBalancedParen(expr, i);
+    if (numInner === null) continue;
+    const slashIdx = i + 1 + numInner.length + 1;
+    if (expr[slashIdx] !== '/') continue;
+    const den = takeFractionDenominator(expr, slashIdx + 1);
+    if (!den) continue;
+    return {
+      start: i,
+      end: den.end,
+      numInner,
+      denInner: den.inner,
+    };
+  }
+  return null;
+}
+
+function takeFractionDenominator(
+  expr: string,
+  start: number
+): { inner: string; end: number } | null {
+  if (start >= expr.length) return null;
+  if (expr[start] === '(') {
+    const inner = takeBalancedParen(expr, start);
+    if (inner === null) return null;
+    return { inner, end: start + 1 + inner.length + 1 };
+  }
+  const tail = expr.slice(start);
+  const simple = tail.match(/^(-?\d+|[xX])\b/);
+  if (simple) {
+    return { inner: simple[1], end: start + simple[1].length };
+  }
+  return null;
+}
+
+function replaceSimpleInlineFractions(expr: string): string {
+  return expr.replace(
+    /(^|[=+\-*/(])(-?\d+|[xX])\/(\d+|[xX])(?=$|[=+\-*/)])/g,
+    (_match, prefix: string, numerator: string, denominator: string) => {
+      const isNegative = numerator.startsWith('-');
+      const absNumerator = isNegative ? numerator.slice(1) : numerator;
+      return `${prefix}${isNegative ? '-' : ''}\\frac{${absNumerator}}{${denominator}}`;
+    }
+  );
 }
 
 function takeBalancedParen(str: string, openIndex: number): string | null {

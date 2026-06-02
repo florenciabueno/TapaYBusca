@@ -912,6 +912,29 @@ describe('Equation resolution lifecycle endpoints', () => {
       expect(response.body.solutionSet).toEqual([2, -6]);
       expect(response.body.expectedDistinctSolutionCount).toBe(1);
     });
+
+    it('keeps left/right field order when x is in the answer input', async () => {
+      repoMocks.findResolutionsByUserEquation.mockResolvedValue([
+        {
+          subEquation: 'x20*',
+          subEquationInfix: '100',
+          proposedResult: 'x*20',
+          isCorrect: true,
+          resolutionSide: RESOLUTION_STEP_NO_BRANCH,
+        },
+      ]);
+      repoMocks.getDistinctLoggedSolutions.mockResolvedValue([5]);
+
+      const response = await request(app)
+        .get('/api/equations/ue-1/resolution')
+        .set(authHeader(token));
+
+      expect(response.status).toBe(200);
+      expect(response.body.steps[0]).toMatchObject({
+        subEquationLatex: '100',
+        resultLatex: 'x*20',
+      });
+    });
   });
 
   describe('POST /api/equations/:id/finish-resolution', () => {
@@ -1363,6 +1386,17 @@ describe('resultToLatex', () => {
   it('renders a negative simple fraction with the minus outside the fraction', async () => {
     const { resultToLatex } = await import('../src/modules/equations/infix-to-latex.js');
     expect(resultToLatex('-1/2')).toBe('-\\frac{1}{2}');
+  });
+
+  it('renders inline fractions inside expressions', async () => {
+    const { resultToLatex } = await import('../src/modules/equations/infix-to-latex.js');
+    expect(resultToLatex('x+1/2')).toBe('x+\\frac{1}{2}');
+  });
+
+  it('renders parenthesized numerator fractions', async () => {
+    const { resultToLatex } = await import('../src/modules/equations/infix-to-latex.js');
+    expect(resultToLatex('(8*x^2+3)/5')).toBe('\\frac{8*x^2+3}{5}');
+    expect(resultToLatex('(8*x^2+3)/5=1')).toBe('\\frac{8*x^2+3}{5}=1');
   });
 });
 

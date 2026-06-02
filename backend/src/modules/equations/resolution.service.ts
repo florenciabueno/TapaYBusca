@@ -12,7 +12,7 @@ import {
   pickExpressionAndAnswer,
   computeEffectiveResolutionSessionId,
 } from './equation-solver/resolve-helpers.js';
-import { infixToLatex, resultToLatex } from './infix-to-latex.js';
+import { resultToLatex } from './infix-to-latex.js';
 import {
   EMPTY_SET_WITHOUT_SUBEQUATION_KEY,
   FINISH_ATTEMPT_SUBEQUATION_KEY,
@@ -82,7 +82,7 @@ export class ResolutionService {
     );
 
     const skipSubequationValidation = isEmptySetAnswer && subEquationPostfix.length === 0;
-    const subEquationInfixForStep = skipSubequationValidation ? '\\emptyset' : subEquationInfix.trim();
+    const subEquationInfixForStep = skipSubequationValidation ? '\\emptyset' : rawSub;
     if (!skipSubequationValidation && !validateSubEquation(equationPostfixTokens, subEquationPostfix)) {
       return this.persistInvalidSubequationAttempt({
         userEquationId,
@@ -90,8 +90,8 @@ export class ResolutionService {
         session,
         effectiveResolutionId,
         subEquation,
-        subEquationInfix,
-        answerForStep,
+        subEquationInfix: rawSub,
+        proposedResult: rawAnswer,
       });
     }
 
@@ -103,7 +103,7 @@ export class ResolutionService {
         userEquationId,
         effectiveResolutionId,
         subEquation,
-        answerForStep
+        rawAnswer
       )
     ) {
       return { code: RESOLUTION_CODES.STEP_REPEATED };
@@ -127,7 +127,7 @@ export class ResolutionService {
       currentResolutionId: effectiveResolutionId,
       subEquation,
       subEquationInfix: subEquationInfixForStep,
-      answer: answerForStep,
+      answer: rawAnswer,
       resolutionStepStatus: payload.resolutionStepStatus,
       evaluation,
     });
@@ -168,7 +168,7 @@ export class ResolutionService {
     effectiveResolutionId: number;
     subEquation: string;
     subEquationInfix: string;
-    answerForStep: string;
+    proposedResult: string;
   }): Promise<{ code: string }> {
     const {
       userEquationId,
@@ -177,7 +177,7 @@ export class ResolutionService {
       effectiveResolutionId,
       subEquation,
       subEquationInfix,
-      answerForStep,
+      proposedResult,
     } = params;
 
     if (
@@ -186,7 +186,7 @@ export class ResolutionService {
         userEquationId,
         effectiveResolutionId,
         subEquation,
-        answerForStep
+        proposedResult
       )
     ) {
       return { code: RESOLUTION_CODES.STEP_REPEATED };
@@ -205,7 +205,7 @@ export class ResolutionService {
       resolutionSessionId: effectiveResolutionId,
       subEquation,
       subEquationInfix: subEquationInfix,
-      proposedResult: answerForStep,
+      proposedResult,
       resultValue: '',
       stepWithoutSolution: false,
       isCorrect: false,
@@ -266,8 +266,11 @@ export class ResolutionService {
         isCorrect: step.isCorrect,
         finishAttempt,
         subEquationLatex:
-          finishAttempt || !infix ? undefined : infixToLatex(infix),
-        resultLatex: finishAttempt ? undefined : resultToLatex(step.proposedResult),
+          finishAttempt || !infix ? undefined : resultToLatex(infix),
+        resultLatex:
+          finishAttempt || !step.proposedResult.trim()
+            ? undefined
+            : resultToLatex(step.proposedResult),
       };
     });
     const solutionSet = await this.equationRepository.getDistinctLoggedSolutions(
