@@ -11,6 +11,7 @@ import {
   RESOLUTION_STEP_INVALID_SUBEQUATION_ATTEMPT,
 } from '../src/modules/equations/equation-solver/resolution-constants.js';
 import { tokenizeInfix } from '../src/modules/equations/equation-solver/tokenizer.js';
+import { normalizeUserInfix } from '../src/modules/equations/equation-solver/user-infix-normalize.js';
 import { infixToPostfix } from '../src/modules/equations/equation-solver/infix-to-postfix.js';
 import { postfixToTree } from '../src/modules/equations/equation-solver/postfix-to-tree.js';
 import {
@@ -1362,5 +1363,30 @@ describe('resultToLatex', () => {
   it('renders a negative simple fraction with the minus outside the fraction', async () => {
     const { resultToLatex } = await import('../src/modules/equations/infix-to-latex.js');
     expect(resultToLatex('-1/2')).toBe('-\\frac{1}{2}');
+  });
+});
+
+describe('normalizeUserInfix', () => {
+  it('turns comma decimals into dots', () => {
+    expect(normalizeUserInfix('0,5*x=1')).toBe('0.5*x=1');
+  });
+
+  it('inserts implicit multiplication for 3x', () => {
+    expect(normalizeUserInfix('3x+2=8')).toBe('3*x+2=8');
+  });
+
+  it('inserts implicit multiplication before parentheses', () => {
+    expect(normalizeUserInfix('2(x+1)=8')).toBe('2*(x+1)=8');
+  });
+
+  it('does not corrupt function names like pot2 and pot3', () => {
+    expect(normalizeUserInfix('pot2(x)=9')).toBe('pot2(x)=9');
+    expect(normalizeUserInfix('pot3(x)=8')).toBe('pot3(x)=8');
+  });
+
+  it('produces the same postfix for 3x and 3*x', () => {
+    expect(infixToPostfix(tokenizeInfix('3x+2'))).toEqual(
+      infixToPostfix(tokenizeInfix('3*x+2'))
+    );
   });
 });

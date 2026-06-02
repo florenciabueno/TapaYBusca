@@ -8,6 +8,7 @@ import {
   DIVIDE,
 } from './constants.js';
 import { TOKENIZE_ORDER } from './constants.js';
+import { normalizeUserInfix } from './user-infix-normalize.js';
 
 const UNARY_MINUS_AFTER = new Set([EQUALS, LEFT_PAREN, ADD, SUBTRACT, MULTIPLY, DIVIDE]);
 
@@ -77,7 +78,7 @@ function findMatchingOpenParen(s: string, closeIdx: number): number {
 }
 
 export function normalizeInfix(equation: string): string {
-  let s = equation.replace(/\s/g, '');
+  let s = normalizeUserInfix(equation);
   s = expandNumericLiteralPowers(s);
   s = s.replace(/x\^3/g, 'pot3(x)');
   s = s.replace(/x\^2/g, 'pot2(x)');

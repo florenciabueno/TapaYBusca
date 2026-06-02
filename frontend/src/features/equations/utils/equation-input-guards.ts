@@ -3,7 +3,7 @@ import type { KeyboardEvent } from 'react';
 const PRINTABLE_EQUATION_KEYS = [
   '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
   'x', 'X', '=',
-  '*', '+', '/', '-', '(', ')', '^',
+  '*', '+', '/', '-', '(', ')', '^', ',',
 ] as const;
 
 const NAVIGATION_KEYS = [
@@ -15,7 +15,7 @@ export const ALLOWED_EQUATION_KEYS = new Set<string>([
   ...NAVIGATION_KEYS,
 ]);
 
-const PASTE_DISALLOWED_RE = /[^0-9xX=*+()\-/^]/gi;
+const PASTE_DISALLOWED_RE = /[^0-9xX=*+(),\-/^]/gi;
 
 export function sanitizeEquationPastedText(pasted: string): string {
   return pasted.replace(PASTE_DISALLOWED_RE, '');
@@ -153,5 +153,9 @@ export function infixToUserFacingForInput(infix: string): string {
     const pick = hits[0];
     out = out.slice(0, pick.start) + pick.replacement + out.slice(pick.endExclusive);
   }
-  return unwrapStorageFractions(out);
+  return formatDecimalCommasForDisplay(unwrapStorageFractions(out));
+}
+
+function formatDecimalCommasForDisplay(s: string): string {
+  return s.replace(/(\d+)\.(\d+)/g, '$1,$2');
 }

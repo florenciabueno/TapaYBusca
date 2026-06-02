@@ -1,4 +1,5 @@
 import { tokenizeInfix } from './tokenizer.js';
+import { normalizeUserInfix } from './user-infix-normalize.js';
 import { infixToPostfix } from './infix-to-postfix.js';
 import { postfixToTree } from './postfix-to-tree.js';
 import { isolateVariable } from './isolate-variable.js';
@@ -40,10 +41,6 @@ export function validateSubEquation(
   return tree !== null;
 }
 
-function normalizeDecimalSeparator(s: string): string {
-  return s.replace(/,/g, '.');
-}
-
 function normalizeMathAliases(input: string): string {
   let out = input.replace(/−/g, '-');
   out = out.replace(/³√\s*\(/g, 'cbrt(');
@@ -56,7 +53,7 @@ function normalizeMathAliases(input: string): string {
 export function parseAnswerValues(answer: string): number[] {
   const trimmed = (answer ?? '').trim();
   if (!trimmed) return [];
-  const normalized = normalizeMathAliases(normalizeDecimalSeparator(trimmed));
+  const normalized = normalizeMathAliases(normalizeUserInfix(trimmed));
   try {
     const infixTokens = tokenizeInfix(normalized);
     const postfix = infixToPostfix(infixTokens);

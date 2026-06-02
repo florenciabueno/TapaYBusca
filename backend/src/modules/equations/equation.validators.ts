@@ -1,4 +1,5 @@
 import type { EquationValidationResult } from './equation.types.js';
+import { normalizeUserInfix } from './equation-solver/user-infix-normalize.js';
 
 export const EQUATION_VARIABLE = 'x';
 
@@ -162,7 +163,7 @@ function validateExpressionSide(tokens: Token[]): string | null {
 }
 
 export function validateEquation(equation: string): EquationValidationResult {
-  const trimmed = (equation ?? '').trim();
+  const trimmed = normalizeUserInfix(equation ?? '');
   const errors = [...validateStructure(trimmed)];
   if (errors.length > 0) return toEquationValidationResult(errors);
 

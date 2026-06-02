@@ -14,6 +14,7 @@ import {
 } from './equation.types.js';
 import { validateEquation } from './equation.validators.js';
 import { solveEquation } from './equation-solver/index.js';
+import { normalizeUserInfix } from './equation-solver/user-infix-normalize.js';
 import { infixToLatex } from './infix-to-latex.js';
 import { ensureValidationPassedWithErrorList } from '../../shared/utils/validation.js';
 import { DEFAULT_LIMIT, DEFAULT_PAGE, MAX_LIMIT } from '../../shared/constants/pagination.js';
@@ -95,12 +96,14 @@ export class EquationService {
   }
 
   async createEquation(data: CreateEquationDto): Promise<EquationResponse> {
-    ensureValidationPassedWithErrorList(validateEquation(data.expression), MESSAGE_EQUATION_VALIDATION_PREFIX);
-    const solveResult = solveEquation(data.expression);
+    const expression = normalizeUserInfix(data.expression);
+    ensureValidationPassedWithErrorList(validateEquation(expression), MESSAGE_EQUATION_VALIDATION_PREFIX);
+    const solveResult = solveEquation(expression);
     this.ensureEquationHasSolution(solveResult);
-    const latexExpression = infixToLatex(data.expression.trim());
+    const latexExpression = infixToLatex(expression);
     const equationUser = await this.equationRepository.create({
       ...data,
+      expression,
       latexExpression,
       solutionValues: solveResult.solutions ?? [],
     });
