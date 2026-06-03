@@ -7,12 +7,9 @@ export interface TreeNode {
   right?: TreeNode | null;
 }
 
-export interface SolveResult {
-  ok: boolean;
-  solutions?: number[];
-  errorCode?: string;
-  message?: string;
-}
+export type SolveResult =
+  | { ok: true; solutions: number[] }
+  | { ok: false; errorCode: string; message: string };
 
 export const ERROR_CODES = {
   MISSING_PARENTHESES: 'MISSING_PARENTHESES',

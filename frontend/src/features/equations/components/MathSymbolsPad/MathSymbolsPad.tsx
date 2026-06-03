@@ -1,5 +1,5 @@
 import { COLORS, SPACING } from '../../../../config/theme';
-import { DEFAULT_MATH_SYMBOLS } from './math-symbols';
+import { CREATE_EQUATION_MATH_SYMBOLS } from './math-symbols';
 
 interface MathSymbolsPadProps {
   onSymbolClick: (insert: string) => void;
@@ -10,7 +10,7 @@ interface MathSymbolsPadProps {
 export const MathSymbolsPad = ({
   onSymbolClick,
   disabled = false,
-  symbols = DEFAULT_MATH_SYMBOLS,
+  symbols = CREATE_EQUATION_MATH_SYMBOLS,
 }: MathSymbolsPadProps) => {
   return (
     <div translate="no" style={{ marginBottom: SPACING.lg }}>

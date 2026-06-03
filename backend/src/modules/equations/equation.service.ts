@@ -13,7 +13,7 @@ import {
   DownloadEquationsResult,
 } from './equation.types.js';
 import { validateEquation } from './equation.validators.js';
-import { solveEquation } from './equation-solver/index.js';
+import { solveEquation, type SolveResult } from './equation-solver/index.js';
 import { normalizeUserInfix } from './equation-solver/user-infix-normalize.js';
 import { infixToLatex } from './infix-to-latex.js';
 import { ensureValidationPassedWithErrorList } from '../../shared/utils/validation.js';
@@ -105,7 +105,7 @@ export class EquationService {
       ...data,
       expression,
       latexExpression,
-      solutionValues: solveResult.solutions ?? [],
+      solutionValues: solveResult.solutions,
     });
     return this.toEquationResponse(equationUser);
   }
@@ -283,7 +283,9 @@ export class EquationService {
     }).format(new Date(date));
   }
 
-  private ensureEquationHasSolution(solveResult: { ok: boolean; message?: string }): void {
+  private ensureEquationHasSolution(
+    solveResult: SolveResult
+  ): asserts solveResult is Extract<SolveResult, { ok: true }> {
     if (!solveResult.ok) {
       throw new Error(solveResult.message ?? MESSAGE_EQUATION_NO_SOLUTION);
     }

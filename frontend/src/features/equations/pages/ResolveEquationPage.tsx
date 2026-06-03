@@ -5,10 +5,12 @@ import { EquationsLayout } from '../components/EquationsLayout';
 import { EquationsMessageCard } from '../components/EquationsMessageCard';
 import { ResolveEquationContent } from '../components/ResolveEquation';
 import { useResolveEquation } from '../hooks/useResolveEquation';
+import { useEquationNeighbors } from '../hooks/useEquationNeighbors';
 
 export const ResolveEquationPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const navigation = useEquationNeighbors(id);
 
   const {
     equation,
@@ -59,6 +61,7 @@ export const ResolveEquationPage = () => {
         outcome={outcome}
         actions={actions}
         isReadOnly={equation.isActive === false}
+        navigation={navigation}
       />
     </EquationsLayout>
   );

@@ -1,6 +1,7 @@
 import { COLORS, SHADOW } from '../../../../config/theme';
 import { MathExpression } from '../../../../shared/components/ui/MathExpression';
 import type { ResolutionStep } from '../../types';
+import { formatSolutionSetLatex } from '../../utils/format-solution-set';
 
 export interface ResolutionStepListItemProps {
   step: ResolutionStep;
@@ -29,10 +30,7 @@ export const ResolutionStepListItem = ({ step, stepNumber }: ResolutionStepListI
             Terminar resolución — intento incompleto
           </span>
         ) : step.proposedResult === '{}' ? (
-          <>
-            <span>S = </span>
-            <MathExpression expression="\\{\\}" />
-          </>
+          <MathExpression expression={formatSolutionSetLatex([])} />
         ) : (
           <>
             {step.subEquationLatex ? (

@@ -1,2 +1,5 @@
 export { MathSymbolsPad } from './MathSymbolsPad';
-export { DEFAULT_MATH_SYMBOLS } from './math-symbols';
+export {
+  CREATE_EQUATION_MATH_SYMBOLS,
+  RESOLUTION_MATH_SYMBOLS,
+} from './math-symbols';

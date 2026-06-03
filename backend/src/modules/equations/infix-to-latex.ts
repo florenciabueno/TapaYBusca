@@ -33,6 +33,14 @@ export function resultToLatex(result: string): string {
 }
 
 function convertInfixPart(expr: string): string {
+  const pipeAbs = findPipeAbsSegment(expr);
+  if (pipeAbs) {
+    const before = convertInfixPart(expr.slice(0, pipeAbs.start));
+    const inner = convertInfixPart(pipeAbs.inner);
+    const after = convertInfixPart(expr.slice(pipeAbs.end));
+    return `${before}\\left|${inner}\\right|${after}`;
+  }
+
   let out = expr;
   let changed = true;
   while (changed) {
@@ -61,6 +69,21 @@ function convertInfixPart(expr: string): string {
         out =
           out.slice(0, sqrtMatch.index) +
           `\\sqrt{${arg}}` +
+          out.slice(openParen + 1 + inner.length + 1);
+        changed = true;
+        continue;
+      }
+    }
+
+    const absMatch = out.match(/\babs\s*\(/i);
+    if (absMatch && absMatch.index !== undefined) {
+      const openParen = absMatch.index + absMatch[0].length - 1;
+      const inner = takeBalancedParen(out, openParen);
+      if (inner !== null) {
+        const arg = convertInfixPart(inner);
+        out =
+          out.slice(0, absMatch.index) +
+          `\\left|${arg}\\right|` +
           out.slice(openParen + 1 + inner.length + 1);
         changed = true;
         continue;
@@ -230,6 +253,19 @@ function replaceSimpleInlineFractions(expr: string): string {
       return `${prefix}${isNegative ? '-' : ''}\\frac{${absNumerator}}{${denominator}}`;
     }
   );
+}
+
+function findPipeAbsSegment(
+  expr: string
+): { start: number; end: number; inner: string } | null {
+  for (let i = 0; i < expr.length; i++) {
+    if (expr[i] !== '|') continue;
+    let j = i + 1;
+    while (j < expr.length && expr[j] !== '|') j++;
+    if (j >= expr.length) return null;
+    return { start: i, end: j + 1, inner: expr.slice(i + 1, j) };
+  }
+  return null;
 }
 
 function takeBalancedParen(str: string, openIndex: number): string | null {

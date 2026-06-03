@@ -25,6 +25,7 @@ export type StepEvaluation = {
   isVariable: boolean;
   stepWithoutSolution: boolean;
   correctResult?: number;
+  resultValue?: string;
   selectedBranch: string;
   stateUpdated: boolean;
 };
@@ -36,7 +37,10 @@ export type KnownStepDecision = {
   stateUpdated: boolean;
 };
 
-export type KnownSolutionEvalOutcome = KnownStepDecision & { correctResult?: number };
+export type KnownSolutionEvalOutcome = KnownStepDecision & {
+  correctResult?: number;
+  resultValue?: string;
+};
 
 export function parseSolutionValues(json: unknown): number[] {
   if (json == null) return [];

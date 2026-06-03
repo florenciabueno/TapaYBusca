@@ -1639,3 +1639,54 @@ describe('parseAnswerValues with unary plus', () => {
     expect(parseAnswerValues('+7')).toEqual([7]);
   });
 });
+
+describe('absolute value (pipe notation)', () => {
+  it('converts |x| to abs(x) for parsing', async () => {
+    const { convertPipeAbsToAbsCall } = await import(
+      '../src/modules/equations/equation-solver/user-infix-normalize.js'
+    );
+    expect(convertPipeAbsToAbsCall('|x|')).toBe('abs(x)');
+    expect(convertPipeAbsToAbsCall('|x|=1')).toBe('abs(x)=1');
+  });
+
+  it('solves |x|=1 as ±1', async () => {
+    const { solveEquation } = await import('../src/modules/equations/equation-solver/index.js');
+    const result = solveEquation('|x|=1');
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.solutions.sort((a, b) => a - b)).toEqual([-1, 1]);
+  });
+
+  it('renders |x|=1 in LaTeX with bars', async () => {
+    const { resultToLatex } = await import('../src/modules/equations/infix-to-latex.js');
+    expect(resultToLatex('|x|')).toBe('\\left|x\\right|');
+    expect(resultToLatex('|x|=1')).toBe('\\left|x\\right|=1');
+  });
+
+  it('matches |x|=1 against ±1 solutions', async () => {
+    const { matchAbsXAnswer, isAbsXSolutionStep, isAbsXPostfix } = await import(
+      '../src/modules/equations/equation-solver/resolve-helpers.js'
+    );
+    const postfix = infixToPostfix(tokenizeInfix('|x|'))!;
+    expect(isAbsXPostfix(postfix)).toBe(true);
+    expect(matchAbsXAnswer(postfix, 1, [1, -1])).toEqual({
+      isCorrect: true,
+      correctResult: 1,
+    });
+    expect(isAbsXSolutionStep('|x|', '1', [1, -1])).toBe(true);
+  });
+
+  it('treats x=|sqrt(2)| as registering both ±sqrt(2) roots', async () => {
+    const { isAbsWrappedPlusMinusAnswer, formatAbsXResultValue } = await import(
+      '../src/modules/equations/equation-solver/resolve-helpers.js'
+    );
+    const { solveEquation } = await import('../src/modules/equations/equation-solver/index.js');
+    const result = solveEquation('x^2=2');
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    const solutions = result.solutions;
+    const subPostfix = infixToPostfix(tokenizeInfix('x'))!;
+    expect(isAbsWrappedPlusMinusAnswer('|sqrt(2)|', subPostfix, solutions)).toBe(true);
+    expect(formatAbsXResultValue(Math.sqrt(2))).toContain(';');
+  });
+});

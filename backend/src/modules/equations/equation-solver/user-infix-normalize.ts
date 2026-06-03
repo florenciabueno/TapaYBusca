@@ -27,3 +27,23 @@ export function normalizeUserInfix(equation: string): string {
   const stripped = (equation ?? '').replace(/\s/g, '');
   return insertImplicitMultiplication(normalizeDecimalCommas(stripped));
 }
+
+/** Converts pipe notation |expr| into abs(expr) for parsing. */
+export function convertPipeAbsToAbsCall(s: string): string {
+  let out = '';
+  for (let i = 0; i < s.length; i++) {
+    if (s[i] !== '|') {
+      out += s[i];
+      continue;
+    }
+    let j = i + 1;
+    while (j < s.length && s[j] !== '|') j++;
+    if (j >= s.length) {
+      out += s[i];
+      continue;
+    }
+    out += `abs(${s.slice(i + 1, j)})`;
+    i = j;
+  }
+  return out;
+}

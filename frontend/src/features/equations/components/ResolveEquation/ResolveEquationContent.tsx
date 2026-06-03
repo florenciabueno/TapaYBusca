@@ -9,7 +9,9 @@ import type {
   ResolutionOutcome,
   ResolutionStep,
 } from '../../types';
+import type { EquationNeighbors } from '../../hooks/useEquationNeighbors';
 import { DeletedEquationView } from './DeletedEquationView';
+import { ResolutionNavigationShell } from './ResolutionNavigationShell';
 import { ResolveEquationStepsCard } from './ResolveEquationStepsCard';
 import { ResolveEquationWorkspace } from './ResolveEquationWorkspace';
 
@@ -46,6 +48,7 @@ interface ResolveEquationContentProps {
   outcome: ResolutionOutcome;
   actions: ResolutionActions;
   isReadOnly?: boolean;
+  navigation: EquationNeighbors;
 }
 
 export const ResolveEquationContent = ({
@@ -58,6 +61,7 @@ export const ResolveEquationContent = ({
   outcome,
   actions,
   isReadOnly = false,
+  navigation,
 }: ResolveEquationContentProps) => {
   const user = useAuthStore((state) => state.user);
   const showBackToHome = !user;
@@ -83,20 +87,24 @@ export const ResolveEquationContent = ({
   return (
     <div className="flex min-h-[calc(100vh-7rem)] w-full flex-col items-center justify-center px-2 py-4">
       {hasSteps ? (
-        <div className="flex w-full max-w-7xl flex-col">
-          {showBackToHome && <BackToHomeLink />}
-          <div className="flex w-full flex-col gap-6 lg:min-h-0 lg:flex-row lg:items-stretch lg:justify-center">
-            <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col">{workspace}</div>
-            <div className="flex min-h-0 w-full min-w-0 flex-col overflow-hidden lg:w-[min(24rem,100%)] lg:flex-shrink-0">
-              <ResolveEquationStepsCard steps={steps} />
+        <ResolutionNavigationShell navigation={navigation}>
+          <div className="flex w-full max-w-7xl flex-col">
+            {showBackToHome && <BackToHomeLink />}
+            <div className="flex w-full flex-col gap-6 lg:min-h-0 lg:flex-row lg:items-stretch lg:justify-center">
+              <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col">{workspace}</div>
+              <div className="flex min-h-0 w-full min-w-0 flex-col overflow-hidden lg:w-[min(24rem,100%)] lg:flex-shrink-0">
+                <ResolveEquationStepsCard steps={steps} />
+              </div>
             </div>
           </div>
-        </div>
+        </ResolutionNavigationShell>
       ) : (
-        <div className="mx-auto flex w-full max-w-5xl flex-col">
-          {showBackToHome && <BackToHomeLink />}
-          {workspace}
-        </div>
+        <ResolutionNavigationShell navigation={navigation}>
+          <div className="mx-auto flex w-full max-w-5xl flex-col">
+            {showBackToHome && <BackToHomeLink />}
+            {workspace}
+          </div>
+        </ResolutionNavigationShell>
       )}
     </div>
   );

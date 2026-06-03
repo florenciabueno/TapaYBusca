@@ -1,5 +1,5 @@
 import type { EquationValidationResult } from './equation.types.js';
-import { normalizeUserInfix } from './equation-solver/user-infix-normalize.js';
+import { normalizeUserInfix, convertPipeAbsToAbsCall } from './equation-solver/user-infix-normalize.js';
 
 export const EQUATION_VARIABLE = 'x';
 
@@ -8,9 +8,10 @@ export const ALLOWED_FUNCTIONS = new Set([
   'cbrt',
   'pot2',
   'pot3',
+  'abs',
 ]);
 
-const CONSTANT_ALLOWED_CHARS = /^[-\d\s.+*\/()]+$/;
+const CONSTANT_ALLOWED_CHARS = /^[-\d\s.+*\/()|]+$/;
 const MAX_DEGREE = 3;
 
 const MESSAGE_EMPTY = 'La ecuación no puede estar vacía.';
@@ -26,7 +27,7 @@ const MESSAGE_CONSTANT_INVALID_CHARS =
 const MESSAGE_CONSTANT_PARENS = 'Paréntesis desbalanceados en el lado constante.';
 const MESSAGE_EXPRESSION_MULTIPLE_X = 'La expresión en x solo puede contener una vez la incógnita.';
 const MESSAGE_EXPRESSION_ALLOWED_FUNCTIONS =
-  'Función no permitida: "{id}". Permitidas: sqrt, cbrt, pot2, pot3.';
+  'Función no permitida: "{id}". Permitidas: sqrt, cbrt, pot2, pot3, abs.';
 const MESSAGE_EXPRESSION_DEGREE = `Solo se permiten expresiones hasta grado ${MAX_DEGREE} (x, x^2, x^3).`;
 const MESSAGE_EXPRESSION_MUST_HAVE_X =
   'Uno de los lados debe ser una expresión que contenga la incógnita x.';
@@ -163,7 +164,7 @@ function validateExpressionSide(tokens: Token[]): string | null {
 }
 
 export function validateEquation(equation: string): EquationValidationResult {
-  const trimmed = normalizeUserInfix(equation ?? '');
+  const trimmed = convertPipeAbsToAbsCall(normalizeUserInfix(equation ?? ''));
   const errors = [...validateStructure(trimmed)];
   if (errors.length > 0) return toEquationValidationResult(errors);
 

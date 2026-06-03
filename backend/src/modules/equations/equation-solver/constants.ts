@@ -6,6 +6,7 @@ export const DIVIDE = '/';
 export const MULTIPLY = '*';
 export const SQUARE_ROOT = 'sqrt';
 export const CUBE_ROOT = 'cbrt';
+export const ABS = 'abs';
 export const SQUARE_POWER = 'pot2';
 export const CUBE_POWER = 'pot3';
 export const POWER_HALF = 'pot1_2';
@@ -23,6 +24,7 @@ export const DEFAULT_FLOAT_TOLERANCE = 1e-9;
 export const TOKENIZE_ORDER: string[] = [
   CUBE_ROOT,
   SQUARE_ROOT,
+  ABS,
   CUBE_POWER,
   SQUARE_POWER,
   POWER_HALF,
@@ -49,6 +51,7 @@ export const PRECEDENCE: Record<string, number> = {
   [POWER_THIRD]: 4,
   [SQUARE_ROOT]: 4,
   [CUBE_ROOT]: 4,
+  [ABS]: 4,
   [NEGATE]: 4,
   [MULTIPLY]: 3,
   [DIVIDE]: 3,
@@ -62,6 +65,7 @@ export const BINARY_OPERATORS = new Set([ADD, SUBTRACT, MULTIPLY, DIVIDE, EQUALS
 export const UNARY_OPERATORS = new Set([
   SQUARE_ROOT,
   CUBE_ROOT,
+  ABS,
   SQUARE_POWER,
   CUBE_POWER,
   POWER_HALF,

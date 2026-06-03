@@ -4,7 +4,8 @@ import { infixToPostfix } from './infix-to-postfix.js';
 import { postfixToTree } from './postfix-to-tree.js';
 import { isolateVariable } from './isolate-variable.js';
 import { evaluateTree, listContainsElement } from './evaluate-tree.js';
-import { DEFAULT_FLOAT_TOLERANCE, VARIABLE } from './constants.js';
+import { DEFAULT_FLOAT_TOLERANCE, VARIABLE, ABS } from './constants.js';
+import { resultToLatex } from '../infix-to-latex.js';
 import { equationSidesShareNumericValue } from '../resolution.service.helpers.js';
 
 export function infixContainsVariable(infix: string): boolean {
@@ -201,6 +202,81 @@ export function replaceSubListInPostfix(
     }
   }
   return null;
+}
+
+export function isAbsXPostfix(postfix: string[]): boolean {
+  return postfix.length === 2 && postfix[0] === VARIABLE && postfix[1] === ABS;
+}
+
+export function isPlusMinusPair(solutions: number[], k: number): boolean {
+  const uniq = [...new Set(solutions)];
+  return (
+    uniq.length === 2 &&
+    listContainsElement(solutions, k) &&
+    listContainsElement(solutions, -k)
+  );
+}
+
+export function parseAbsWrappedConstantValue(answerInfix: string): number | undefined {
+  const normalized = normalizeUserInfix((answerInfix ?? '').trim());
+  if (!normalized.startsWith('|') || !normalized.endsWith('|')) return undefined;
+  const inner = normalized.slice(1, -1);
+  if (!inner || inner.includes('|')) return undefined;
+  const k = parseAnswerValues(inner)[0];
+  if (k === undefined || k < 0) return undefined;
+  return k;
+}
+
+export function isAbsWrappedPlusMinusAnswer(
+  answerInfix: string,
+  subEquationPostfix: string[],
+  solutions: number[]
+): boolean {
+  if (!isOnlyVariable(subEquationPostfix)) return false;
+  const k = parseAbsWrappedConstantValue(answerInfix);
+  return k !== undefined && isPlusMinusPair(solutions, k);
+}
+
+export function matchAbsXAnswer(
+  subEquationPostfix: string[],
+  answerValue: number | undefined,
+  solutions: number[]
+): { isCorrect: boolean; correctResult?: number } {
+  if (!isAbsXPostfix(subEquationPostfix) || answerValue === undefined || answerValue < 0) {
+    return { isCorrect: false };
+  }
+  if (!isPlusMinusPair(solutions, answerValue)) return { isCorrect: false };
+  return { isCorrect: true, correctResult: answerValue };
+}
+
+export function isAbsXSolutionStep(
+  firstField: string,
+  secondField: string,
+  solutions: number[]
+): boolean {
+  const picked = pickExpressionAndAnswer(firstField, secondField);
+  const postfix = infixToPostfix(tokenizeInfix(picked.expressionInfix));
+  if (!postfix) return false;
+  const parsed = parseAnswerValues(picked.answerContent);
+  const k = parsed[0];
+  if (k === undefined || k < 0) return false;
+  return isAbsXPostfix(postfix) && isPlusMinusPair(solutions, k);
+}
+
+export function formatLoggedStepLatex(leftInfix: string, rightInfix: string): string {
+  const left = (leftInfix ?? '').trim();
+  const right = (rightInfix ?? '').trim();
+  if (infixContainsVariable(left) && !infixContainsVariable(right)) {
+    return `${resultToLatex(left)}=${resultToLatex(right)}`;
+  }
+  if (!infixContainsVariable(left) && infixContainsVariable(right)) {
+    return `${resultToLatex(right)}=${resultToLatex(left)}`;
+  }
+  return resultToLatex(loggedSolutionDisplayInfix(left, right));
+}
+
+export function formatAbsXResultValue(k: number): string {
+  return `${k};${-k}`;
 }
 
 export function matchAnswerAgainstKnownSolutions(

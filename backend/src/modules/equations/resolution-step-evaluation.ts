@@ -15,6 +15,11 @@ import {
   matchAnswerAgainstKnownSolutions,
   replaceSubListInPostfix,
   listContainsElement,
+  isAbsXPostfix,
+  matchAbsXAnswer,
+  formatAbsXResultValue,
+  isPlusMinusPair,
+  isAbsWrappedPlusMinusAnswer,
 } from './equation-solver/resolve-helpers.js';
 import {
   equationSidesShareNumericValue,
@@ -144,6 +149,7 @@ async function evaluateStandardStep(
     equationPostfixTokens: args.equationPostfixTokens,
     subEquationPostfix: args.subEquationPostfix,
     subEquation: args.subEquation,
+    answerInfix: args.answer,
     answerValue,
     solutions: args.solutions,
     isVariable: isOnlyVariable(args.subEquationPostfix),
@@ -154,9 +160,10 @@ async function evaluateStandardStep(
   return {
     resultCode: knownSolutionEval.resultCode,
     isCorrect: knownSolutionEval.isCorrect,
-    isVariable: isOnlyVariable(args.subEquationPostfix),
+    isVariable: isOnlyVariable(args.subEquationPostfix) || isAbsXPostfix(args.subEquationPostfix),
     stepWithoutSolution: false,
     correctResult: knownSolutionEval.correctResult,
+    resultValue: knownSolutionEval.resultValue,
     selectedBranch: knownSolutionEval.selectedBranch,
     stateUpdated: knownSolutionEval.stateUpdated,
   };
@@ -202,6 +209,7 @@ async function evaluateWhenSolutionsAreKnown(
     equationPostfixTokens: string[];
     subEquationPostfix: string[];
     subEquation: string;
+    answerInfix: string;
     answerValue?: number;
     solutions: number[];
     isVariable: boolean;
@@ -214,9 +222,19 @@ async function evaluateWhenSolutionsAreKnown(
     args.solutions,
     args.answerValue
   );
-  let isCorrect = matchedIsCorrect;
+  const absMatch = matchAbsXAnswer(args.subEquationPostfix, args.answerValue, args.solutions);
+  let isCorrect = matchedIsCorrect || absMatch.isCorrect;
+  const resolvedCorrectResult = absMatch.isCorrect ? absMatch.correctResult : correctResult;
+  const isAbsX = isAbsXPostfix(args.subEquationPostfix);
+  const isAbsWrappedPair = isAbsWrappedPlusMinusAnswer(
+    args.answerInfix,
+    args.subEquationPostfix,
+    args.solutions
+  );
+  const registersBothRoots = isAbsX || isAbsWrappedPair;
+  const isVariableStep = args.isVariable || isAbsX;
 
-  if (isCorrect && !args.isVariable) {
+  if (isCorrect && !args.isVariable && !isAbsX) {
     const previousStepIsValid = await isPreviousStepValid(
       repo,
       args.userEquationId,
@@ -228,7 +246,7 @@ async function evaluateWhenSolutionsAreKnown(
     if (!previousStepIsValid) isCorrect = false;
   }
 
-  const stepDecision: KnownStepDecision = args.isVariable
+  const stepDecision: KnownStepDecision = isVariableStep
     ? await decideKnownVariableResult(repo, {
         userEquationId: args.userEquationId,
         currentResolutionId: args.currentResolutionId,
@@ -237,7 +255,8 @@ async function evaluateWhenSolutionsAreKnown(
         selectedBranch: args.selectedBranch,
         stateUpdated: args.stateUpdated,
         isCorrect,
-        correctResult,
+        correctResult: resolvedCorrectResult,
+        isAbsX: registersBothRoots,
       })
     : await decideKnownNonVariableResult(repo, {
         userEquationId: args.userEquationId,
@@ -252,7 +271,14 @@ async function evaluateWhenSolutionsAreKnown(
         stateUpdated: args.stateUpdated,
       });
 
-  return { ...stepDecision, correctResult };
+  return {
+    ...stepDecision,
+    correctResult: resolvedCorrectResult,
+    resultValue:
+      registersBothRoots && isCorrect && resolvedCorrectResult !== undefined
+        ? formatAbsXResultValue(resolvedCorrectResult)
+        : undefined,
+  };
 }
 
 async function decideKnownVariableResult(
@@ -266,6 +292,7 @@ async function decideKnownVariableResult(
     stateUpdated: boolean;
     isCorrect: boolean;
     correctResult?: number;
+    isAbsX: boolean;
   }
 ): Promise<KnownStepDecision> {
   if (!args.isCorrect || args.correctResult === undefined) {
@@ -286,6 +313,21 @@ async function decideKnownVariableResult(
   let resultCode: string = RESOLUTION_CODES.RESULT_CORRECT;
   let selectedBranch = args.selectedBranch;
   let stateUpdated = args.stateUpdated;
+
+  if (args.isAbsX && isPlusMinusPair(solutionSet, answerValue)) {
+    const hasBoth =
+      listContainsElement(loggedSolutions, answerValue) &&
+      listContainsElement(loggedSolutions, -answerValue);
+    if (hasBoth) {
+      return makeKnownStepDecision(
+        RESOLUTION_CODES.RESULT_REPEATED,
+        false,
+        selectedBranch,
+        stateUpdated
+      );
+    }
+    return makeKnownStepDecision(RESOLUTION_CODES.PENDING_FINISH, true, selectedBranch, stateUpdated);
+  }
 
   if (listContainsElement(loggedSolutions, answerValue)) {
     return makeKnownStepDecision(

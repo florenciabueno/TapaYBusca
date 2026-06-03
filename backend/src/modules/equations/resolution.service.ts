@@ -13,6 +13,10 @@ import {
   pickExpressionAndAnswer,
   computeEffectiveResolutionSessionId,
   loggedSolutionDisplayInfix,
+  isAbsXSolutionStep,
+  formatLoggedStepLatex,
+  isAbsXPostfix,
+  parseAbsWrappedConstantValue,
 } from './equation-solver/resolve-helpers.js';
 import { resultToLatex } from './infix-to-latex.js';
 import {
@@ -88,7 +92,9 @@ export class ResolutionService {
 
     const skipSubequationValidation = isEmptySetAnswer && subEquationPostfix.length === 0;
     const subEquationInfixForStep = skipSubequationValidation ? EMPTY_SET : rawSub;
-    const subEquationValid = validateSubEquation(equationPostfixTokens, subEquationPostfix);
+    const subEquationValid =
+      validateSubEquation(equationPostfixTokens, subEquationPostfix) ||
+      isAbsXSolutionStep(rawSub, rawAnswer, knownSolutions);
     const equivalentEquationStep =
       !skipSubequationValidation &&
       !subEquationValid &&
@@ -250,7 +256,7 @@ export class ResolutionService {
       subEquation: args.subEquation,
       subEquationInfix: args.subEquationInfix || undefined,
       proposedResult: args.answer,
-      resultValue: formatResultValue(args.evaluation.correctResult),
+      resultValue: args.evaluation.resultValue ?? formatResultValue(args.evaluation.correctResult),
       stepWithoutSolution: args.evaluation.stepWithoutSolution,
       isCorrect: args.evaluation.isCorrect,
       isVariable: args.evaluation.isVariable,
@@ -308,14 +314,35 @@ export class ResolutionService {
     }>
   ): string[] {
     const seen = new Set<number>();
+    const seenAbsSteps = new Set<string>();
     const out: string[] = [];
     for (const step of steps) {
       if (!step.isVariable || !step.isCorrect) continue;
+
+      const left = step.subEquationInfix ?? '';
+      const right = step.proposedResult;
+      const subPostfix = parseSubEquationPostfix(left);
+      if (isAbsXPostfix(subPostfix)) {
+        const absKey = `${left}|${right}`;
+        if (seenAbsSteps.has(absKey)) continue;
+        seenAbsSteps.add(absKey);
+        out.push(formatLoggedStepLatex(left, right));
+        continue;
+      }
+
+      if (parseAbsWrappedConstantValue(right) !== undefined) {
+        const absKey = `${left}|${right}`;
+        if (seenAbsSteps.has(absKey)) continue;
+        seenAbsSteps.add(absKey);
+        out.push(formatLoggedStepLatex(left, right));
+        continue;
+      }
+
       const nums = parseStoredResultValues(step.resultValue);
       const num = nums[0];
       if (num === undefined || seen.has(num)) continue;
       seen.add(num);
-      const infix = loggedSolutionDisplayInfix(step.subEquationInfix ?? '', step.proposedResult);
+      const infix = loggedSolutionDisplayInfix(left, right);
       out.push(resultToLatex(infix));
     }
     return out;

@@ -12,6 +12,11 @@ export function insertMathSymbolAtSelection(
   const end = Math.max(start, Math.min(selectionEnd, value.length));
   const nextValue = value.slice(0, start) + insert + value.slice(end);
   const placeInsideParens = insert.endsWith('()');
-  const cursorPos = placeInsideParens ? start + insert.length - 1 : start + insert.length;
+  const placeInsidePipes = insert === '||';
+  const cursorPos = placeInsidePipes
+    ? start + 1
+    : placeInsideParens
+      ? start + insert.length - 1
+      : start + insert.length;
   return { nextValue, cursorPos };
 }

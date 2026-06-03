@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { COLORS, RADIUS, SHADOW } from '../../../../config/theme';
 import { resolveEquationPath } from '../../../../config/constants';
 import { MathExpression } from '../../../../shared/components/ui/MathExpression';
@@ -25,12 +25,13 @@ export const EquationCard = ({
   onDelete,
   canDelete,
 }: EquationCardProps) => {
+  const location = useLocation();
   const isDeleted = equation.isActive === false;
   const statusStyle = STATUS_STYLES[equation.status];
 
   return (
     <Link
-      to={resolveEquationPath(equation.id)}
+      to={`${resolveEquationPath(equation.id)}${location.search}`}
       className="flex h-[130px] flex-col rounded-lg border p-4 transition-all duration-200 ease-out hover:-translate-y-2 hover:scale-[1.05] hover:shadow-xl"
       style={{
         borderRadius: RADIUS.lg,

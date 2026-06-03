@@ -8,6 +8,7 @@ import {
   CUBE_POWER,
   SQUARE_ROOT,
   CUBE_ROOT,
+  ABS,
   NEGATE,
   DEFAULT_FLOAT_TOLERANCE,
 } from './constants.js';
@@ -96,6 +97,9 @@ export function evaluateTree(
           if (!Number.isNaN(r) && Number.isFinite(r)) out.push(r);
           break;
         }
+        case ABS:
+          out.push(Math.abs(rightVal));
+          break;
         case NEGATE:
           out.push(-rightVal);
           break;

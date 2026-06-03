@@ -4,7 +4,7 @@ import { formatDecimalCommaForDisplay } from './format-solution-set';
 const PRINTABLE_EQUATION_KEYS = [
   '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
   'x', 'X', '=',
-  '*', '+', '/', '-', '(', ')', '^', ',',
+  '*', '+', '/', '-', '(', ')', '^', ',', '|',
 ] as const;
 
 const NAVIGATION_KEYS = [
@@ -16,7 +16,7 @@ export const ALLOWED_EQUATION_KEYS = new Set<string>([
   ...NAVIGATION_KEYS,
 ]);
 
-const PASTE_DISALLOWED_RE = /[^0-9xX=*+(),\-/^]/gi;
+const PASTE_DISALLOWED_RE = /[^0-9xX=*+(),\-/^|]/gi;
 
 export function sanitizeEquationPastedText(pasted: string): string {
   return pasted.replace(PASTE_DISALLOWED_RE, '');

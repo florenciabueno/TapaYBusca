@@ -3,7 +3,7 @@ import { FormPageCard } from '../components/FormPageCard';
 import { FormMessage } from '../../../shared/components/ui/FormMessage';
 import { Input } from '../../../shared/components/ui/Input/Input';
 import { Button } from '../../../shared/components/ui/Button/Button';
-import { MathSymbolsPad, DEFAULT_MATH_SYMBOLS } from '../components/MathSymbolsPad';
+import { MathSymbolsPad, CREATE_EQUATION_MATH_SYMBOLS } from '../components/MathSymbolsPad';
 import { SPACING } from '../../../config/theme';
 import { useCreateEquationForm } from '../hooks/useCreateEquationForm';
 
@@ -46,7 +46,7 @@ export const CreateEquationPage = () => {
               <FormMessage message={success} variant="success" className="mb-4" />
             )}
             <MathSymbolsPad
-              symbols={DEFAULT_MATH_SYMBOLS}
+              symbols={CREATE_EQUATION_MATH_SYMBOLS}
               onSymbolClick={handleSymbolClick}
               disabled={isLoading}
             />

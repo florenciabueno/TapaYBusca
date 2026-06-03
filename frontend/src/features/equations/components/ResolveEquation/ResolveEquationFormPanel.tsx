@@ -2,7 +2,7 @@ import { COLORS, SPACING } from '../../../../config/theme';
 import { FormMessage } from '../../../../shared/components/ui/FormMessage';
 import { Input } from '../../../../shared/components/ui/Input/Input';
 import { Button } from '../../../../shared/components/ui/Button/Button';
-import { MathSymbolsPad, DEFAULT_MATH_SYMBOLS } from '../MathSymbolsPad';
+import { MathSymbolsPad, RESOLUTION_MATH_SYMBOLS } from '../MathSymbolsPad';
 import { useResolveEquationFormInputs } from '../../hooks/useResolveEquationFormInputs';
 import type {
   ResolutionActions,
@@ -92,7 +92,7 @@ export const ResolveEquationFormPanel = ({
         </p>
       </fieldset>
       <MathSymbolsPad
-        symbols={DEFAULT_MATH_SYMBOLS}
+        symbols={RESOLUTION_MATH_SYMBOLS}
         onSymbolClick={handlePadSymbol}
         disabled={submitting}
       />

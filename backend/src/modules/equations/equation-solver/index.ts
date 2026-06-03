@@ -6,6 +6,7 @@ import { postfixToTree } from './postfix-to-tree.js';
 import { isolateVariable } from './isolate-variable.js';
 import { evaluateTree } from './evaluate-tree.js';
 import { checkSolutions } from './solution-check.js';
+import { trySolveAbsXEqualsConstant } from './solve-abs-x.js';
 
 export function solveEquation(infixExpression: string): SolveResult {
   const trimmed = (infixExpression ?? '').trim();
@@ -36,6 +37,19 @@ export function solveEquation(infixExpression: string): SolveResult {
     };
   }
 
+  const absSolutions = trySolveAbsXEqualsConstant(tree);
+  if (absSolutions !== null) {
+    const result = checkSolutions(absSolutions, trimmed, tree);
+    if (result.ok) {
+      return { ok: true, solutions: result.solutions };
+    }
+    return {
+      ok: false,
+      errorCode: result.errorCode ?? ERROR_CODES.MALFORMED_EQUATION,
+      message: result.message ?? ERROR_MESSAGES[ERROR_CODES.MALFORMED_EQUATION],
+    };
+  }
+
   const isolatedTree = isolateVariable(tree);
   if (!isolatedTree) {
     return {
@@ -52,9 +66,9 @@ export function solveEquation(infixExpression: string): SolveResult {
   }
   return {
     ok: false,
-    errorCode: result.errorCode,
-    message: result.message,
+    errorCode: result.errorCode ?? ERROR_CODES.MALFORMED_EQUATION,
+    message: result.message ?? ERROR_MESSAGES[ERROR_CODES.MALFORMED_EQUATION],
   };
 }
 
-export { ERROR_CODES, ERROR_MESSAGES } from './types.js';
+export { ERROR_CODES, ERROR_MESSAGES, type SolveResult } from './types.js';
