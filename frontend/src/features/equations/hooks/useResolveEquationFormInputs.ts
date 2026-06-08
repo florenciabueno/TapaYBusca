@@ -8,20 +8,19 @@ export const useResolveEquationFormInputs = (
   subEquationInfix: string,
   answer: string,
   onSubEquationChange: Dispatch<SetStateAction<string>>,
-  onAnswerChange: Dispatch<SetStateAction<string>>
+  onAnswerChange: Dispatch<SetStateAction<string>>,
+  equationVariable?: string | null
 ) => {
   const activeFieldRef = useRef<ActiveField>('sub');
 
   const subInput = useEquationMathInput(subEquationInfix, onSubEquationChange, {
-    onFocus: () => {
-      activeFieldRef.current = 'sub';
-    },
+    onFocus: () => { activeFieldRef.current = 'sub'; },
+    equationVariable,
   });
 
   const answerInput = useEquationMathInput(answer, onAnswerChange, {
-    onFocus: () => {
-      activeFieldRef.current = 'answer';
-    },
+    onFocus: () => { activeFieldRef.current = 'answer'; },
+    equationVariable,
   });
 
   const handlePadSymbol = useCallback(

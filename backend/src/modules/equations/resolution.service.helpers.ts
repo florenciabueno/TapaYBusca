@@ -1,3 +1,4 @@
+import { extractEquationVariable } from './equation-solver/equation-variable.js';
 import { tokenizeInfix } from './equation-solver/tokenizer.js';
 import { infixToPostfix } from './equation-solver/infix-to-postfix.js';
 import { listContainsList } from './equation-solver/evaluate-tree.js';
@@ -68,9 +69,21 @@ export function makeKnownStepDecision(
   return { resultCode, isCorrect, selectedBranch, stateUpdated };
 }
 
-export function parseSubEquationPostfix(subEquationInfix?: string): string[] {
+function equationVariable(equation?: {
+  infixExpression?: string | null;
+  postfixExpression?: string | null;
+}): string | null {
+  if (!equation) return null;
+  const infix = equation.infixExpression ?? equation.postfixExpression ?? '';
+  return extractEquationVariable(infix);
+}
+
+export function parseSubEquationPostfix(
+  subEquationInfix?: string,
+  equation?: { infixExpression?: string | null; postfixExpression?: string | null }
+): string[] {
   if (!subEquationInfix) return [];
-  return infixToPostfix(tokenizeInfix(subEquationInfix)) ?? [];
+  return infixToPostfix(tokenizeInfix(subEquationInfix, equationVariable(equation))) ?? [];
 }
 
 export function parseEquationPostfix(equation: {
@@ -78,7 +91,7 @@ export function parseEquationPostfix(equation: {
   postfixExpression?: string | null;
 }): string[] | null {
   const infix = equation.infixExpression ?? equation.postfixExpression ?? '';
-  return infixToPostfix(tokenizeInfix(infix));
+  return infixToPostfix(tokenizeInfix(infix, equationVariable(equation)));
 }
 
 export function initializeSessionState(userEq: {

@@ -4,6 +4,7 @@ import { Input } from '../../../../shared/components/ui/Input/Input';
 import { Button } from '../../../../shared/components/ui/Button/Button';
 import { MathSymbolsPad, RESOLUTION_MATH_SYMBOLS } from '../MathSymbolsPad';
 import { useResolveEquationFormInputs } from '../../hooks/useResolveEquationFormInputs';
+import { extractEquationVariable } from '../../utils/equation-input-guards';
 import type {
   ResolutionActions,
   ResolutionFormState,
@@ -11,12 +12,14 @@ import type {
 } from '../../types';
 
 interface ResolveEquationFormPanelProps {
+  equationInfixExpression?: string | null;
   form: ResolutionFormState;
   status: ResolutionMutationStatus;
   actions: ResolutionActions;
 }
 
 export const ResolveEquationFormPanel = ({
+  equationInfixExpression,
   form,
   status,
   actions,
@@ -35,7 +38,8 @@ export const ResolveEquationFormPanel = ({
     subEquationInfix,
     answer,
     onSubEquationChange,
-    onAnswerChange
+    onAnswerChange,
+    extractEquationVariable(equationInfixExpression ?? '')
   );
 
   return (

@@ -11,6 +11,7 @@ import { ResolveEquationResultPanel } from './ResolveEquationResultPanel';
 
 export interface ResolveEquationWorkspaceProps {
   equationExpression: string;
+  equationInfixExpression?: string | null;
   hasSteps: boolean;
   solutionSet: number[];
   solutionSetLatex?: string[];
@@ -22,6 +23,7 @@ export interface ResolveEquationWorkspaceProps {
 
 export const ResolveEquationWorkspace = ({
   equationExpression,
+  equationInfixExpression,
   hasSteps,
   solutionSet,
   solutionSetLatex,
@@ -51,7 +53,12 @@ export const ResolveEquationWorkspace = ({
               onReset={actions.onReset}
             />
           ) : (
-            <ResolveEquationFormPanel form={form} status={status} actions={actions} />
+            <ResolveEquationFormPanel
+              equationInfixExpression={equationInfixExpression}
+              form={form}
+              status={status}
+              actions={actions}
+            />
           )}
         </div>
       </div>

@@ -902,6 +902,36 @@ describe('Equation resolver API', () => {
       expect(response.status).toBe(200);
       expect(response.body).toEqual({ code: RESOLUTION_CODES.RESULT_REPEATED });
     });
+
+    it('rejects a step that uses a different variable than the equation', async () => {
+      repoMocks.findByIdWithEquation.mockResolvedValue(
+        makeUserEquation({
+          equation: { infixExpression: 'y+5=12', postfixExpression: 'y+5=12', solutionValues: [7] },
+        })
+      );
+
+      const response = await request(app)
+        .post('/api/equations/ue-1/resolve')
+        .set(authHeader(token))
+        .send({ subEquationInfix: 'x', answer: '7', resolutionStepStatus: RESOLUTION_STEP_NO_BRANCH });
+
+      expect(response.body.code).toBe(RESOLUTION_CODES.SYNTAX_INCORRECT);
+    });
+
+    it('accepts a step with the equation variable letter', async () => {
+      repoMocks.findByIdWithEquation.mockResolvedValue(
+        makeUserEquation({
+          equation: { infixExpression: 'y+5=12', postfixExpression: 'y+5=12', solutionValues: [7] },
+        })
+      );
+
+      const response = await request(app)
+        .post('/api/equations/ue-1/resolve')
+        .set(authHeader(token))
+        .send({ subEquationInfix: 'y', answer: '7', resolutionStepStatus: RESOLUTION_STEP_NO_BRANCH });
+
+      expect(response.body.code).toBe(RESOLUTION_CODES.PENDING_FINISH);
+    });
   });
 });
 

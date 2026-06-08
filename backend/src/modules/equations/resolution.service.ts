@@ -8,6 +8,10 @@ import {
   EMPTY_SET,
 } from './equation-solver/resolution-constants.js';
 import {
+  extractEquationVariable,
+  stepUsesOnlyEquationVariable,
+} from './equation-solver/equation-variable.js';
+import {
   validateSubEquation,
   validateEquivalentEquationStep,
   pickExpressionAndAnswer,
@@ -59,18 +63,29 @@ export class ResolutionService {
     const rawSub = (payload.subEquationInfix ?? '').trim();
     const rawAnswer = (payload.answer ?? '').trim();
     const isEmptySetAnswer = rawAnswer === EMPTY_SET;
-    const picked = isEmptySetAnswer
-      ? { expressionInfix: rawSub, answerContent: rawAnswer }
-      : pickExpressionAndAnswer(rawSub, rawAnswer);
-    const subEquationInfix = picked.expressionInfix;
-    const subEquationPostfix = parseSubEquationPostfix(subEquationInfix);
-    if (subEquationPostfix.length === 0 && !isEmptySetAnswer) {
-      return { code: RESOLUTION_CODES.SYNTAX_INCORRECT, message: MESSAGE_RESOLVE_SUBEQUATION_REQUIRED };
-    }
 
     const userEq = await this.equationRepository.findByIdWithEquation(userEquationId);
     if (!userEq) return { code: RESOLUTION_CODES.SYNTAX_INCORRECT, message: MESSAGE_RESOLVE_EQUATION_NOT_FOUND };
     if (userEq.userId !== userId) return { code: RESOLUTION_CODES.SYNTAX_INCORRECT, message: MESSAGE_RESOLVE_NO_PERMISSIONS };
+
+    const equationVariable = extractEquationVariable(
+      userEq.equation.infixExpression ?? userEq.equation.postfixExpression ?? ''
+    );
+    if (
+      !stepUsesOnlyEquationVariable(rawSub, equationVariable) ||
+      !stepUsesOnlyEquationVariable(rawAnswer, equationVariable)
+    ) {
+      return { code: RESOLUTION_CODES.SYNTAX_INCORRECT };
+    }
+
+    const picked = isEmptySetAnswer
+      ? { expressionInfix: rawSub, answerContent: rawAnswer }
+      : pickExpressionAndAnswer(rawSub, rawAnswer);
+    const subEquationInfix = picked.expressionInfix;
+    const subEquationPostfix = parseSubEquationPostfix(subEquationInfix, userEq.equation);
+    if (subEquationPostfix.length === 0 && !isEmptySetAnswer) {
+      return { code: RESOLUTION_CODES.SYNTAX_INCORRECT, message: MESSAGE_RESOLVE_SUBEQUATION_REQUIRED };
+    }
 
     const equationPostfixTokens = parseEquationPostfix(userEq.equation);
     if (!equationPostfixTokens) {
@@ -94,11 +109,17 @@ export class ResolutionService {
     const subEquationInfixForStep = skipSubequationValidation ? EMPTY_SET : rawSub;
     const subEquationValid =
       validateSubEquation(equationPostfixTokens, subEquationPostfix) ||
-      isAbsXSolutionStep(rawSub, rawAnswer, knownSolutions);
+      isAbsXSolutionStep(rawSub, rawAnswer, knownSolutions, equationVariable);
     const equivalentEquationStep =
       !skipSubequationValidation &&
       !subEquationValid &&
-      validateEquivalentEquationStep(rawSub, rawAnswer, equationPostfixTokens, knownSolutions);
+      validateEquivalentEquationStep(
+        rawSub,
+        rawAnswer,
+        equationPostfixTokens,
+        knownSolutions,
+        equationVariable
+      );
 
     if (!skipSubequationValidation && !subEquationValid && !equivalentEquationStep) {
       return this.persistInvalidSubequationAttempt({

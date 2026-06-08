@@ -83,7 +83,8 @@ export function validateEquivalentEquationStep(
   leftInfix: string,
   rightInfix: string,
   equationPostfixTokens: string[],
-  solutions: number[]
+  solutions: number[],
+  knownVariable?: string | null
 ): boolean {
   const left = (leftInfix ?? '').trim();
   const right = (rightInfix ?? '').trim();
@@ -92,8 +93,8 @@ export function validateEquivalentEquationStep(
   let leftPost: string[] | null;
   let rightPost: string[] | null;
   try {
-    leftPost = infixToPostfix(tokenizeInfix(normalizeUserInfix(left)));
-    rightPost = infixToPostfix(tokenizeInfix(normalizeUserInfix(right)));
+    leftPost = infixToPostfix(tokenizeInfix(normalizeUserInfix(left), knownVariable));
+    rightPost = infixToPostfix(tokenizeInfix(normalizeUserInfix(right), knownVariable));
   } catch {
     return false;
   }
@@ -252,10 +253,11 @@ export function matchAbsXAnswer(
 export function isAbsXSolutionStep(
   firstField: string,
   secondField: string,
-  solutions: number[]
+  solutions: number[],
+  knownVariable?: string | null
 ): boolean {
   const picked = pickExpressionAndAnswer(firstField, secondField);
-  const postfix = infixToPostfix(tokenizeInfix(picked.expressionInfix));
+  const postfix = infixToPostfix(tokenizeInfix(picked.expressionInfix, knownVariable));
   if (!postfix) return false;
   const parsed = parseAnswerValues(picked.answerContent);
   const k = parsed[0];

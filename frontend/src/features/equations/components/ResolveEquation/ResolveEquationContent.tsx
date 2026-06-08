@@ -40,6 +40,7 @@ const BackToHomeLink = () => (
 
 interface ResolveEquationContentProps {
   equationExpression: string;
+  equationInfixExpression?: string | null;
   steps: ResolutionStep[];
   solutionSet: number[];
   solutionSetLatex?: string[];
@@ -53,6 +54,7 @@ interface ResolveEquationContentProps {
 
 export const ResolveEquationContent = ({
   equationExpression,
+  equationInfixExpression,
   steps,
   solutionSet,
   solutionSetLatex,
@@ -74,6 +76,7 @@ export const ResolveEquationContent = ({
   const workspace = (
     <ResolveEquationWorkspace
       equationExpression={equationExpression}
+      equationInfixExpression={equationInfixExpression}
       hasSteps={hasSteps}
       solutionSet={solutionSet}
       solutionSetLatex={solutionSetLatex}

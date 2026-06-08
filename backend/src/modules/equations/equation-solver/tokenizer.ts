@@ -6,9 +6,11 @@ import {
   ADD,
   MULTIPLY,
   DIVIDE,
+  VARIABLE,
+  TOKENIZE_ORDER,
 } from './constants.js';
-import { TOKENIZE_ORDER } from './constants.js';
 import { normalizeUserInfix, stripUnaryPlus, convertPipeAbsToAbsCall } from './user-infix-normalize.js';
+import { canonicalizeEquationVariable, extractEquationVariable } from './equation-variable.js';
 
 const UNARY_MINUS_AFTER = new Set([EQUALS, LEFT_PAREN, ADD, SUBTRACT, MULTIPLY, DIVIDE]);
 
@@ -77,13 +79,22 @@ function findMatchingOpenParen(s: string, closeIdx: number): number {
   return -1;
 }
 
-export function normalizeInfix(equation: string): string {
+function normalizeVariablePowers(s: string, variable: string): string {
+  const v = variable.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return s
+    .replace(new RegExp(`(?<![a-zA-Z0-9])${v}\\^3(?![a-zA-Z0-9])`, 'gi'), `pot3(${variable})`)
+    .replace(new RegExp(`(?<![a-zA-Z0-9])${v}\\^2(?![a-zA-Z0-9])`, 'gi'), `pot2(${variable})`);
+}
+
+export function normalizeInfix(equation: string, knownVariable?: string | null): string {
   let s = normalizeUserInfix(equation);
   s = convertPipeAbsToAbsCall(s);
   s = stripUnaryPlus(s);
   s = expandNumericLiteralPowers(s);
-  s = s.replace(/x\^3/g, 'pot3(x)');
-  s = s.replace(/x\^2/g, 'pot2(x)');
+
+  const variable = (knownVariable ?? extractEquationVariable(s))?.toLowerCase() ?? VARIABLE;
+  s = normalizeVariablePowers(s, variable);
+  s = canonicalizeEquationVariable(s, variable);
   s = normalizeParenPowers(s);
   s = unwrapUnaryNegMulChainParens(s);
   return s;
@@ -123,8 +134,8 @@ function unaryMinusToNeg(tokens: string[]): string[] {
   return result;
 }
 
-export function tokenizeInfix(equation: string): string[] {
-  const normalized = normalizeInfix(equation);
+export function tokenizeInfix(equation: string, knownVariable?: string | null): string[] {
+  const normalized = normalizeInfix(equation, knownVariable);
   let arr: string[] = [normalized];
 
   for (const delim of TOKENIZE_ORDER) {

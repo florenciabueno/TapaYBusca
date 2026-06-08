@@ -53,6 +53,7 @@ export const ResolveEquationPage = () => {
     <EquationsLayout>
       <ResolveEquationContent
         equationExpression={equation.equation}
+        equationInfixExpression={equation.infixExpression}
         steps={steps}
         solutionSet={solutionSet}
         solutionSetLatex={solutionSetLatex}

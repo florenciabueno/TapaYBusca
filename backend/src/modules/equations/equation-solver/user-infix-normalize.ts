@@ -16,10 +16,11 @@ export function stripUnaryPlus(s: string): string {
 }
 
 function insertImplicitMultiplication(s: string): string {
-  let out = s.replace(/X/g, 'x');
-  out = out.replace(/(?<![a-zA-Z_])(\d)([x(])/g, '$1*$2');
-  out = out.replace(/(\))([x\d(])/g, '$1*$2');
-  out = out.replace(/(x)(\()/g, '$1*$2');
+  let out = s;
+  out = out.replace(/(?<![a-zA-Z])(\d)([a-zA-Z])(?![a-zA-Z0-9])/g, '$1*$2');
+  out = out.replace(/(?<![a-zA-Z])(\d)(\()/g, '$1*$2');
+  out = out.replace(/(\))([a-zA-Z])(?![a-zA-Z0-9])/g, '$1*$2');
+  out = out.replace(/(?<![a-zA-Z])([a-zA-Z])(\()/g, '$1*$2');
   return out;
 }
 

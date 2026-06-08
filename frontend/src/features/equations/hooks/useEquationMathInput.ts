@@ -3,6 +3,7 @@ import type {
   ClipboardEvent,
   Dispatch,
   FocusEvent,
+  KeyboardEvent,
   MouseEvent,
   SetStateAction,
   SyntheticEvent,
@@ -19,6 +20,8 @@ const readSelection = (el: HTMLInputElement) => ({
 export type EquationMathInputOptions = {
   /** Called when the input receives focus (e.g. to mark this field as active for the math pad). */
   onFocus?: () => void;
+  /** Incógnita fijada (resolución). Si no se pasa, se infiere al escribir "=" en creación. */
+  equationVariable?: string | null;
 };
 
 /**
@@ -35,6 +38,8 @@ export const useEquationMathInput = (
   const pendingCaretRef = useRef<number | null>(null);
   const onFocusRef = useRef(options?.onFocus);
   onFocusRef.current = options?.onFocus;
+  const equationVariableRef = useRef(options?.equationVariable);
+  equationVariableRef.current = options?.equationVariable;
 
   useLayoutEffect(() => {
     const pos = pendingCaretRef.current;
@@ -65,7 +70,8 @@ export const useEquationMathInput = (
         selectionRef.current = readSelection(el);
         onChange(el.value);
       },
-      onKeyDown: handleEquationInputKeyDown,
+      onKeyDown: (e: KeyboardEvent<HTMLInputElement>) =>
+        handleEquationInputKeyDown(e, equationVariableRef.current),
       onPaste: (e: ClipboardEvent<HTMLInputElement>) => {
         e.preventDefault();
         const pasted = e.clipboardData.getData('text');

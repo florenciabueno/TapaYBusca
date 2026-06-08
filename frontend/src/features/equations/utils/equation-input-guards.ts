@@ -3,7 +3,8 @@ import { formatDecimalCommaForDisplay } from './format-solution-set';
 
 const PRINTABLE_EQUATION_KEYS = [
   '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-  'x', 'X', '=',
+  ...'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'.split(''),
+  '=',
   '*', '+', '/', '-', '(', ')', '^', ',', '|',
 ] as const;
 
@@ -16,13 +17,47 @@ export const ALLOWED_EQUATION_KEYS = new Set<string>([
   ...NAVIGATION_KEYS,
 ]);
 
-const PASTE_DISALLOWED_RE = /[^0-9xX=*+(),\-/^|]/gi;
+const PASTE_DISALLOWED_RE = /[^0-9a-zA-Z=*+(),\-/^|]/gi;
+const ALLOWED_FUNCTIONS = new Set(['sqrt', 'cbrt', 'pot2', 'pot3', 'abs']);
+
+/** Incógnita de la ecuación (una sola letra). En creación, solo aplica si ya hay "=". */
+export function extractEquationVariable(infix: string): string | null {
+  if (!infix.includes('=')) return null;
+  const variables = new Set<string>();
+  let i = 0;
+  const s = infix.trim();
+
+  while (i < s.length) {
+    if (!/[a-zA-Z]/.test(s[i]!)) {
+      i++;
+      continue;
+    }
+    let id = '';
+    while (i < s.length && /[a-zA-Z0-9]/.test(s[i]!)) {
+      id += s[i]!;
+      i++;
+    }
+    if (id.length === 1 && !ALLOWED_FUNCTIONS.has(id.toLowerCase())) {
+      variables.add(id.toLowerCase());
+    }
+  }
+
+  return variables.size === 1 ? [...variables][0]! : null;
+}
 
 export function sanitizeEquationPastedText(pasted: string): string {
   return pasted.replace(PASTE_DISALLOWED_RE, '');
 }
 
-export function handleEquationInputKeyDown(e: KeyboardEvent<HTMLInputElement>) {
+export function handleEquationInputKeyDown(
+  e: KeyboardEvent<HTMLInputElement>,
+  equationVariable?: string | null
+) {
+  const locked = equationVariable ?? extractEquationVariable(e.currentTarget.value);
+  if (locked && /^[a-zA-Z]$/.test(e.key) && e.key.toLowerCase() !== locked) {
+    e.preventDefault();
+    return;
+  }
   if (ALLOWED_EQUATION_KEYS.has(e.key)) return;
   if (e.ctrlKey || e.metaKey) {
     if (e.key === 'a' || e.key === 'c' || e.key === 'v' || e.key === 'x') return;
