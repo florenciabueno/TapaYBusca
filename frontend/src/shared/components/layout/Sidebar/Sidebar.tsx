@@ -3,6 +3,11 @@ import { ROUTES } from '../../../../config/constants';
 import { COLORS, ACCENT_RGB, PURPLE_RGB } from '../../../../config/theme';
 import logoImage from '../../../../assets/logo.png';
 
+interface SidebarProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+}
+
 const HomeIcon = ({ className }: { className?: string }) => {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -77,50 +82,62 @@ const navItems = [
 
 const navItemClass = 'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors duration-150';
 
-export const Sidebar = () => {
+export const Sidebar = ({ isOpen = false, onClose }: SidebarProps) => {
   return (
-    <aside
-      className="w-60 h-screen flex-shrink-0 flex flex-col"
-      style={{
-        backgroundColor: `rgba(${ACCENT_RGB}, 0.48)`,
-      }}
-    >
-      <Link
-        to={ROUTES.DASHBOARD}
-        className="flex items-center gap-3 px-5 py-5 cursor-pointer hover:opacity-90 transition-opacity"
-        aria-label="Ir al inicio"
-      >
-        <img
-          src={logoImage}
-          alt="Tapa y Busca"
-          className="w-10 h-10 object-contain shrink-0"
+    <>
+      {isOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black/40 md:hidden"
+          onClick={onClose}
+          aria-hidden="true"
         />
-        <span className="text-xl font-semibold">
-          <span style={{ color: COLORS.orange }}>Tapa </span>
-          <span style={{ color: COLORS.lightTeal }}>y </span>
-          <span style={{ color: COLORS.violet }}>Busca</span>
-        </span>
-      </Link>
+      )}
+      <aside
+        className={`fixed inset-y-0 left-0 z-40 w-60 shrink-0 flex flex-col transition-transform duration-300 md:relative md:inset-auto md:z-auto md:transition-none ${isOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}
+        style={{
+          backgroundColor: COLORS.background,
+          backgroundImage: `linear-gradient(rgba(${ACCENT_RGB}, 0.48), rgba(${ACCENT_RGB}, 0.48))`,
+        }}
+      >
+        <Link
+          to={ROUTES.DASHBOARD}
+          onClick={onClose}
+          className="flex items-center gap-3 px-5 py-5 cursor-pointer hover:opacity-90 transition-opacity"
+          aria-label="Ir al inicio"
+        >
+          <img
+            src={logoImage}
+            alt="Tapa y Busca"
+            className="w-10 h-10 object-contain shrink-0"
+          />
+          <span className="text-xl font-semibold">
+            <span style={{ color: COLORS.orange }}>Tapa </span>
+            <span style={{ color: COLORS.lightTeal }}>y </span>
+            <span style={{ color: COLORS.violet }}>Busca</span>
+          </span>
+        </Link>
 
-      <nav className="flex flex-col gap-0.5 px-3 pt-2">
-        {navItems.map(({ path, label, icon: Icon }) => (
-          <NavLink
-            key={path}
-            to={path}
-            style={({ isActive }) =>
-              isActive
-                ? { backgroundColor: `rgba(${PURPLE_RGB}, 0.28)`, color: COLORS.accentSecondary }
-                : undefined
-            }
-            className={({ isActive }) =>
-              `${navItemClass} ${isActive ? '' : 'text-gray-600 hover:bg-white/60 hover:text-gray-800'}`
-            }
-          >
-            <Icon className="w-5 h-5 shrink-0" />
-            <span>{label}</span>
-          </NavLink>
-        ))}
-      </nav>
-    </aside>
+        <nav className="flex flex-col gap-0.5 px-3 pt-2">
+          {navItems.map(({ path, label, icon: Icon }) => (
+            <NavLink
+              key={path}
+              to={path}
+              onClick={onClose}
+              style={({ isActive }) =>
+                isActive
+                  ? { backgroundColor: `rgba(${PURPLE_RGB}, 0.28)`, color: COLORS.accentSecondary }
+                  : undefined
+              }
+              className={({ isActive }) =>
+                `${navItemClass} ${isActive ? '' : 'text-gray-600 hover:bg-white/60 hover:text-gray-800'}`
+              }
+            >
+              <Icon className="w-5 h-5 shrink-0" />
+              <span>{label}</span>
+            </NavLink>
+          ))}
+        </nav>
+      </aside>
+    </>
   );
 };

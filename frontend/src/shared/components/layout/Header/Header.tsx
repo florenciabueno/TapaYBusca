@@ -65,7 +65,19 @@ const EditIcon = ({ className }: { className?: string }) => {
   );
 };
 
-export const Header = () => {
+const HamburgerIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M3 12H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    <path d="M3 6H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    <path d="M3 18H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+  </svg>
+);
+
+interface HeaderProps {
+  onMenuClick?: () => void;
+}
+
+export const Header = ({ onMenuClick }: HeaderProps) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -113,6 +125,18 @@ export const Header = () => {
         boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.05)',
       }}
     >
+      {onMenuClick && (
+        <button
+          type="button"
+          onClick={onMenuClick}
+          className="md:hidden mr-2 p-2 rounded-lg transition-colors hover:bg-white/40 focus:outline-none"
+          style={{ color: COLORS.brandDark }}
+          aria-label="Abrir menú"
+        >
+          <HamburgerIcon className="w-5 h-5" />
+        </button>
+      )}
+
       {!user && (
         <Link
           to={ROUTES.DASHBOARD}

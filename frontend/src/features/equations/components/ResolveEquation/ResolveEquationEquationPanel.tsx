@@ -40,7 +40,7 @@ export const ResolveEquationEquationPanel = ({
           }}
         >
           <h2 className="mb-2 text-sm font-medium" style={{ color: COLORS.accentSecondary }}>
-            Conjunto solución parcial
+            Conjunto solución actual
           </h2>
           <MathExpression
             expression={formatSolutionSetExpression(

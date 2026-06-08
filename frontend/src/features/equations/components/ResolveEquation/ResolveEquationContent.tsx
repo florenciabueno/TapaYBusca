@@ -93,9 +93,9 @@ export const ResolveEquationContent = ({
         <ResolutionNavigationShell navigation={navigation}>
           <div className="flex w-full max-w-7xl flex-col">
             {showBackToHome && <BackToHomeLink />}
-            <div className="flex w-full flex-col gap-6 lg:min-h-0 lg:flex-row lg:items-stretch lg:justify-center">
+            <div className="flex w-full flex-col gap-6 xl:min-h-0 xl:flex-row xl:items-stretch xl:justify-center">
               <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col">{workspace}</div>
-              <div className="flex min-h-0 w-full min-w-0 flex-col overflow-hidden lg:w-[min(24rem,100%)] lg:flex-shrink-0">
+              <div className="flex min-h-0 w-full min-w-0 flex-col overflow-hidden xl:w-[min(24rem,100%)] xl:shrink-0">
                 <ResolveEquationStepsCard steps={steps} />
               </div>
             </div>
