@@ -40,11 +40,11 @@ export async function isRepeatedSubmittedStep(
 ): Promise<boolean> {
   const loggedSteps = await repo.findResolutionsByUserEquation(userEquationId, currentResolutionId);
   if (loggedSteps.length === 0) return false;
-  const last = loggedSteps[loggedSteps.length - 1]!;
   const left = (rawLeft ?? '').trim();
   const right = (rawRight ?? '').trim();
-  return (
-    (last.subEquationInfix?.trim() ?? '') === left && last.proposedResult.trim() === right
+  return loggedSteps.some(
+    (step) =>
+      (step.subEquationInfix?.trim() ?? '') === left && step.proposedResult.trim() === right
   );
 }
 

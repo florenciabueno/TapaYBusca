@@ -397,6 +397,38 @@ describe('Equation resolver API', () => {
       expect(repoMocks.createResolution).not.toHaveBeenCalled();
     });
 
+    it('returns PR when the step matches an earlier logged step, not only the last one', async () => {
+      const firstStepInfix = 'x+5';
+      const firstStepPostfix = toPostfixTokens(firstStepInfix);
+      const secondStepInfix = 'x';
+      const secondStepPostfix = toPostfixTokens(secondStepInfix);
+      repoMocks.findResolutionsByUserEquation.mockResolvedValue([
+        {
+          subEquation: firstStepPostfix.join(''),
+          subEquationInfix: firstStepInfix,
+          proposedResult: '7',
+        },
+        {
+          subEquation: secondStepPostfix.join(''),
+          subEquationInfix: secondStepInfix,
+          proposedResult: '2',
+        },
+      ]);
+
+      const response = await request(app)
+        .post('/api/equations/ue-1/resolve')
+        .set(authHeader(token))
+        .send({
+          subEquationInfix: firstStepInfix,
+          answer: '7',
+          resolutionStepStatus: RESOLUTION_STEP_NO_BRANCH,
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({ code: RESOLUTION_CODES.STEP_REPEATED });
+      expect(repoMocks.createResolution).not.toHaveBeenCalled();
+    });
+
     it('persists correct step in max resolution session when currentResolutionId lags in DB', async () => {
       repoMocks.findByIdWithEquation.mockResolvedValue(
         makeUserEquation({
