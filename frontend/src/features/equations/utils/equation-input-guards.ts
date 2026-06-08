@@ -49,11 +49,29 @@ export function sanitizeEquationPastedText(pasted: string): string {
   return pasted.replace(PASTE_DISALLOWED_RE, '');
 }
 
+function extractFirstVariable(infix: string): string | null {
+  let i = 0;
+  const s = infix.trim();
+  while (i < s.length) {
+    if (!/[a-zA-Z]/.test(s[i]!)) { i++; continue; }
+    let id = '';
+    while (i < s.length && /[a-zA-Z0-9]/.test(s[i]!)) { id += s[i]!; i++; }
+    if (!ALLOWED_FUNCTIONS.has(id.toLowerCase())) {
+      const firstLetter = id.match(/[a-zA-Z]/)?.[0];
+      if (firstLetter) return firstLetter.toLowerCase();
+    }
+  }
+  return null;
+}
+
 export function handleEquationInputKeyDown(
   e: KeyboardEvent<HTMLInputElement>,
   equationVariable?: string | null
 ) {
-  const locked = equationVariable ?? extractEquationVariable(e.currentTarget.value);
+  const locked =
+    equationVariable ??
+    extractEquationVariable(e.currentTarget.value) ??
+    extractFirstVariable(e.currentTarget.value);
   if (locked && /^[a-zA-Z]$/.test(e.key) && e.key.toLowerCase() !== locked) {
     e.preventDefault();
     return;
