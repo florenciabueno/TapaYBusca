@@ -35,7 +35,6 @@ export const ResolveEquationWorkspace = ({
   return (
     <FormPageCard
       title="Resolución"
-      description="Consulta tu historial de resolución."
       maxWidth={hasSteps ? 'full' : 'wide'}
     >
       <div className="grid grid-cols-1 lg:grid-cols-[2fr_3fr] gap-6 lg:gap-8">

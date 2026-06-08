@@ -53,7 +53,7 @@ export const ResolveEquationFormPanel = ({
           className="block text-sm font-medium mb-2 px-0"
           style={{ color: COLORS.accentSecondary }}
         >
-          Ingresa la nueva ecuación equivalente de un lado y del otro tu respuesta
+          Resuelve la ecuación
         </legend>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
           <div className="flex-1 min-w-0">
