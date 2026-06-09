@@ -681,6 +681,136 @@ describe('Equation resolver API', () => {
       ]);
     });
 
+    it('empty-solution equation: correct intermediate non-variable step returns PC', async () => {
+      repoMocks.findByIdWithEquation.mockResolvedValue(
+        makeUserEquation({
+          equation: {
+            infixExpression: 'pot2(x)+8=-8',
+            postfixExpression: 'pot2(x)+8=-8',
+            solutionValues: [],
+          },
+        })
+      );
+
+      const response = await request(app)
+        .post('/api/equations/ue-1/resolve')
+        .set(authHeader(token))
+        .send({
+          subEquationInfix: 'pot2(x)',
+          answer: '-16',
+          resolutionStepStatus: RESOLUTION_STEP_NO_BRANCH,
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({ code: RESOLUTION_CODES.STEP_CORRECT });
+      const created = repoMocks.createResolution.mock.calls[0]?.[0] as {
+        isCorrect?: boolean;
+        stepWithoutSolution?: boolean;
+      };
+      expect(created).toMatchObject({ isCorrect: true, stepWithoutSolution: false });
+    });
+
+    it('empty-solution equation: wrong intermediate step is still counted toward warnings', async () => {
+      repoMocks.findByIdWithEquation.mockResolvedValue(
+        makeUserEquation({
+          equation: {
+            infixExpression: 'pot2(x)+8=-8',
+            postfixExpression: 'pot2(x)+8=-8',
+            solutionValues: [],
+          },
+        })
+      );
+
+      const response = await request(app)
+        .post('/api/equations/ue-1/resolve')
+        .set(authHeader(token))
+        .send({
+          subEquationInfix: 'pot2(x)',
+          answer: '5',
+          resolutionStepStatus: RESOLUTION_STEP_NO_BRANCH,
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({ code: RESOLUTION_CODES.STEP_INCORRECT });
+      const created = repoMocks.createResolution.mock.calls[0]?.[0] as {
+        isCorrect?: boolean;
+        stepWithoutSolution?: boolean;
+      };
+      expect(created).toMatchObject({ isCorrect: false, stepWithoutSolution: true });
+    });
+
+    it('empty-solution equation: correct intermediate step then empty-set completes resolution', async () => {
+      repoMocks.findByIdWithEquation.mockResolvedValue(
+        makeUserEquation({
+          equation: {
+            infixExpression: 'pot2(x)+8=-8',
+            postfixExpression: 'pot2(x)+8=-8',
+            solutionValues: [],
+          },
+        })
+      );
+
+      const step1 = await request(app)
+        .post('/api/equations/ue-1/resolve')
+        .set(authHeader(token))
+        .send({
+          subEquationInfix: 'pot2(x)',
+          answer: '-16',
+          resolutionStepStatus: RESOLUTION_STEP_NO_BRANCH,
+        });
+      expect(step1.status).toBe(200);
+      expect(step1.body).toEqual({ code: RESOLUTION_CODES.STEP_CORRECT });
+
+      const step2 = await request(app)
+        .post('/api/equations/ue-1/resolve')
+        .set(authHeader(token))
+        .send({
+          subEquationInfix: 'x',
+          answer: EMPTY_SET,
+          resolutionStepStatus: RESOLUTION_STEP_NO_BRANCH,
+        });
+      expect(step2.status).toBe(200);
+      expect(step2.body).toEqual({ code: RESOLUTION_CODES.RESOLUTION_FINISHED });
+      expect(repoMocks.updateResolutionState).toHaveBeenLastCalledWith(
+        'ue-1',
+        expect.objectContaining({ status: EquationStatus.SOLVED })
+      );
+    });
+
+    it('empty-solution equation: correct intermediate step does not count toward wrong-answer warnings', async () => {
+      repoMocks.findByIdWithEquation.mockResolvedValue(
+        makeUserEquation({
+          equation: {
+            infixExpression: 'pot2(x)+8=-8',
+            postfixExpression: 'pot2(x)+8=-8',
+            solutionValues: [],
+          },
+        })
+      );
+
+      const steps = [
+        { subEquationInfix: 'pot2(x)', answer: '-16' }, // correct intermediate → PC, not counted
+        { subEquationInfix: 'x', answer: '5' },          // wrong on x → PI (1st failure)
+        { subEquationInfix: 'x', answer: '6' },          // wrong on x → PI (2nd failure)
+        { subEquationInfix: 'x', answer: '7' },          // wrong on x → PA (3rd failure)
+      ];
+      const codes: string[] = [];
+      for (const step of steps) {
+        const response = await request(app)
+          .post('/api/equations/ue-1/resolve')
+          .set(authHeader(token))
+          .send({ ...step, resolutionStepStatus: RESOLUTION_STEP_NO_BRANCH });
+        expect(response.status).toBe(200);
+        codes.push(response.body.code);
+      }
+      expect(codes).toEqual([
+        RESOLUTION_CODES.STEP_CORRECT,
+        RESOLUTION_CODES.STEP_INCORRECT,
+        RESOLUTION_CODES.STEP_INCORRECT,
+        RESOLUTION_CODES.FIRST_WARNING,
+      ]);
+    });
+
     it('returns RI when empty-set without subequation but equation has known solutions', async () => {
       const response = await request(app)
         .post('/api/equations/ue-1/resolve')

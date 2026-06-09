@@ -20,7 +20,9 @@ import {
   formatAbsXResultValue,
   isPlusMinusPair,
   isAbsWrappedPlusMinusAnswer,
+  getSubEquationResult,
 } from './equation-solver/resolve-helpers.js';
+import { VARIABLE } from './equation-solver/constants.js';
 import {
   equationSidesShareNumericValue,
   makeKnownStepDecision,
@@ -136,7 +138,11 @@ async function evaluateStandardStep(
     return evaluateNumericAttemptOnEmptySolutionEquation(repo, {
       userEquationId: args.userEquationId,
       currentResolutionId: args.currentResolutionId,
+      equationPostfixTokens: args.equationPostfixTokens,
       subEquationPostfix: args.subEquationPostfix,
+      subEquation: args.subEquation,
+      resolutionStepStatus: args.resolutionStepStatus,
+      answerValue,
       selectedBranch: args.selectedBranch,
       stateUpdated: args.stateUpdated,
     });
@@ -174,11 +180,42 @@ async function evaluateNumericAttemptOnEmptySolutionEquation(
   args: {
     userEquationId: string;
     currentResolutionId: number;
+    equationPostfixTokens: string[];
     subEquationPostfix: string[];
+    subEquation: string;
+    resolutionStepStatus: number;
+    answerValue: number;
     selectedBranch: string;
     stateUpdated: boolean;
   }
 ): Promise<StepEvaluation> {
+  const expectedValues = getSubEquationResult(
+    args.equationPostfixTokens,
+    args.subEquationPostfix,
+    VARIABLE,
+    false
+  );
+  if (listContainsElement(expectedValues, args.answerValue)) {
+    let selectedBranch = args.selectedBranch;
+    let stateUpdated = args.stateUpdated;
+    if (
+      args.resolutionStepStatus === RESOLUTION_STEP_NO_BRANCH &&
+      isQuadratic(args.equationPostfixTokens, args.subEquationPostfix)
+    ) {
+      selectedBranch = args.subEquation;
+      stateUpdated = true;
+    }
+    return {
+      resultCode: RESOLUTION_CODES.STEP_CORRECT,
+      isCorrect: true,
+      isVariable: isOnlyVariable(args.subEquationPostfix),
+      stepWithoutSolution: false,
+      correctResult: args.answerValue,
+      selectedBranch,
+      stateUpdated,
+    };
+  }
+
   const priorFailures = await repo.countEmptySolutionWrongNumericAttempts(
     args.userEquationId,
     args.currentResolutionId
