@@ -216,6 +216,20 @@ async function evaluateNumericAttemptOnEmptySolutionEquation(
     };
   }
 
+  // Sub-expression has a valid intermediate value but answer is wrong → plain PI, not escalated.
+  // The escalated system (PA/SS) only applies when the sub-expression itself has no real value.
+  if (expectedValues.length > 0) {
+    return {
+      resultCode: RESOLUTION_CODES.STEP_INCORRECT,
+      isCorrect: false,
+      isVariable: isOnlyVariable(args.subEquationPostfix),
+      stepWithoutSolution: false,
+      correctResult: undefined,
+      selectedBranch: args.selectedBranch,
+      stateUpdated: args.stateUpdated,
+    };
+  }
+
   const priorFailures = await repo.countEmptySolutionWrongNumericAttempts(
     args.userEquationId,
     args.currentResolutionId

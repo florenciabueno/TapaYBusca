@@ -650,7 +650,9 @@ describe('Equation resolver API', () => {
       expect(lastCreate).toMatchObject({ proposedResult: '7', isCorrect: false });
     });
 
-    it('empty-solution equation: PA on 3rd wrong counts across subequations (pot2(x) vs x)', async () => {
+    it('empty-solution equation: PA only counts sub-expressions without real value (x), not intermediate ones (pot2(x))', async () => {
+      // pot2(x)+1=0: pot2(x) has value -1 (valid intermediate) → wrong answers not counted
+      // x has no real value → wrong answers enter the escalated system
       repoMocks.findByIdWithEquation.mockResolvedValue(
         makeUserEquation({
           equation: {
@@ -661,9 +663,11 @@ describe('Equation resolver API', () => {
         })
       );
       const steps = [
-        { subEquationInfix: 'pot2(x)', answer: '3' },
-        { subEquationInfix: 'x', answer: '5' },
-        { subEquationInfix: 'pot2(x)', answer: '7' },
+        { subEquationInfix: 'pot2(x)', answer: '3' }, // PI, not counted (has valid value -1)
+        { subEquationInfix: 'x', answer: '5' },        // PI, 1st escalated
+        { subEquationInfix: 'pot2(x)', answer: '7' },  // PI, not counted (has valid value -1)
+        { subEquationInfix: 'x', answer: '6' },        // PI, 2nd escalated
+        { subEquationInfix: 'x', answer: '8' },        // PA, 3rd escalated
       ];
       const codes: string[] = [];
       for (const step of steps) {
@@ -675,6 +679,8 @@ describe('Equation resolver API', () => {
         codes.push(response.body.code);
       }
       expect(codes).toEqual([
+        RESOLUTION_CODES.STEP_INCORRECT,
+        RESOLUTION_CODES.STEP_INCORRECT,
         RESOLUTION_CODES.STEP_INCORRECT,
         RESOLUTION_CODES.STEP_INCORRECT,
         RESOLUTION_CODES.FIRST_WARNING,
@@ -710,7 +716,8 @@ describe('Equation resolver API', () => {
       expect(created).toMatchObject({ isCorrect: true, stepWithoutSolution: false });
     });
 
-    it('empty-solution equation: wrong intermediate step is still counted toward warnings', async () => {
+    it('empty-solution equation: wrong answer on sub-expression with valid value returns PI without counting', async () => {
+      // pot2(x)+8=-8: pot2(x) has valid value -16, so wrong answer is plain PI (not escalated)
       repoMocks.findByIdWithEquation.mockResolvedValue(
         makeUserEquation({
           equation: {
@@ -736,7 +743,7 @@ describe('Equation resolver API', () => {
         isCorrect?: boolean;
         stepWithoutSolution?: boolean;
       };
-      expect(created).toMatchObject({ isCorrect: false, stepWithoutSolution: true });
+      expect(created).toMatchObject({ isCorrect: false, stepWithoutSolution: false });
     });
 
     it('empty-solution equation: correct intermediate step then empty-set completes resolution', async () => {
