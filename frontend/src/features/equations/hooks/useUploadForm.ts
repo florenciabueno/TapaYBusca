@@ -8,7 +8,7 @@ import { mergeFormSubmitError } from '../../../shared/utils/formError';
 import { useUploadableEquations } from './useUploadableEquations';
 
 const UPLOAD_SUCCESS = 'Ecuaciones subidas correctamente. Se han compartido con el resto de los estudiantes.';
-const UPLOAD_SELECT_AT_LEAST_ONE = 'Selecciona al menos una ecuación para subir.';
+const UPLOAD_SELECT_AT_LEAST_ONE = 'Selecciona al menos una ecuación para subir';
 const SUCCESS_MESSAGE_DURATION_MS = 4000;
 
 export type UploadTab = 'can-upload' | 'already-uploaded';

@@ -12,27 +12,27 @@ export { ALLOWED_FUNCTIONS };
 const CONSTANT_ALLOWED_CHARS = /^[-\d\s.+*\/()|]+$/;
 const MAX_DEGREE = 3;
 
-const MESSAGE_EMPTY = 'La ecuación no puede estar vacía.';
-const MESSAGE_NO_EQUALS = 'La ecuación debe contener exactamente un signo =.';
-const MESSAGE_MULTIPLE_EQUALS = 'La ecuación debe tener exactamente un signo = (no varios).';
-const MESSAGE_SIDES_EMPTY = 'Cada lado del signo = debe tener una expresión.';
+const MESSAGE_EMPTY = 'La ecuación no puede estar vacía';
+const MESSAGE_NO_EQUALS = 'La ecuación debe contener exactamente un signo =';
+const MESSAGE_MULTIPLE_EQUALS = 'La ecuación debe tener exactamente un signo = (no varios)';
+const MESSAGE_SIDES_EMPTY = 'Cada lado del signo = debe tener una expresión';
 const MESSAGE_BOTH_HAVE_VARIABLE =
-  'Solo un lado de la ecuación puede contener la incógnita.';
-const MESSAGE_NEITHER_HAS_VARIABLE = 'Uno de los lados debe contener la incógnita.';
+  'Solo un lado de la ecuación puede contener la incógnita';
+const MESSAGE_NEITHER_HAS_VARIABLE = 'Uno de los lados debe contener la incógnita';
 const MESSAGE_MULTIPLE_VARIABLES =
-  'Solo se permite una incógnita; no mezcles letras distintas como variables.';
-const MESSAGE_SIDE_EMPTY = 'Un lado de la ecuación está vacío.';
-const MESSAGE_CONSTANT_HAS_VARIABLE = 'El lado constante (k) no debe contener la incógnita.';
+  'Solo se permite una incógnita; no mezcles letras distintas como variables';
+const MESSAGE_SIDE_EMPTY = 'Un lado de la ecuación está vacío';
+const MESSAGE_CONSTANT_HAS_VARIABLE = 'El lado constante (k) no debe contener la incógnita';
 const MESSAGE_CONSTANT_INVALID_CHARS =
-  'El lado constante solo puede contener números y los operadores +, -, *, /.';
-const MESSAGE_CONSTANT_PARENS = 'Paréntesis desbalanceados en el lado constante.';
+  'El lado constante solo puede contener números y los operadores +, -, *, /';
+const MESSAGE_CONSTANT_PARENS = 'Paréntesis desbalanceados en el lado constante';
 const MESSAGE_EXPRESSION_MULTIPLE_VARIABLE =
-  'La expresión solo puede contener una vez la incógnita.';
+  'La expresión solo puede contener una vez la incógnita';
 const MESSAGE_EXPRESSION_ALLOWED_FUNCTIONS =
-  'Función no permitida: "{id}". Permitidas: sqrt, cbrt, pot2, pot3, abs.';
-const MESSAGE_EXPRESSION_DEGREE = `Solo se permiten expresiones hasta grado ${MAX_DEGREE}.`;
+  'Función no permitida: "{id}". Permitidas: sqrt, cbrt, pot2, pot3, abs';
+const MESSAGE_EXPRESSION_DEGREE = `Solo se permiten expresiones hasta grado ${MAX_DEGREE}`;
 const MESSAGE_EXPRESSION_MUST_HAVE_VARIABLE =
-  'Uno de los lados debe ser una expresión que contenga la incógnita.';
+  'Uno de los lados debe ser una expresión que contenga la incógnita';
 
 type TokenType = 'NUMBER' | 'ID' | 'OP' | 'LPAREN' | 'RPAREN';
 interface Token {

@@ -6,10 +6,10 @@ import { EquationStatus } from './equation.types.js';
 import { DEFAULT_FLOAT_TOLERANCE } from './equation-solver/constants.js';
 
 export const RESULT_VALUE_SEPARATOR = ';';
-export const MESSAGE_RESOLVE_SUBEQUATION_REQUIRED = 'La ecuación equivalente es obligatoria';
-export const MESSAGE_RESOLVE_EQUATION_NOT_FOUND = 'Ecuación no encontrada.';
-export const MESSAGE_RESOLVE_NO_PERMISSIONS = 'No tienes permisos para resolver esta ecuación.';
-export const MESSAGE_RESOLVE_INVALID_EQUATION = 'La ecuación almacenada es inválida.';
+export const MESSAGE_RESOLVE_SUBEQUATION_REQUIRED = 'La ecuación es obligatoria';
+export const MESSAGE_RESOLVE_EQUATION_NOT_FOUND = 'Ecuación no encontrada';
+export const MESSAGE_RESOLVE_NO_PERMISSIONS = 'No tienes permisos para resolver esta ecuación';
+export const MESSAGE_RESOLVE_INVALID_EQUATION = 'La ecuación almacenada es inválida';
 
 export const FINISH_ATTEMPT_SUBEQUATION_KEY = '__finish_attempt__';
 export const EMPTY_SET_WITHOUT_SUBEQUATION_KEY = '__empty_set_no_sub__';

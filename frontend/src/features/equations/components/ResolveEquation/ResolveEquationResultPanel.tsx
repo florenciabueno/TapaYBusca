@@ -50,10 +50,10 @@ export const ResolveEquationResultPanel = ({
             expression={formatSolutionSetExpression(solutionSet, solutionSetLatex)}
           />
         </p>
-        <Button type="button" variant="accent" onClick={onReset} className="mt-4">
-          Reiniciar y volver a resolver
-        </Button>
       </div>
+      <Button type="button" variant="accent" onClick={onReset} className="mt-4">
+        Reiniciar y volver a resolver
+      </Button>
     </>
   );
 };

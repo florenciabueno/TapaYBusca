@@ -10,7 +10,7 @@ type ResolveStepPayload = {
   resolutionStepStatus: number;
 };
 
-const MESSAGE_EQUATION_NOT_FOUND = 'Ecuación no encontrada.';
+const MESSAGE_EQUATION_NOT_FOUND = 'Ecuación no encontrada';
 
 export class GuestResolutionService {
   private resolutionService: ResolutionService;

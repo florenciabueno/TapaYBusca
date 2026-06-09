@@ -33,7 +33,7 @@ export const useCreateEquationForm = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.equations.lists() });
       queryClient.invalidateQueries({ queryKey: queryKeys.equations.all });
-      setSuccess('Ecuación guardada correctamente.');
+      setSuccess('Ecuación guardada correctamente');
       setValue('');
       if (navigateTimerRef.current !== null) clearTimeout(navigateTimerRef.current);
       navigateTimerRef.current = setTimeout(() => {
@@ -46,7 +46,7 @@ export const useCreateEquationForm = () => {
   const error = mergeFormSubmitError(
     validationError,
     createMutation.error,
-    'Error al crear la ecuación.'
+    'Error al crear la ecuación'
   );
 
   const isLoading = createMutation.isPending;

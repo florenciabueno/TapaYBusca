@@ -26,15 +26,15 @@ const DOWNLOAD_FETCH_MULTIPLIER = 3;
 const DOWNLOAD_FETCH_MAX = 200;
 
 const MESSAGE_EQUATION_VALIDATION_PREFIX = '';
-const MESSAGE_EQUATION_NO_SOLUTION = 'La ecuación no tiene solución.';
+const MESSAGE_EQUATION_NO_SOLUTION = 'La ecuación no tiene solución';
 const MESSAGE_NO_PERMISSION_MODIFY = 'No tienes permisos para modificar esta ecuación';
 const MESSAGE_NO_PERMISSION_DELETE = 'No tienes permisos para eliminar esta ecuación';
-const MESSAGE_UPLOAD_EQUATIONS_NOT_FOUND = 'Una o más ecuaciones no existen o no te pertenecen.';
+const MESSAGE_UPLOAD_EQUATIONS_NOT_FOUND = 'Una o más ecuaciones no existen o no te pertenecen';
 const MESSAGE_UPLOAD_ALREADY_PUBLISHED = 'Una o más ecuaciones ya fueron subidas. Solo puedes subir cada ecuación una vez.';
-const MESSAGE_DOWNLOAD_QUANTITY_RANGE = `Cantidad debe estar entre ${DOWNLOAD_QUANTITY_MIN} y ${DOWNLOAD_QUANTITY_MAX}.`;
-const MESSAGE_DOWNLOAD_FROM_DATE_INVALID = 'Fecha desde no válida.';
-const MESSAGE_DOWNLOAD_TO_DATE_INVALID = 'Fecha hasta no válida.';
-const MESSAGE_DOWNLOAD_DATE_RANGE = 'La fecha desde no puede ser posterior a la fecha hasta.';
+const MESSAGE_DOWNLOAD_QUANTITY_RANGE = `Cantidad debe estar entre ${DOWNLOAD_QUANTITY_MIN} y ${DOWNLOAD_QUANTITY_MAX}`;
+const MESSAGE_DOWNLOAD_FROM_DATE_INVALID = 'Fecha desde no válida';
+const MESSAGE_DOWNLOAD_TO_DATE_INVALID = 'Fecha hasta no válida';
+const MESSAGE_DOWNLOAD_DATE_RANGE = 'La fecha desde no puede ser posterior a la fecha hasta';
 
 export class EquationService {
   constructor(private equationRepository: EquationRepository) {}

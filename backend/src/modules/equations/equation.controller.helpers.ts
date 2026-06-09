@@ -17,7 +17,7 @@ const PERMISSION_ERROR_KEYWORD = 'permisos';
 const VALIDATION_ERROR_KEYWORDS = ['inválido', 'inválida', 'obligatoria'] as const;
 const GUEST_SESSION_ID_HEADER = 'x-guest-session-id';
 const GUEST_SESSION_ID_PATTERN = /^[a-zA-Z0-9_-]{16,120}$/;
-const MESSAGE_INVALID_EQUATION_ID = 'ID de ecuación inválido.';
+const MESSAGE_INVALID_EQUATION_ID = 'ID de ecuación inválido';
 
 type QueryParams = Request['query'];
 type RouteParams = Request['params'];
@@ -84,7 +84,7 @@ export function parseDateFilters(
   const toDate = parseOptionalDate(query.toDate);
 
   if (fromDate !== undefined && toDate !== undefined && fromDate > toDate) {
-    return { error: 'La fecha desde no puede ser posterior a la fecha hasta.' };
+    return { error: 'La fecha desde no puede ser posterior a la fecha hasta' };
   }
 
   return { fromDate, toDate };
@@ -136,7 +136,7 @@ export function parseGuestSessionId(req: Request): string {
   const raw = Array.isArray(headerValue) ? headerValue[0] : headerValue;
   const guestSessionId = typeof raw === 'string' ? raw.trim() : '';
   if (!guestSessionId || !GUEST_SESSION_ID_PATTERN.test(guestSessionId)) {
-    throw new Error('Sesión de invitado inválida.');
+    throw new Error('Sesión de invitado inválida');
   }
   return guestSessionId;
 }
@@ -144,7 +144,7 @@ export function parseGuestSessionId(req: Request): string {
 export function parseCreateEquationBody(body: unknown, userId: string): CreateEquationDto {
   const b = asObject(body);
   const equation = typeof b.equation === 'string' ? b.equation.trim() : '';
-  if (!equation) throw new Error('La ecuación es obligatoria.');
+  if (!equation) throw new Error('La ecuación es obligatoria');
   return {
     expression: equation,
     userId,
@@ -157,7 +157,7 @@ export function parseUpdateEquationBody(body: unknown): UpdateEquationUserDto {
 
   if ('status' in b && b.status !== undefined) {
     if (typeof b.status !== 'string' || !VALID_STATUSES.has(b.status)) {
-      throw new Error('Estado inválido.');
+      throw new Error('Estado inválido');
     }
     data.status = b.status as EquationStatus;
   }

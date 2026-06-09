@@ -24,12 +24,12 @@ const CODE_MESSAGES: Record<string, string> = {
   [RESOLUTION_CODES.PENDING_FINISH]: 'Solución correcta. Podés ingresar otra si aún falta.',
   [RESOLUTION_CODES.RESOLUTION_FINISHED]: '¡Resolución terminada con éxito!',
   [RESOLUTION_CODES.NO_SOLUTION]:
-    'La ecuación no tiene solución real. El conjunto solución es el conjunto vacío ({}).',
+    'La ecuación no tiene solución real. El conjunto solución es el conjunto vacío.',
   [RESOLUTION_CODES.FIRST_WARNING]: '¿La ecuación tendrá solución real?',
   [RESOLUTION_CODES.RESULT_REPEATED]: 'Otro número, no el mismo',
   [RESOLUTION_CODES.RESULT_INCORRECT]: '¿Mmm… ¿Estás segur@?',
-  [RESOLUTION_CODES.STEP_INCORRECT]: 'El valor no es correcto para esta ecuación equivalente',
-  [RESOLUTION_CODES.SYNTAX_INCORRECT]: 'La ecuación equivalente seleccionada no es válida',
+  [RESOLUTION_CODES.STEP_INCORRECT]: 'El valor no es correcto',
+  [RESOLUTION_CODES.SYNTAX_INCORRECT]: 'La ecuación ingresada no es válida',
   [RESOLUTION_CODES.STEP_REPEATED]: 'Ya ingresaste este paso',
 };
 

@@ -13,12 +13,12 @@ import { EquationCard } from '../EquationCard';
 const MESSAGES = {
   LOADING: 'Cargando ecuaciones...',
   EMPTY_TITLE: 'No hay ecuaciones',
-  EMPTY_DESCRIPTION: 'Crea tu primera ecuación para comenzar a resolver paso a paso.',
+  EMPTY_DESCRIPTION: 'Crea tu primera ecuación para comenzar a resolver paso a paso',
   EMPTY_DELETED_TITLE: 'No hay ecuaciones eliminadas',
   EMPTY_DELETED_DESCRIPTION:
-    'Cuando elimines una ecuación, podrás verla aquí seleccionando este filtro.',
+    'Cuando elimines una ecuación, podrás verla aquí seleccionando este filtro',
   EMPTY_DOWNLOADED_TITLE: 'No hay ecuaciones descargadas',
-  EMPTY_DOWNLOADED_DESCRIPTION: 'Descarga ecuaciones para agregarlas a tu listado.',
+  EMPTY_DOWNLOADED_DESCRIPTION: 'Descarga ecuaciones para agregarlas a tu listado',
   DELETE_CONFIRM_TITLE: 'Eliminar ecuación',
   DELETE_CONFIRM_MESSAGE: '¿Estás seguro de eliminar esta ecuación? Esta acción no se puede deshacer.',
   DELETE_CONFIRM_BTN: 'Eliminar',

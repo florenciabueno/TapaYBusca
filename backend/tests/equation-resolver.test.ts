@@ -233,7 +233,7 @@ describe('Equation resolver API', () => {
       expect(response.status).toBe(200);
       expect(response.body).toMatchObject({
         code: RESOLUTION_CODES.SYNTAX_INCORRECT,
-        message: 'Ecuación no encontrada.',
+        message: 'Ecuación no encontrada',
       });
     });
 
@@ -250,7 +250,7 @@ describe('Equation resolver API', () => {
       expect(response.status).toBe(200);
       expect(response.body).toMatchObject({
         code: RESOLUTION_CODES.SYNTAX_INCORRECT,
-        message: 'No tienes permisos para resolver esta ecuación.',
+        message: 'No tienes permisos para resolver esta ecuación',
       });
     });
 
@@ -273,7 +273,7 @@ describe('Equation resolver API', () => {
       expect(response.status).toBe(200);
       expect(response.body).toMatchObject({
         code: RESOLUTION_CODES.SYNTAX_INCORRECT,
-        message: 'La ecuación almacenada es inválida.',
+        message: 'La ecuación almacenada es inválida',
       });
     });
 

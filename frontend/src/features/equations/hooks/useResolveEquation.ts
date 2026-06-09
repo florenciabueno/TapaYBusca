@@ -104,6 +104,9 @@ export const useResolveEquation = (id?: string) => {
     mutationFn: (payload: ResolveStepPayload) => resolutionApi.resolveStep(id!, payload, ctx),
     onSuccess: async (result) => {
       setMessage(deriveResolutionFeedbackMessage(result));
+      if (result.code === RESOLUTION_CODES.NO_SOLUTION) {
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+      }
       await invalidateEquationQueries();
     },
   });

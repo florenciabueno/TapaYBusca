@@ -40,7 +40,7 @@ function validateDateRangeOrThrow(fromDate?: string, toDate?: string): void {
   const to = parseIsoDate(toDate);
   if (!from || !to) return;
   if (from.getTime() > to.getTime()) {
-    throw new Error('La fecha desde no puede ser posterior a la fecha hasta.');
+    throw new Error('La fecha desde no puede ser posterior a la fecha hasta');
   }
 }
 
@@ -119,7 +119,7 @@ async function listEquationsForGuest(
     fallbackErrorMessage: 'Error al obtener ecuaciones',
   });
   if (!Array.isArray(raw.data)) {
-    throw new Error('Respuesta del servidor no válida al listar ecuaciones.');
+    throw new Error('Respuesta del servidor no válida al listar ecuaciones');
   }
 
   const baseData = raw.data.map(mapEquation);
@@ -168,7 +168,7 @@ async function listEquationsForAuth(
   });
 
   if (!Array.isArray(raw.data)) {
-    throw new Error('Respuesta del servidor no válida al listar ecuaciones.');
+    throw new Error('Respuesta del servidor no válida al listar ecuaciones');
   }
   return {
     data: raw.data.map(mapEquation),

@@ -6,8 +6,8 @@ import {
   parseResetPasswordBody,
 } from './passwordReset.controller.helpers.js';
 
-const FORGOT_PASSWORD_ERROR_MESSAGE = 'Error al solicitar restablecimiento de contraseña.';
-const RESET_PASSWORD_ERROR_MESSAGE = 'Error al restablecer contraseña.';
+const FORGOT_PASSWORD_ERROR_MESSAGE = 'Error al solicitar restablecimiento de contraseña';
+const RESET_PASSWORD_ERROR_MESSAGE = 'Error al restablecer contraseña';
 
 export class PasswordResetController {
   constructor(private passwordResetService: PasswordResetService) {}
