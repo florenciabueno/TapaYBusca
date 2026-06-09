@@ -88,7 +88,7 @@ export const ResolveEquationContent = ({
   );
 
   return (
-    <div className="flex min-h-[calc(100vh-7rem)] w-full flex-col items-center justify-center px-2 py-4">
+    <div className="flex min-h-[calc(100vh-7rem)] w-full flex-col items-center justify-start px-2 py-4">
       {hasSteps ? (
         <ResolutionNavigationShell navigation={navigation}>
           <div className="flex w-full max-w-7xl flex-col">
