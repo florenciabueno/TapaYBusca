@@ -21,7 +21,7 @@ export const EquationsLayout = ({ children }: EquationsLayoutProps) => {
   return (
     <PromoBannerProvider>
       <div
-        className="h-screen flex overflow-hidden"
+        className="flex h-dvh overflow-hidden"
         style={{ backgroundColor: COLORS.background }}
       >
         {user && (
@@ -36,8 +36,8 @@ export const EquationsLayout = ({ children }: EquationsLayoutProps) => {
             onMenuClick={user ? () => setIsSidebarOpen((o) => !o) : undefined}
           />
 
-          <main className="relative flex flex-1 min-h-0 flex-col overflow-auto px-6 py-6">
-            <div className={`flex-1 flex flex-col min-h-full ${user ? '' : 'max-w-7xl mx-auto w-full'}`}>
+          <main className="relative flex flex-1 min-h-0 min-w-0 flex-col overflow-x-hidden overflow-y-auto px-4 py-6 sm:px-6">
+            <div className={`flex min-h-0 w-full min-w-0 flex-1 flex-col ${user ? '' : 'max-w-7xl mx-auto'}`}>
               {children}
             </div>
           </main>
