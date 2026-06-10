@@ -15,7 +15,7 @@ import { validateForgotPasswordBody, validateResetPasswordBody } from './passwor
 const FORGOT_PASSWORD_GENERIC_MESSAGE =
   'Si el correo existe, enviaremos un enlace para restablecer la contraseña.';
 const RESET_PASSWORD_INVALID_TOKEN_MESSAGE = 'Token inválido o expirado.';
-const RESET_PASSWORD_SUCCESS_MESSAGE = 'Contraseña actualizada correctamente';
+const RESET_PASSWORD_SUCCESS_MESSAGE = 'Contraseña actualizada correctamente.';
 const VALIDATION_ERROR_PREFIX = 'Datos inválidos: ';
 
 export class PasswordResetService {

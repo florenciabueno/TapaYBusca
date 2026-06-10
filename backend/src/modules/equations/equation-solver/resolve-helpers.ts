@@ -136,7 +136,8 @@ function normalizeMathAliases(input: string): string {
   out = out.replace(/³√\s*\(/g, 'cbrt(');
   out = out.replace(/√\s*\(/g, 'sqrt(');
   out = out.replace(/\bneg\s*\(/gi, '-(');
-  out = out.replace(/(^|[=(+\-*/])\s*-\s*(sqrt|cbrt|x)\b/gi, '$10-$2');
+  out = out.replace(/(^|[=(+\-*/])\s*-\s*(sqrt|cbrt|abs|x)\b/gi, '$10-$2');
+  out = out.replace(/(^|[=(+\-*/])\s*-\s*\|/g, '$10-|');
   return out;
 }
 
@@ -218,24 +219,14 @@ export function isPlusMinusPair(solutions: number[], k: number): boolean {
   );
 }
 
-export function parseAbsWrappedConstantValue(answerInfix: string): number | undefined {
-  const normalized = normalizeUserInfix((answerInfix ?? '').trim());
-  if (!normalized.startsWith('|') || !normalized.endsWith('|')) return undefined;
-  const inner = normalized.slice(1, -1);
-  if (!inner || inner.includes('|')) return undefined;
-  const k = parseAnswerValues(inner)[0];
-  if (k === undefined || k < 0) return undefined;
-  return k;
-}
-
-export function isAbsWrappedPlusMinusAnswer(
-  answerInfix: string,
-  subEquationPostfix: string[],
-  solutions: number[]
-): boolean {
-  if (!isOnlyVariable(subEquationPostfix)) return false;
-  const k = parseAbsWrappedConstantValue(answerInfix);
-  return k !== undefined && isPlusMinusPair(solutions, k);
+export function formatPlusMinusSolutionLatex(constInfix: string): string[] {
+  const trimmed = (constInfix ?? '').trim();
+  if (!trimmed) return [];
+  const positive = resultToLatex(trimmed);
+  const negated = trimmed.startsWith('-')
+    ? resultToLatex(trimmed.slice(1).trim())
+    : resultToLatex(`neg(${trimmed})`);
+  return [positive, negated];
 }
 
 export function matchAbsXAnswer(
@@ -263,18 +254,6 @@ export function isAbsXSolutionStep(
   const k = parsed[0];
   if (k === undefined || k < 0) return false;
   return isAbsXPostfix(postfix) && isPlusMinusPair(solutions, k);
-}
-
-export function formatLoggedStepLatex(leftInfix: string, rightInfix: string): string {
-  const left = (leftInfix ?? '').trim();
-  const right = (rightInfix ?? '').trim();
-  if (infixContainsVariable(left) && !infixContainsVariable(right)) {
-    return `${resultToLatex(left)}=${resultToLatex(right)}`;
-  }
-  if (!infixContainsVariable(left) && infixContainsVariable(right)) {
-    return `${resultToLatex(right)}=${resultToLatex(left)}`;
-  }
-  return resultToLatex(loggedSolutionDisplayInfix(left, right));
 }
 
 export function formatAbsXResultValue(k: number): string {

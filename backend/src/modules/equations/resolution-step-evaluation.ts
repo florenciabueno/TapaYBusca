@@ -19,7 +19,6 @@ import {
   matchAbsXAnswer,
   formatAbsXResultValue,
   isPlusMinusPair,
-  isAbsWrappedPlusMinusAnswer,
   getSubEquationResult,
 } from './equation-solver/resolve-helpers.js';
 import { VARIABLE } from './equation-solver/constants.js';
@@ -276,13 +275,9 @@ async function evaluateWhenSolutionsAreKnown(
   const absMatch = matchAbsXAnswer(args.subEquationPostfix, args.answerValue, args.solutions);
   let isCorrect = matchedIsCorrect || absMatch.isCorrect;
   const resolvedCorrectResult = absMatch.isCorrect ? absMatch.correctResult : correctResult;
+  
   const isAbsX = isAbsXPostfix(args.subEquationPostfix);
-  const isAbsWrappedPair = isAbsWrappedPlusMinusAnswer(
-    args.answerInfix,
-    args.subEquationPostfix,
-    args.solutions
-  );
-  const registersBothRoots = isAbsX || isAbsWrappedPair;
+  const registersBothRoots = isAbsX;
   const isVariableStep = args.isVariable || isAbsX;
 
   if (isCorrect && !args.isVariable && !isAbsX) {

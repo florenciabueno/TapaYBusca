@@ -12,3 +12,10 @@ body {
   text-rendering: optimizeLegibility;
   letter-spacing: 0.005em;
 }
+
+input[type='date'],
+input[type='datetime-local'] {
+  min-width: 0;
+  -webkit-min-logical-width: 0;
+  max-width: 100%;
+}

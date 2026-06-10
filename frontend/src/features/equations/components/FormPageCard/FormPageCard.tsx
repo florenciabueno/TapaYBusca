@@ -11,12 +11,12 @@ export interface FormPageCardProps {
 export const FormPageCard = ({ title, description, children, maxWidth = 'default' }: FormPageCardProps) => {
   const outerClass =
     maxWidth === 'full'
-      ? 'w-full max-w-none'
-      : `${maxWidth === 'wide' ? 'max-w-5xl' : 'max-w-3xl'} mx-auto`;
+      ? 'w-full min-w-0 max-w-none'
+      : `w-full min-w-0 ${maxWidth === 'wide' ? 'max-w-5xl' : 'max-w-3xl'} mx-auto`;
   return (
     <div className={outerClass}>
       <div
-        className="p-8 rounded-2xl"
+        className="overflow-x-hidden rounded-2xl p-4 sm:p-8"
         style={{
           backgroundColor: COLORS.surface,
           borderRadius: RADIUS.xl,

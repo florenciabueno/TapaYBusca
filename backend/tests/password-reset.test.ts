@@ -79,8 +79,8 @@ async function resetPasswordRequest(
 
 const FORGOT_SUCCESS_MESSAGE =
   'Si el correo existe, enviaremos un enlace para restablecer la contraseña.';
-const RESET_SUCCESS_MESSAGE = 'Contraseña actualizada correctamente';
-const RESET_INVALID_TOKEN_MESSAGE = 'Token inválido o expirado';
+const RESET_SUCCESS_MESSAGE = 'Contraseña actualizada correctamente.';
+const RESET_INVALID_TOKEN_MESSAGE = 'Token inválido o expirado.';
 const VALID_EMAIL = 'user@example.com';
 const VALID_NEW_PASSWORD = 'newpassword123';
 const VALID_TOKEN = 'valid-reset-token';

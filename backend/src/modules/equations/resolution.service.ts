@@ -18,9 +18,8 @@ import {
   computeEffectiveResolutionSessionId,
   loggedSolutionDisplayInfix,
   isAbsXSolutionStep,
-  formatLoggedStepLatex,
   isAbsXPostfix,
-  parseAbsWrappedConstantValue,
+  formatPlusMinusSolutionLatex,
 } from './equation-solver/resolve-helpers.js';
 import { resultToLatex } from './infix-to-latex.js';
 import {
@@ -343,19 +342,14 @@ export class ResolutionService {
       const left = step.subEquationInfix ?? '';
       const right = step.proposedResult;
       const subPostfix = parseSubEquationPostfix(left);
+
       if (isAbsXPostfix(subPostfix)) {
         const absKey = `${left}|${right}`;
         if (seenAbsSteps.has(absKey)) continue;
         seenAbsSteps.add(absKey);
-        out.push(formatLoggedStepLatex(left, right));
-        continue;
-      }
-
-      if (parseAbsWrappedConstantValue(right) !== undefined) {
-        const absKey = `${left}|${right}`;
-        if (seenAbsSteps.has(absKey)) continue;
-        seenAbsSteps.add(absKey);
-        out.push(formatLoggedStepLatex(left, right));
+        for (const latex of formatPlusMinusSolutionLatex(loggedSolutionDisplayInfix(left, right))) {
+          out.push(latex);
+        }
         continue;
       }
 
@@ -363,8 +357,9 @@ export class ResolutionService {
       const num = nums[0];
       if (num === undefined || seen.has(num)) continue;
       seen.add(num);
-      const infix = loggedSolutionDisplayInfix(left, right);
-      out.push(resultToLatex(infix));
+      // The solution set mirrors the value exactly as logged in the step history
+      // (e.g. a step x = -|1/5| appears as -|1/5|, not its unwrapped form).
+      out.push(resultToLatex(loggedSolutionDisplayInfix(left, right)));
     }
     return out;
   }
