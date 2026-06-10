@@ -69,30 +69,39 @@ export const ResolveEquationFormPanel = ({
             />
           </div>
           <span
-            className="text-xl font-bold self-center hidden sm:inline"
+            className="text-xl font-bold leading-none self-stretch items-center hidden sm:flex"
             style={{ color: COLORS.accentSecondary }}
             aria-hidden
           >
             =
           </span>
-          <div className="flex-1 min-w-0">
-            <Input
-              ref={answerInputRef}
-              label=""
-              value={answer}
-              {...answerInputHandlers}
-              placeholder="ej. 3, x*2, 0,5"
-              disabled={submitting}
-              autoComplete="off"
-              labelColor="secondary"
-            />
+          <div className="flex flex-1 min-w-0 items-center gap-2">
+            <span
+              className="text-xl font-bold shrink-0 sm:hidden"
+              style={{ color: COLORS.accentSecondary }}
+              aria-hidden
+            >
+              =
+            </span>
+            <div className="flex-1 min-w-0">
+              <Input
+                ref={answerInputRef}
+                label=""
+                value={answer}
+                {...answerInputHandlers}
+                placeholder="ej. 3, x*2, 0,5"
+                disabled={submitting}
+                autoComplete="off"
+                labelColor="secondary"
+              />
+            </div>
           </div>
         </div>
         <p
           className="mt-1 text-xs"
           style={{ color: COLORS.gray[500] }}
         >
-          Teclado: números, x, =, * + - / y paréntesis
+          Teclado: números, variable, =, * + - / y paréntesis
         </p>
       </fieldset>
       <MathSymbolsPad

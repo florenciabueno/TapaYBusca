@@ -19,6 +19,10 @@ import type {
 import { useAuthContext } from './useAuthContext';
 import { usePrefillResolutionInputs } from './usePrefillResolutionInputs';
 import { useSyncGuestResolutionHistory } from './useSyncGuestResolutionHistory';
+import {
+  infixToUserFacingForInput,
+  splitInfixAtEquals,
+} from '../utils/equation-input-guards';
 
 const readErrorMessage = (e: unknown, fallback: string): string =>
   e instanceof Error ? e.message : fallback;
@@ -85,13 +89,15 @@ export const useResolveEquation = (id?: string) => {
     queryClient.invalidateQueries({ queryKey: queryKeys.equations.lists() });
   }, [id, mode, queryClient]);
 
-  const clearResolutionFormState = useCallback(() => {
+  const restoreInitialFormState = useCallback(() => {
     setFinished(false);
     setFinishedCode(null);
     setMessage(null);
-    setSubEquationInfix('');
-    setAnswer('');
-  }, []);
+    const infix = equation?.infixExpression?.trim();
+    const prefill = infix ? splitInfixAtEquals(infixToUserFacingForInput(infix)) : null;
+    setSubEquationInfix(prefill?.[0] ?? '');
+    setAnswer(prefill?.[1] ?? '');
+  }, [equation?.infixExpression]);
 
   const markAsFinished = useCallback((code: string) => {
     setFinished(true);
@@ -114,7 +120,7 @@ export const useResolveEquation = (id?: string) => {
   const resetResolutionMutation = useMutation({
     mutationFn: () => resolutionApi.resetResolution(id!, ctx),
     onSuccess: async () => {
-      clearResolutionFormState();
+      restoreInitialFormState();
       await invalidateEquationQueries();
     },
     onError: (e: unknown) => {

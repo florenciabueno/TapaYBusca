@@ -36,7 +36,7 @@ export const CreateEquationPage = () => {
                 {...inputHandlers}
                 placeholder="ej: x*20 = 100"
                 error={error}
-                helperText="Teclado: números, x, =, operadores (* + - /) y paréntesis"
+                helperText="Teclado: números, variable, =, operadores (* + - /) y paréntesis"
                 disabled={isLoading}
                 autoComplete="off"
               />

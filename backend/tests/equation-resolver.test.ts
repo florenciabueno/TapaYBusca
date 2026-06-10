@@ -173,7 +173,7 @@ describe('Equation resolver API', () => {
       expect(response.status).toBe(200);
       expect(response.body).toMatchObject({
         code: RESOLUTION_CODES.SYNTAX_INCORRECT,
-        message: 'La ecuación equivalente es obligatoria',
+        message: 'La ecuación es obligatoria',
       });
     });
 
@@ -1875,17 +1875,20 @@ describe('absolute value (pipe notation)', () => {
     expect(isAbsXSolutionStep('|x|', '1', [1, -1])).toBe(true);
   });
 
-  it('treats x=|sqrt(2)| as registering both ±sqrt(2) roots', async () => {
-    const { isAbsWrappedPlusMinusAnswer, formatAbsXResultValue } = await import(
+  it('parses -|k| (negated absolute value) as the negative root', async () => {
+    const { parseAnswerValues } = await import(
       '../src/modules/equations/equation-solver/resolve-helpers.js'
     );
-    const { solveEquation } = await import('../src/modules/equations/equation-solver/index.js');
-    const result = solveEquation('x^2=2');
-    expect(result.ok).toBe(true);
-    if (!result.ok) return;
-    const solutions = result.solutions;
-    const subPostfix = infixToPostfix(tokenizeInfix('x'))!;
-    expect(isAbsWrappedPlusMinusAnswer('|sqrt(2)|', subPostfix, solutions)).toBe(true);
-    expect(formatAbsXResultValue(Math.sqrt(2))).toContain(';');
+    expect(parseAnswerValues('-|1/5|')).toEqual([-0.2]);
+    expect(parseAnswerValues('-|sqrt(4)|')).toEqual([-2]);
+    expect(parseAnswerValues('5-|3|')).toEqual([2]);
+  });
+
+  it('renders |x|=k solution set as the ±k numeric values', async () => {
+    const { formatPlusMinusSolutionLatex } = await import(
+      '../src/modules/equations/equation-solver/resolve-helpers.js'
+    );
+    expect(formatPlusMinusSolutionLatex('1/5')).toEqual(['\\frac{1}{5}', '-\\frac{1}{5}']);
+    expect(formatPlusMinusSolutionLatex('sqrt(2)')).toEqual(['\\sqrt{2}', '-\\sqrt{2}']);
   });
 });

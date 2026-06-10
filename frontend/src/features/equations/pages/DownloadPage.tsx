@@ -43,7 +43,7 @@ export const DownloadPage = () => {
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4" style={{ marginBottom: SPACING.lg }}>
+          <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2" style={{ marginBottom: SPACING.lg }}>
             <Input
               label="Fecha desde (opcional)"
               type="date"

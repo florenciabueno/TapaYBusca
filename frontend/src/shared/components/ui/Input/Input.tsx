@@ -26,11 +26,12 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
   ) => {
   const [showPassword, setShowPassword] = useState(false);
   const isPasswordType = type === 'password';
+  const isDateType = type === 'date';
   const inputType = isPasswordType && showPassword ? 'text' : type;
   const isDisabled = props.disabled;
 
   const sizeClasses = density === 'sm' ? 'px-3 py-2 text-sm' : 'px-4 py-3';
-  const inputClasses = `w-full ${sizeClasses} border-2 rounded-lg focus:outline-none focus:ring-2 ${
+  const inputClasses = `w-full min-w-0 max-w-full ${sizeClasses} border-2 rounded-lg focus:outline-none focus:ring-2 ${
     isDisabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'
   }${className ? ` ${className}` : ''}`;
   const getLabelColor = () => {
@@ -38,7 +39,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
   };
 
   return (
-    <div className="w-full">
+    <div className="w-full min-w-0">
       {label && (
         <label 
           className="block text-sm font-medium mb-1"
@@ -47,7 +48,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           {label}
         </label>
       )}
-      <div className="relative">
+      <div className="relative min-w-0">
         <input
           ref={ref}
           type={inputType}
@@ -56,6 +57,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             borderColor: error ? COLORS.error.main : isDisabled ? COLORS.gray[200] : COLORS.primary,
             '--tw-ring-color': COLORS.teal,
             paddingRight: isPasswordType ? '2.5rem' : undefined,
+            ...(isDateType ? { WebkitMinLogicalWidth: 0 } : {}),
           } as React.CSSProperties}
           aria-invalid={error ? 'true' : 'false'}
           aria-describedby={error ? `${props.id || props.name}-error` : helperText ? `${props.id || props.name}-helper` : undefined}
