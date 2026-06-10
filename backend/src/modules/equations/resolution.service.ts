@@ -357,8 +357,6 @@ export class ResolutionService {
       const num = nums[0];
       if (num === undefined || seen.has(num)) continue;
       seen.add(num);
-      // The solution set mirrors the value exactly as logged in the step history
-      // (e.g. a step x = -|1/5| appears as -|1/5|, not its unwrapped form).
       out.push(resultToLatex(loggedSolutionDisplayInfix(left, right)));
     }
     return out;
