@@ -31,7 +31,10 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
   const isDisabled = props.disabled;
 
   const sizeClasses = density === 'sm' ? 'px-3 py-2 text-sm' : 'px-4 py-3';
-  const inputClasses = `w-full min-w-0 max-w-full ${sizeClasses} border-2 rounded-lg focus:outline-none focus:ring-2 ${
+  const dateSizeClasses = 'px-3 py-2 text-sm sm:px-4 sm:py-3 sm:text-base';
+  const inputClasses = `box-border w-full min-w-0 max-w-full ${
+    isDateType ? dateSizeClasses : sizeClasses
+  } border-2 rounded-lg focus:outline-none focus:ring-2 ${
     isDisabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'
   }${className ? ` ${className}` : ''}`;
   const getLabelColor = () => {
@@ -48,7 +51,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           {label}
         </label>
       )}
-      <div className="relative min-w-0">
+      <div className={`relative min-w-0 w-full${isDateType ? ' overflow-hidden' : ''}`}>
         <input
           ref={ref}
           type={inputType}
@@ -57,7 +60,9 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             borderColor: error ? COLORS.error.main : isDisabled ? COLORS.gray[200] : COLORS.primary,
             '--tw-ring-color': COLORS.teal,
             paddingRight: isPasswordType ? '2.5rem' : undefined,
-            ...(isDateType ? { WebkitMinLogicalWidth: 0 } : {}),
+            ...(isDateType
+              ? { display: 'block', WebkitMinLogicalWidth: 0, minWidth: 0, maxWidth: '100%' }
+              : {}),
           } as React.CSSProperties}
           aria-invalid={error ? 'true' : 'false'}
           aria-describedby={error ? `${props.id || props.name}-error` : helperText ? `${props.id || props.name}-helper` : undefined}

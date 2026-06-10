@@ -22,12 +22,12 @@ export const DownloadPage = () => {
 
   return (
     <EquationsLayout>
-      <div className="w-full flex-1 flex items-center justify-center">
+      <div className="grid w-full min-w-0 flex-1 min-h-0 place-items-center">
         <FormPageCard
           title="Descargar ecuaciones"
         description='Añade a "Mis ecuaciones" ecuaciones compartidas por otros estudiantes. Indica cuántas quieres y, si lo deseas, un intervalo de fechas (por fecha de publicación).'
       >
-        <form onSubmit={handleSubmit}>
+        <form className="min-w-0 w-full" onSubmit={handleSubmit}>
           <div style={{ marginBottom: SPACING.lg }}>
             <Input
               label="Cantidad de ecuaciones"

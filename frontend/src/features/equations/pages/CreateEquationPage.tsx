@@ -22,7 +22,7 @@ export const CreateEquationPage = () => {
 
   return (
     <EquationsLayout>
-      <div className="w-full flex-1 flex items-center justify-center">
+      <div className="grid w-full min-w-0 flex-1 min-h-0 place-items-center">
         <FormPageCard
           title="Crear nueva ecuación"
           description="Construye tu ecuación en la forma f(x) = k o k = f(x), con una sola incógnita, y una sola ocurrencia de la misma."
