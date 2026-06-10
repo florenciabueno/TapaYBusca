@@ -4,12 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="google" content="notranslate" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Manual de usuario - Tapa y Busca</title>
+  <title>Manual de usuario</title>
   <link rel="icon" type="image/png" href="/logo.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/manual-usuario.css" />
+  <link rel="stylesheet" href="/manual/manual-usuario.css" />
 </head>
 <body>
   <header class="site-header">
@@ -19,7 +19,7 @@
         <span class="orange">Tapa </span><span class="teal">y </span><span class="violet">Busca</span>
       </p>
     </a>
-    <a class="back-link" href="/">← Volver a la app</a>
+    <a class="back-link" href="/">← Volver</a>
   </header>
 
   <div class="layout">
@@ -40,7 +40,7 @@
     </nav>
 
     <main class="content-card">
-<h1 class="manual-title">Manual de usuario - Tapa y Busca</h1>
+      <h1 class="manual-title">Manual de usuario</h1>
       <p class="intro">Este documento explica paso a paso cómo utilizar la aplicación: autenticación (inicio de sesión, registro y restablecimiento de contraseña), visualización del listado de ecuaciones y uso de filtros, creación de ecuaciones, descarga y subida (publicación) de ecuaciones y la resolución paso a paso. Incluye casos y mensajes más comunes para que se sepa qué esperar en cada flujo.</p>
 
       <h2 id="autenticacion">Autenticación</h2>
@@ -52,7 +52,7 @@
         <li>Pulsa <strong>“Iniciar sesión”</strong>.</li>
         <li>Si las credenciales son correctas, serás redirigido/a al tablero <strong>“Mis ecuaciones”</strong>.</li>
       </ol>
-      <figure class="manual-figure"><img src="/manual-images/iniciar-sesion.png" alt="Pantalla de inicio de sesión" loading="lazy" /></figure>
+      <figure class="manual-figure"><img src="/manual/images/iniciar-sesion.png" alt="Pantalla de inicio de sesión" loading="lazy" /></figure>
 
       <h3>Registrarse</h3>
       <ol>
@@ -61,7 +61,7 @@
         <li>Pulsa <strong>“Crear cuenta”</strong>.</li>
         <li>Tras el registro exitoso, entrarás con sesión iniciada y se te redirigirá a <strong>“Mis ecuaciones”</strong>.</li>
       </ol>
-      <figure class="manual-figure"><img src="/manual-images/registro.png" alt="Pantalla de registro" loading="lazy" /></figure>
+      <figure class="manual-figure"><img src="/manual/images/registro.png" alt="Pantalla de registro" loading="lazy" /></figure>
 
       <h3>Validaciones</h3>
       <ul>
@@ -77,7 +77,7 @@
         <li>Ingresa tu correo y pulsa <strong>“Enviar enlace”</strong>.</li>
         <li>Si el correo es válido, verás un mensaje de confirmación y recibirás un enlace de restablecimiento (si tu correo está registrado).</li>
       </ol>
-      <figure class="manual-figure"><img src="/manual-images/olvide-contrasena.png" alt="Pantalla de recuperación de contraseña" loading="lazy" /></figure>
+      <figure class="manual-figure"><img src="/manual/images/olvide-contrasena.png" alt="Pantalla de recuperación de contraseña" loading="lazy" /></figure>
 
       <h3>Restablecer contraseña</h3>
       <ol>
@@ -85,8 +85,8 @@
         <li>Define tu nueva contraseña y confírmala.</li>
         <li>Pulsa <strong>“Restablecer contraseña”</strong>. Verás un mensaje de éxito y serás redirigido/a al inicio de sesión.</li>
       </ol>
-      <figure class="manual-figure"><img src="/manual-images/email.png" alt="Correo de restablecimiento de contraseña" loading="lazy" /></figure>
-      <figure class="manual-figure"><img src="/manual-images/restablecimiento-contrasena.png" alt="Pantalla para el restablecimiento de la contraseña" loading="lazy" /></figure>
+      <figure class="manual-figure"><img src="/manual/images/email.png" alt="Correo de restablecimiento de contraseña" loading="lazy" /></figure>
+      <figure class="manual-figure"><img src="/manual/images/restablecimiento-contrasena.png" alt="Pantalla para el restablecimiento de la contraseña" loading="lazy" /></figure>
 
       <h2 id="mis-ecuaciones-listado-y-filtros">Mis ecuaciones (listado) y filtros</h2>
       <p>Al entrar al tablero <strong>“Mis ecuaciones”</strong> verás:</p>
@@ -101,7 +101,7 @@
           </ul>
         </li>
       </ul>
-      <figure class="manual-figure"><img src="/manual-images/listado.png" alt="Pantalla del listado Mis ecuaciones" loading="lazy" /></figure>
+      <figure class="manual-figure"><img src="/manual/images/listado.png" alt="Pantalla del listado Mis ecuaciones" loading="lazy" /></figure>
 
       <h3 id="filtros-disponibles">Filtros disponibles</h3>
       <ul>
@@ -110,7 +110,7 @@
         <li>Fecha: <strong>“Desde”</strong> y <strong>“Hasta”</strong>. Filtra por fecha de creación/descarga según el contexto.</li>
       </ul>
       <p>Los filtros pueden combinarse. Para limpiar un filtro, desmárcalo o borra la fecha.</p>
-      <figure class="manual-figure"><img src="/manual-images/filtros.png" alt="Pantalla del listado con filtros aplicados" loading="lazy" /></figure>
+      <figure class="manual-figure"><img src="/manual/images/filtros.png" alt="Pantalla del listado con filtros aplicados" loading="lazy" /></figure>
 
       <div class="callout callout-warning">
         <p><strong>IMPORTANTE:</strong> Si no ves ninguna ecuación en tu listado, verifica que existan datos creados o descargados en el rango de fechas seleccionado.</p>
@@ -118,15 +118,15 @@
 
       <h3>Estados vacíos</h3>
       <p>Si no hay resultados con los filtros actuales, se muestra un estado vacío con el CTA correspondiente (<strong>“Crear ecuación”</strong> o <strong>“Descargar ecuaciones”</strong>). Ajusta filtros o cambia el CTA para continuar.</p>
-      <figure class="manual-figure"><img src="/manual-images/no-hay-ecuaciones.png" alt="Pantalla del listado en estado vacío" loading="lazy" /></figure>
+      <figure class="manual-figure"><img src="/manual/images/no-hay-ecuaciones.png" alt="Pantalla del listado en estado vacío" loading="lazy" /></figure>
 
       <h3>Eliminación de ecuaciones</h3>
       <p>Desde el listado puedes eliminar una ecuación propia o descargada. Se mostrará un diálogo de confirmación. Si confirmas, la ecuación pasará a estado <strong>“Eliminada”</strong> y podría ocultarse según el filtro de estado activo. Al confirmar la eliminación, la ecuación se mueve a un archivo histórico. Podrás seguir consultando los pasos que realizaste anteriormente, pero la ecuación pasará a un modo de <strong>“solo lectura”</strong>, por lo que no podrás agregar nuevos intentos de resolución.</p>
-      <figure class="manual-figure"><img src="/manual-images/eliminar.png" alt="Modal para eliminar una ecuación" loading="lazy" /></figure>
+      <figure class="manual-figure"><img src="/manual/images/eliminar.png" alt="Modal para eliminar una ecuación" loading="lazy" /></figure>
 
       <h2 id="crear-ecuacion">Crear ecuación</h2>
       <p>Accede a <strong>“Crear ecuación”</strong> desde el listado o el menú principal.</p>
-      <figure class="manual-figure"><img src="/manual-images/crear.png" alt="Pantalla para la creación de ecuaciones" loading="lazy" /></figure>
+      <figure class="manual-figure"><img src="/manual/images/crear.png" alt="Pantalla para la creación de ecuaciones" loading="lazy" /></figure>
 
       <h3>Formato y reglas</h3>
       <ul>
@@ -156,11 +156,11 @@
         </li>
         <li>Si aparece un error genérico como <strong>“Error al crear la ecuación.”</strong>, revisa la sintaxis y vuelve a intentar.</li>
       </ul>
-      <figure class="manual-figure"><img src="/manual-images/ecuacion-invalida.png" alt="Pantalla de creación con ecuación inválida" loading="lazy" /></figure>
+      <figure class="manual-figure"><img src="/manual/images/ecuacion-invalida.png" alt="Pantalla de creación con ecuación inválida" loading="lazy" /></figure>
 
       <h2 id="resolver-ecuacion">Resolver ecuación</h2>
       <p>Abre una ecuación desde el listado para entrar al modo <strong>“Resolver ecuación”</strong>.</p>
-      <figure class="manual-figure"><img src="/manual-images/inicio-resolucion.png" alt="Pantalla de resolución de ecuaciones" loading="lazy" /></figure>
+      <figure class="manual-figure"><img src="/manual/images/inicio-resolucion.png" alt="Pantalla de resolución de ecuaciones" loading="lazy" /></figure>
 
       <p>En esta pantalla vemos:</p>
       <ul>
@@ -192,8 +192,8 @@
         <li>Si aún faltan soluciones, el sistema te lo indicará y no cerrará la resolución.</li>
         <li>Cuando todas las soluciones estén registradas, verás el resultado final y podrás reiniciar si deseas empezar de nuevo.</li>
       </ol>
-      <figure class="manual-figure"><img src="/manual-images/resolucion-proceso.png" alt="Pantalla de resolución con una ecuación siendo resuelta" loading="lazy" /></figure>
-      <figure class="manual-figure"><img src="/manual-images/resolucion-terminada.png" alt="Pantalla de resolución terminada" loading="lazy" /></figure>
+      <figure class="manual-figure"><img src="/manual/images/resolucion-proceso.png" alt="Pantalla de resolución con una ecuación siendo resuelta" loading="lazy" /></figure>
+      <figure class="manual-figure"><img src="/manual/images/resolucion-terminada.png" alt="Pantalla de resolución terminada" loading="lazy" /></figure>
 
       <h3>Acciones y mensajes clave</h3>
       <p><strong>Validar paso:</strong> registra un intento con la ecuación equivalente y la respuesta ingresadas:</p>
@@ -213,16 +213,11 @@
 
       <div class="callout callout-important">
         <h3>¡Importante!</h3>
-        <ol>
-          <li>No confundas <strong>Validar paso</strong> con <strong>Terminar resolución</strong>:
+          No confundas <strong>Validar paso</strong> con <strong>Terminar resolución</strong>:
             <ol type="a">
               <li><strong>Validar paso:</strong> registra y comprueba si el avance actual es correcto. Debes hacerlo en cada paso intermedio.</li>
               <li><strong>Terminar resolución:</strong> es la entrega final. Solo debes usarlo cuando creas que ya no quedan más valores del conjunto solución por encontrar para esa ecuación.</li>
             </ol>
-          </li>
-          <li>La ecuación equivalente que ingreses debe corresponder a una subexpresión de la ecuación original; de lo contrario, el sistema no la aceptará como válida. Si recibes un error, verifica que los paréntesis estén bien cerrados y en el orden correcto, que los signos y operadores coincidan exactamente con los de la expresión original.</li>
-          <li>La incógnita siempre debe representarse con la letra <strong>“x”</strong>.</li>
-        </ol>
       </div>
 
       <h3>Casos detallados y estados especiales</h3>
@@ -241,7 +236,7 @@
 
       <h2 id="logica-de-resolucion-para-ecuaciones-sin-solucion-real">Lógica de resolución para ecuaciones sin solución real</h2>
       <p>Si el usuario selecciona una subexpresión que sí tiene un valor intermedio válido (por ejemplo, x² en la ecuación x² + 8 = −8, donde x² debe valer −16), el sistema valida ese paso con normalidad: si el valor propuesto es correcto muestra <strong>“Paso correcto”</strong>; si es incorrecto, muestra un mensaje de error.</p>
-      <p>Si, en cambio, el usuario selecciona una subexpresión que tampoco admite valor real (por ejemplo, la incógnita x directamente), el sistema aplica un sistema de advertencias progresivas basado en la cantidad de intentos fallidos acumulados en la sesión, según los umbrales de la siguiente tabla.</p>
+      <p>Si, en cambio, el usuario selecciona una subexpresión que tampoco admite valor real (por ejemplo, la incógnita x directamente), el sistema aplica un sistema de advertencias progresivas basado en la cantidad de intentos fallidos acumulados en la sesión, según la siguiente tabla.</p>
 
       <h3>Umbrales de advertencia para ecuaciones sin solución real</h3>
       <div class="manual-table-wrap">
@@ -279,7 +274,7 @@
 
       <h2 id="descargar-ecuaciones">Descargar ecuaciones</h2>
       <p>En <strong>“Descargar ecuaciones”</strong> puedes añadir a <strong>“Mis ecuaciones”</strong> problemas compartidos por otros estudiantes.</p>
-      <figure class="manual-figure"><img src="/manual-images/descargar.png" alt="Pantalla para descargar ecuaciones" loading="lazy" /></figure>
+      <figure class="manual-figure"><img src="/manual/images/descargar.png" alt="Pantalla para descargar ecuaciones" loading="lazy" /></figure>
 
       <h3>Cómo funciona</h3>
       <ol>
@@ -304,8 +299,8 @@
         <li><strong>Para subir:</strong> ecuaciones tuyas que aún no han sido publicadas.</li>
         <li><strong>Ya subidas:</strong> ecuaciones que ya compartiste.</li>
       </ul>
-      <figure class="manual-figure"><img src="/manual-images/subir.png" alt="Pantalla para subir ecuaciones" loading="lazy" /></figure>
-      <figure class="manual-figure"><img src="/manual-images/ecuaciones-subidas.png" alt="Pantalla para subir ecuaciones en la pestaña de ecuaciones ya subidas" loading="lazy" /></figure>
+      <figure class="manual-figure"><img src="/manual/images/subir.png" alt="Pantalla para subir ecuaciones" loading="lazy" /></figure>
+      <figure class="manual-figure"><img src="/manual/images/ecuaciones-subidas.png" alt="Pantalla para subir ecuaciones en la pestaña de ecuaciones ya subidas" loading="lazy" /></figure>
 
       <h3>Cómo funciona</h3>
       <ol>
@@ -319,7 +314,7 @@
 
       <h2 id="editar-perfil">Editar perfil</h2>
       <p>Puedes editar tu perfil desde el encabezado (parte superior): abre el menú de usuario y elige <strong>“Editar perfil”</strong>. Se abrirá un modal con el formulario.</p>
-      <figure class="manual-figure"><img src="/manual-images/editar-perfil.png" alt="Pantalla para editar el perfil" loading="lazy" /></figure>
+      <figure class="manual-figure"><img src="/manual/images/editar-perfil.png" alt="Pantalla para editar el perfil" loading="lazy" /></figure>
 
       <h3>Campos y comportamiento</h3>
       <ul>

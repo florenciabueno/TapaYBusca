@@ -2,7 +2,7 @@ import { COLORS } from '../../../../config/theme';
 
 export const HelpManualButton = () => (
   <a
-    href="/manual-usuario.html"
+    href="/manual/index.html"
     target="_blank"
     rel="noopener noreferrer"
     aria-label="Abrir manual de usuario"
