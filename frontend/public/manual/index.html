@@ -117,7 +117,7 @@
       </div>
 
       <h3>Estados vacíos</h3>
-      <p>Si no hay resultados con los filtros actuales, se muestra un estado vacío con el CTA correspondiente (<strong>“Crear ecuación”</strong> o <strong>“Descargar ecuaciones”</strong>). Ajusta filtros o cambia el CTA para continuar.</p>
+      <p>Si no hay resultados con los filtros actuales, se muestra un estado vacío con el botón (<strong>“Crear ecuación”</strong> o <strong>“Descargar ecuaciones”</strong>). Ajusta filtros o ejecuta la acción correspondiente para continuar.</p>
       <figure class="manual-figure"><img src="/manual/images/no-hay-ecuaciones.png" alt="Pantalla del listado en estado vacío" loading="lazy" /></figure>
 
       <h3>Eliminación de ecuaciones</h3>
@@ -130,10 +130,16 @@
 
       <h3>Formato y reglas</h3>
       <ul>
-        <li>Escribe la ecuación en forma f(x) = k o k = f(x) con una sola incógnita x.</li>
-        <li>Teclado permitido: números, x, =, operadores + - * / y paréntesis ( ).</li>
-        <li>Puedes usar la botonera de símbolos para ingresar fácilmente.</li>
-        <li>Ejemplos válidos: x*20 = 100, 2*(x+5) = 30, x/2 + 3 = 10.</li>
+        <li>Escribe la ecuación en la forma f(letra) = k o k = f(letra), con una sola incógnita y una sola ocurrencia de la misma. Puedes usar cualquier letra minúscula (por ejemplo, x, t o k).</li>
+        <li>Teclado permitido: números, letras (incógnita), =, operadores + - * / y paréntesis ( ).</li>
+        <li>La botonera inserta raíces como <strong>sqrt()</strong> (raíz cuadrada) y <strong>cbrt()</strong> (raíz cúbica), y el exponente ^.</li>
+        <li>El signo <strong>*</strong> puede omitirse en algunos casos, porque el sistema lo interpreta como multiplicación igualmente:
+          <ul>
+            <li>Número seguido de variable: <strong>2x</strong> equivale a <strong>2*x</strong>.</li>
+            <li>Número seguido de paréntesis: <strong>2(x+1)</strong> equivale a <strong>2*(x+1)</strong>.</li>
+            <li>Ejemplos válidos: x*20 = 100, 2*(x+5) = 30, x/2 + 3 = 10, 2t = 8.</li>
+          </ul>
+        </li>
       </ul>
 
       <h3>Guardado</h3>
@@ -165,21 +171,24 @@
       <p>En esta pantalla vemos:</p>
       <ul>
         <li>Panel con la expresión original.</li>
-        <li>Panel con el conjunto solución parcial, que inicialmente es vacío y se actualiza a medida que se avanza en la resolución.</li>
+        <li>Panel con el conjunto solución parcial, que inicialmente es vacío y se actualiza a medida que avanzas.</li>
         <li>Panel de trabajo con:
           <ul>
-            <li>Campo para la ecuación equivalente (ej. x, 2*x, x+5).</li>
-            <li>Separador = y campo para tu respuesta (ej. 3, 1/2, 0,5).
+            <li>Campo para una parte de la ecuación y campo para tu respuesta, separados por = (ej. x, 2*x, x+5 … y 3, 1/2, 0,5).
               <ul>
-                <li>Cualquiera de los dos campos puede usarse como ecuación equivalente/respuesta.</li>
+                <li>Cualquiera de los dos campos puede usarse para la expresión con la incógnita o como respuesta.</li>
               </ul>
             </li>
             <li>Botonera de símbolos.</li>
             <li>Botones: Validar paso, Terminar resolución, Reiniciar.</li>
-            <li>Panel de pasos registrados (si ya se realizaron pasos en la resolución).</li>
           </ul>
         </li>
+        <li>Panel de pasos registrados (visible cuando ya realizaste pasos en la resolución).</li>
+        <li>En pantallas grandes, flechas de navegación (&lt; y &gt;) para ir a la ecuación anterior o siguiente del listado.</li>
       </ul>
+
+      <h3>Punto de partida</h3>
+      <p>Al abrir una ecuación que aún no empezaste a resolver, los dos campos se cargan solos con la ecuación original: un lado de la igualdad en cada campo. Así puedes editar solo lo que cambia en cada paso, sin reescribir toda la expresión.</p>
 
       <h3>Ecuación equivalente</h3>
       <p>En el contexto del método <strong>“cover up”</strong>, la ecuación equivalente que ingresas corresponde a la porción específica de la igualdad sobre la que estás operando en ese momento. La idea es <strong>“tapar”</strong> parte de la expresión y deducir cuánto debe valer lo que queda oculto para que la igualdad se cumpla. Por ejemplo, en la ecuación x/2 + 10 = 21, puedes <strong>“tapar”</strong> el término x/2 y determinar que su valor es 11, ya que 11 + 10 = 21. Ese valor (11) es lo que ingresas en el campo de respuesta.</p>
@@ -204,9 +213,9 @@
 
       <p><strong>Terminar resolución:</strong></p>
       <ul>
-        <li>Si aún faltan soluciones por registrar, verás un mensaje tipo <strong>“Faltan más soluciones”</strong>.</li>
+        <li>Si aún faltan soluciones por registrar, verás: <strong>“Aún no registraste todas las soluciones del conjunto solución”</strong>.</li>
         <li>Si el conjunto está completo, la resolución se da por finalizada y la ecuación queda con estado <strong>“Resuelta”</strong>.</li>
-        <li>Si llegas a la conclusión de que la ecuación no tiene solución real, no ingreses ningún valor: simplemente presiona el botón <strong>“Terminar resolución”</strong>. El paso quedará registrado indicando que la ecuación no tiene solución.</li>
+        <li>Si concluyes que el conjunto solución es vacío, no ingreses ningún valor en los campos: pulsa <strong>“Terminar resolución”</strong> directamente.</li>
       </ul>
 
       <p><strong>Reiniciar:</strong> borra el progreso de la resolución actual de esa ecuación.</p>
@@ -224,13 +233,13 @@
       <ul>
         <li><strong>Ecuación eliminada:</strong> la página se muestra en solo lectura; puedes ver los pasos existentes pero no seguir resolviendo.</li>
         <li><strong>Sintaxis incorrecta en ecuación:</strong> se te pedirá corregirla (por ejemplo, paréntesis, operadores o estructura inválida).</li>
-        <li><strong>Ecuación equivalente obligatoria:</strong> si intentas validar sin ecuación se te indicará que es requerida.</li>
+        <li><strong>Partes de la ecuación obligatorias:</strong> si intentas validar sin completar los campos, el sistema te indicará que son requeridos.</li>
       </ul>
 
       <h3>Checklist rápido</h3>
       <ul>
         <li><strong>Validar es obligatorio:</strong> cada vez que resuelvas una parte de la ecuación, debes pulsar <strong>“Validar paso”</strong> para que el sistema lo registre.</li>
-        <li><strong>Botonera vs. Teclado:</strong> usa siempre la botonera de la app para símbolos especiales como raíces o potencias para evitar errores de formato.</li>
+        <li><strong>Botonera vs. teclado:</strong> usa la botonera de la app para raíces, potencias y valor absoluto (|x|) y así evitar errores de formato.</li>
         <li><strong>Terminar al final:</strong> solo pulsa <strong>“Terminar resolución”</strong> cuando hayas validado todas las soluciones posibles; de lo contrario, el sistema te pedirá más pasos.</li>
       </ul>
 
@@ -262,7 +271,7 @@
             </tr>
             <tr>
               <td>6.º</td>
-              <td>Cierre automático: <strong>“La ecuación no tiene solución real.”</strong> <strong>“El conjunto solución es vacío.”</strong> La ecuación queda resuelta como S = {}.</td>
+              <td>Cierre automático: <strong>“La ecuación no tiene solución real. El conjunto solución es el conjunto vacío.”</strong> La ecuación queda resuelta como S = {}.</td>
             </tr>
           </tbody>
         </table>
@@ -273,7 +282,7 @@
       </div>
 
       <h2 id="descargar-ecuaciones">Descargar ecuaciones</h2>
-      <p>En <strong>“Descargar ecuaciones”</strong> puedes añadir a <strong>“Mis ecuaciones”</strong> problemas compartidos por otros estudiantes.</p>
+      <p>En <strong>“Descargar ecuaciones”</strong> puedes añadir a <strong>“Mis ecuaciones”</strong> problemas compartidos por otros estudiantes. Esta acción no descarga ningún archivo a tu dispositivo: simplemente agrega las ecuaciones elegidas a tu listado.</p>
       <figure class="manual-figure"><img src="/manual/images/descargar.png" alt="Pantalla para descargar ecuaciones" loading="lazy" /></figure>
 
       <h3>Cómo funciona</h3>
@@ -338,13 +347,16 @@
       <h2 id="preguntas-frecuentes">Preguntas frecuentes</h2>
 
       <h3>¿Puedo usar otras letras además de x?</h3>
-      <p>No. Actualmente el sistema admite una sola incógnita x.</p>
+      <p>Sí. Al crear una ecuación puedes usar cualquier letra minúscula como incógnita (por ejemplo, a, t o k). Durante la resolución debes usar exactamente la misma letra que tiene la ecuación original: si la creaste con t, todos tus pasos deben expresarse con t. El sistema no acepta pasos con otra letra.</p>
 
       <h3>¿Puedo ingresar raíces o potencias?</h3>
-      <p>Sí. Desde la botonera puedes insertar raíz cuadrada (√), raíz cúbica (³√) y exponente (^). Con el teclado puedes escribir números, la incógnita x, el signo =, los operadores +, −, *, / y paréntesis; para raíces y potencias usa los botones correspondientes. Si el ejercicio requiere varias transformaciones, avanza con ecuaciones equivalentes válidas en cada paso.</p>
+      <p>Sí. Desde la botonera puedes insertar raíz cuadrada (√), raíz cúbica (³√), valor absoluto (|x|) y exponente (^). Con el teclado puedes escribir números, la incógnita de tu ecuación, el signo =, los operadores +, −, *, / y paréntesis; para raíces, potencias y valor absoluto conviene usar los botones de la botonera.</p>
 
-      <h3>¿Qué pasa si mi ecuación no tiene solución?</h3>
-      <p>Durante la resolución puedes usar el botón de <strong>“Terminar resolución”</strong> sin haber ingresado ningún valor del conjunto solución para indicar que la colusión es el conjunto vacío para una rama válida.</p>
+      <h3>¿Puedo ingresar valores con valor absoluto?</h3>
+      <p>Sí. El sistema reconoce ecuaciones de la forma |x| = k (con la incógnita de tu ecuación) e interpreta automáticamente ambas soluciones como conjunto solución. Por ejemplo, ante |x| = 1, el conjunto solución completo es {−1, 1}.</p>
+
+      <h3>¿Qué pasa si mi ecuación tiene conjunto solución vacío?</h3>
+      <p>Durante la resolución puedes pulsar <strong>“Terminar resolución”</strong> sin haber ingresado ningún valor, para indicar que el conjunto solución es el conjunto vacío.</p>
 
       <h3>¿Por qué “Terminar resolución” me dice que faltan soluciones?</h3>
       <p>Porque todavía no registraste todas las soluciones candidatas. Revisa los pasos y añade los que falten antes de finalizar.</p>
@@ -352,15 +364,15 @@
       <h2 id="detalles-de-la-logica-de-resolucion-mensajes-y-umbrales">Detalles de la lógica de resolución (mensajes y umbrales)</h2>
 
       <h3>¿Por qué “validar paso” da error en ecuaciones sin solución real?</h3>
-      <p>Si una ecuación no tiene solución real, ningún número puede completar la igualdad. Por eso, cada intento numérico con <strong>Validar paso</strong> será incorrecto. El sistema guía con mensajes progresivos y, llegado un umbral, concluye automáticamente <strong>“conjunto vacío (∅)”</strong>.</p>
+      <p>Si una ecuación no tiene solución real, ningún número puede completar la igualdad. Por eso, cada intento numérico con <strong>Validar paso</strong> será incorrecto. El sistema guía con mensajes progresivos y, llegado un umbral, concluye automáticamente que el conjunto solución es vacío.</p>
 
       <h3>Botón “Validar paso”</h3>
       <p>Registra el intento (ecuación equivalente y respuesta) y muestra un mensaje de retroalimentación inmediato.</p>
       <p><strong>Posibles resultados:</strong></p>
       <ul>
         <li><strong>“Paso correcto”</strong> o <strong>“Solución correcta. Podés ingresar otra si aún falta.”</strong></li>
-        <li><strong>“El valor no es correcto para esta ecuación equivalente”</strong> (o variantes: repetido, sintaxis inválida, etc.).</li>
-        <li>Si la ecuación es sin solución, verás primero errores normales, luego una advertencia y finalmente el cierre automático como <strong>“∅”</strong> (ver umbrales abajo).</li>
+        <li><strong>“El valor no es correcto”</strong> (o variantes: repetido, sintaxis inválida, etc.).</li>
+        <li>Si la ecuación es sin solución, verás primero errores normales, luego una advertencia y finalmente el cierre automático con conjunto solución vacío (ver umbrales abajo).</li>
       </ul>
 
       <h3>Botón “Terminar resolución”</h3>
@@ -368,9 +380,10 @@
         <li>Verifica si ya registraste todas las soluciones del conjunto solución.</li>
         <li>Si aún faltan, muestra <strong>“Aún no registraste todas las soluciones del conjunto solución”</strong>.</li>
         <li>Si está completo, finaliza con <strong>“¡Resolución terminada con éxito!”</strong>.</li>
-        <li>En ecuaciones sin solución, al alcanzar el umbral de intentos fallidos se cierra automáticamente como <strong>“∅”</strong>, sin necesidad de usar el botón de <strong>“Terminar resolución”</strong>.</li>
+        <li>En ecuaciones sin solución, al alcanzar el umbral de intentos fallidos se cierra automáticamente con conjunto solución vacío, sin necesidad de usar <strong>“Terminar resolución”</strong>.</li>
+        <li>También puedes declarar conjunto vacío en cualquier momento pulsando <strong>“Terminar resolución”</strong> sin haber ingresado soluciones.</li>
       </ul>
-      <p>El sistema analiza tus intentos fallidos para ayudarte a identificar ecuaciones sin solución real. Si ves el mensaje <strong>“¿La ecuación tendrá solución real?”</strong>, tómalo como una pista del asistente para reconsiderar el conjunto vacío (S=∅) antes de que la aplicación cierre el ejercicio automáticamente.</p>
+      <p>El sistema analiza tus intentos fallidos para ayudarte a identificar ecuaciones sin solución real. Si ves el mensaje <strong>“¿La ecuación tendrá solución real?”</strong>, tómalo como una pista para reconsiderar el conjunto vacío antes de que la aplicación cierre el ejercicio automáticamente.</p>
 
       <h3>Umbrales cuando la ecuación no tiene solución real</h3>
       <p>Secuencia típica al ingresar números incorrectos (cuenta total de intentos fallidos):</p>
@@ -378,7 +391,7 @@
         <li><strong>1.º y 2.º intento:</strong> mensajes de error estándar (p.ej., <strong>“El valor no es correcto…”</strong>).</li>
         <li><strong>3.º intento:</strong> aparece una advertencia: <strong>“¿La ecuación tendrá solución real?”</strong>.</li>
         <li><strong>4.º y 5.º intento:</strong> vuelven los mensajes de error estándar.</li>
-        <li><strong>6.º intento:</strong> la app concluye automáticamente <strong>“La ecuación no tiene solución real. El conjunto solución es ∅.”</strong> y marca la ecuación como resuelta (conjunto vacío).</li>
+        <li><strong>6.º intento:</strong> la app concluye automáticamente con <strong>“La ecuación no tiene solución real. El conjunto solución es el conjunto vacío.”</strong> y marca la ecuación como resuelta.</li>
       </ol>
     </main>
   </div>
