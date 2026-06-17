@@ -5,6 +5,9 @@ node_modules
 # build
 dist
 
+# test coverage
+backend/coverage/
+
 # OS / editor
 .DS_Store
 .vscode
