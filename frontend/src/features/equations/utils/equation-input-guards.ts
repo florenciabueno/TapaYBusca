@@ -68,6 +68,12 @@ export function handleEquationInputKeyDown(
   e: KeyboardEvent<HTMLInputElement>,
   equationVariable?: string | null
 ) {
+  // Allow clipboard / select-all shortcuts (Ctrl/Cmd + a/c/v/x) before any
+  // other guard. These must take precedence over the variable lock below,
+  // otherwise pressing e.g. Ctrl+V is treated as typing the letter "v".
+  if (e.ctrlKey || e.metaKey) {
+    if (e.key === 'a' || e.key === 'c' || e.key === 'v' || e.key === 'x') return;
+  }
   const locked =
     equationVariable ??
     extractEquationVariable(e.currentTarget.value) ??
@@ -77,9 +83,6 @@ export function handleEquationInputKeyDown(
     return;
   }
   if (ALLOWED_EQUATION_KEYS.has(e.key)) return;
-  if (e.ctrlKey || e.metaKey) {
-    if (e.key === 'a' || e.key === 'c' || e.key === 'v' || e.key === 'x') return;
-  }
   e.preventDefault();
 }
 

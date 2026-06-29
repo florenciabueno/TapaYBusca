@@ -108,12 +108,14 @@ export const useEquationList = (): UseEquationListReturn => {
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => equationService.deleteEquation(id, token),
-    onSuccess: () => {
+    onSuccess: (_data, id) => {
       const nextPage = equations.length === 1 && pageFromUrl > 1 ? pageFromUrl - 1 : pageFromUrl;
       if (nextPage !== pageFromUrl) {
         setSearchParams((prev) => withEquationListPageParam(prev, nextPage));
       }
       queryClient.invalidateQueries({ queryKey: queryKeys.equations.lists() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.equations.detail(id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.equations.resolution(id) });
     },
   });
 
