@@ -18,8 +18,8 @@ export const ResolveEquationStepsCard = ({
       translate="no"
       className={
         embedded
-          ? 'min-h-0 overflow-x-hidden overflow-y-auto pr-1 max-h-[min(50vh,28rem)]'
-          : 'min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain pr-1'
+          ? 'scrollbar-always min-h-0 overflow-x-hidden overflow-y-auto pr-1 max-h-[clamp(10rem,calc(100dvh-33rem),40rem)]'
+          : 'scrollbar-always min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain pr-1'
       }
     >
       <ul className="flex flex-col gap-2.5 text-base [&_.katex]:!text-base" style={{ color: COLORS.gray[700] }}>
@@ -46,7 +46,7 @@ export const ResolveEquationStepsCard = ({
 
   return (
     <div
-      className="flex h-full min-h-0 w-full flex-col overflow-hidden rounded-2xl p-6 max-h-[min(55vh,26rem)] lg:max-h-none lg:min-h-0 lg:flex-1"
+      className="flex h-full min-h-0 w-full flex-col overflow-hidden rounded-2xl p-6 max-h-[min(55vh,26rem)] lg:min-h-0 lg:flex-1 lg:max-h-[calc(100dvh-13rem)]"
       style={{
         backgroundColor: COLORS.surface,
         borderRadius: RADIUS.xl,

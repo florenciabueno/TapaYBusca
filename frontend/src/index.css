@@ -36,3 +36,24 @@ input[type='datetime-local']::-webkit-date-and-time-value {
   min-width: 0;
   text-align: left;
 }
+
+.scrollbar-always {
+  scrollbar-gutter: stable;
+}
+
+.scrollbar-always::-webkit-scrollbar {
+  width: 10px;
+}
+
+.scrollbar-always::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-always::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 9999px;
+}
+
+.scrollbar-always::-webkit-scrollbar-thumb:hover {
+  background-color: #94a3b8;
+}
